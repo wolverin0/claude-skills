@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Debate Hub - Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-purple: #a371f7;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+            --gemini-color: #4285f4;
+            --codex-color: #10a37f;
+            --claude-color: #d97706;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-header h1::before {
+            content: "🤖";
+        }
+
+        .debate-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .debate-item {
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .debate-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .debate-item.active {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-blue);
+        }
+
+        .debate-item-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .debate-item-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-completed {
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-in_progress {
+            background: rgba(210, 153, 34, 0.2);
+            color: var(--accent-orange);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        .content-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .content-header-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .markdown-content {
+            max-width: 900px;
+            line-height: 1.6;
+        }
+
+        .markdown-content h1 {
+            font-size: 28px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content h2 {
+            font-size: 22px;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .markdown-content h3 {
+            font-size: 18px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        .markdown-content p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        .markdown-content li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-content code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+        }
+
+        .markdown-content pre {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .markdown-content th, .markdown-content td {
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 16px;
+            margin: 16px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 32px 0;
+        }
+
+        /* Rounds View */
+        .rounds-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .round-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .round-header {
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .round-responses {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+        }
+
+        .advisor-response {
+            background: var(--bg-secondary);
+            padding: 16px;
+        }
+
+        .advisor-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .advisor-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .advisor-gemini {
+            background: rgba(66, 133, 244, 0.2);
+            color: var(--gemini-color);
+        }
+
+        .advisor-codex {
+            background: rgba(16, 163, 127, 0.2);
+            color: var(--codex-color);
+        }
+
+        .advisor-claude {
+            background: rgba(217, 119, 6, 0.2);
+            color: var(--claude-color);
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--text-secondary);
+        }
+
+        /* JSON View */
+        .json-view {
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        /* Refresh Button */
+        .refresh-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        /* Instructions */
+        .instructions {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 12px;
+            color: var(--accent-blue);
+        }
+
+        .instructions code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1>AI Debate Hub</h1>
+        </div>
+        <div class="debate-list" id="debateList">
+            <div class="loading">Loading debates...</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="content-header" id="contentHeader">
+            <h2>Select a Debate</h2>
+            <div class="content-header-meta">
+                <span>Choose a debate from the sidebar to view</span>
+            </div>
+        </div>
+
+        <div class="tabs" id="tabs" style="display: none;">
+            <div class="tab active" data-tab="transcript">Transcript</div>
+            <div class="tab" data-tab="synthesis">Synthesis</div>
+            <div class="tab" data-tab="rounds">Rounds</div>
+            <div class="tab" data-tab="context">Context</div>
+            <div class="tab" data-tab="state">State</div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <div class="empty-state">
+                <div class="empty-state-icon">💬</div>
+                <p>Select a debate to view its content</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadDebates()">
+        🔄 Refresh
+    </button>
+
+    <script>
+        // Debates data loaded from folder
+        let debates = [];
+        let currentDebate = null;
+        let currentTab = 'transcript';
+
+        // Auto-discover debates from index.json
+        // The /debate skill maintains this index file automatically
+        const INDEX_PATHS = [
+            'debates/index.json'
+        ];
+
+        async function loadDebates() {
+            const debateList = document.getElementById('debateList');
+            debateList.innerHTML = '<div class="loading">Loading debates...</div>';
+
+            debates = [];
+            let debatePaths = [];
+
+            // Try to load index files
+            for (const indexPath of INDEX_PATHS) {
+                try {
+                    const response = await fetch(indexPath);
+                    if (response.ok) {
+                        const index = await response.json();
+                        const basePath = indexPath.replace('/index.json', '');
+                        debatePaths.push(...index.debates.map(d => `${basePath}/${d}`));
+                    }
+                } catch (e) {
+                    console.log(`No index at ${indexPath}`);
+                }
+            }
+
+            // Load each debate's state
+            for (const path of debatePaths) {
+                try {
+                    const stateResponse = await fetch(`${path}/state.json`);
+                    if (stateResponse.ok) {
+                        const state = await stateResponse.json();
+                        debates.push({
+                            path: path,
+                            state: state,
+                            topic: state.topic || path.split('/').pop(),
+                            status: state.status || 'unknown',
+                            rounds: state.rounds_completed?.length || 0,
+                            date: state.created_at || 'Unknown'
+                        });
+                    }
+                } catch (e) {
+                    console.log(`Could not load ${path}:`, e);
+                }
+            }
+
+            renderDebateList();
+        }
+
+        function renderDebateList() {
+            const debateList = document.getElementById('debateList');
+
+            if (debates.length === 0) {
+                debateList.innerHTML = `
+                    <div class="instructions">
+                        <h3>No debates found</h3>
+                        <p>Make sure you're running a local server:</p>
+                        <p><code>python -m http.server 8080</code></p>
+                        <p>Then open <code>http://localhost:8080/viewer.html</code></p>
+                        <p style="margin-top: 12px; font-size: 11px; color: var(--text-secondary)">
+                            Debates are discovered via <code>.debates/index.json</code>
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            debateList.innerHTML = debates.map((debate, idx) => `
+                <div class="debate-item ${currentDebate === idx ? 'active' : ''}"
+                     onclick="selectDebate(${idx})">
+                    <div class="debate-item-title">${debate.topic}</div>
+                    <div class="debate-item-meta">
+                        <span class="status-badge status-${debate.status}">${debate.status}</span>
+                        <span>${debate.rounds} rounds</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function selectDebate(idx) {
+            currentDebate = idx;
+            const debate = debates[idx];
+
+            renderDebateList();
+            document.getElementById('tabs').style.display = 'flex';
+
+            // Update header
+            const header = document.getElementById('contentHeader');
+            header.innerHTML = `
+                <h2>${debate.topic}</h2>
+                <div class="content-header-meta">
+                    <span>${debate.status}</span>
+                    <span>${debate.rounds} rounds</span>
+                    <span>${debate.date}</span>
+                </div>
+            `;
+
+            loadTabContent(currentTab);
+        }
+
+        async function loadTabContent(tab) {
+            currentTab = tab;
+            const debate = debates[currentDebate];
+            const contentArea = document.getElementById('contentArea');
+
+            // Update tab styling
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.tab === tab);
+            });
+
+            contentArea.innerHTML = '<div class="loading">Loading...</div>';
+
+            try {
+                switch(tab) {
+                    case 'transcript':
+                        const transcript = await fetchFile(`${debate.path}/transcript.md`);
+                        contentArea.innerHTML = `<div class="markdown-content">${marked.parse(transcript)}</div>`;
+                        break;
+
+                    case 'synthesis':
+                        const synthesis = await fetchFile(`${debate.path}/synthesis.md`);
+                        contentArea.innerHTML = `<div class="markdown-content">${marked.parse(synthesis)}</div>`;
+                        break;
+
+                    case 'context':
+                        const context = await fetchFile(`${debate.path}/context.md`);
+                        contentArea.innerHTML = `<div class="markdown-content">${marked.parse(context)}</div>`;
+                        break;
+
+                    case 'state':
+                        const state = await fetchFile(`${debate.path}/state.json`);
+                        contentArea.innerHTML = `<pre class="json-view">${JSON.stringify(JSON.parse(state), null, 2)}</pre>`;
+                        break;
+
+                    case 'rounds':
+                        await loadRoundsView(debate);
+                        break;
+                }
+            } catch (e) {
+                contentArea.innerHTML = `<div class="empty-state">
+                    <div class="empty-state-icon">❌</div>
+                    <p>Failed to load content: ${e.message}</p>
+                </div>`;
+            }
+        }
+
+        async function loadRoundsView(debate) {
+            const contentArea = document.getElementById('contentArea');
+            const rounds = debate.state.rounds_completed || [];
+
+            let html = '<div class="rounds-container">';
+
+            for (let i = 0; i < rounds.length; i++) {
+                const round = rounds[i];
+                let geminiContent = '', codexContent = '';
+
+                try {
+                    geminiContent = await fetchFile(`${debate.path}/${round.gemini}`);
+                } catch (e) {
+                    geminiContent = '*No response*';
+                }
+
+                try {
+                    codexContent = await fetchFile(`${debate.path}/${round.codex}`);
+                } catch (e) {
+                    codexContent = '*No response*';
+                }
+
+                html += `
+                    <div class="round-card">
+                        <div class="round-header">
+                            <span>Round ${round.round || i + 1}</span>
+                        </div>
+                        <div class="round-responses">
+                            <div class="advisor-response">
+                                <div class="advisor-header">
+                                    <span class="advisor-badge advisor-gemini">Gemini</span>
+                                </div>
+                                <div class="markdown-content">${marked.parse(geminiContent)}</div>
+                            </div>
+                            <div class="advisor-response">
+                                <div class="advisor-header">
+                                    <span class="advisor-badge advisor-codex">Codex</span>
+                                </div>
+                                <div class="markdown-content">${marked.parse(codexContent)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            contentArea.innerHTML = html;
+        }
+
+        async function fetchFile(path) {
+            const response = await fetch(path);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.text();
+        }
+
+        // Tab click handler
+        document.getElementById('tabs').addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab')) {
+                loadTabContent(e.target.dataset.tab);
+            }
+        });
+
+        // Initial load
+        loadDebates();
+    </script>
+</body>
+</html>
