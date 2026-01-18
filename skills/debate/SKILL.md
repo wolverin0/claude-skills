@@ -1,4 +1,4 @@
-# AI Debate Hub Skill v4.7
+# AI Debate Hub Skill v4.8
 
 You are Claude, a **participant and moderator** in a three-way AI debate system. You consult AI advisors (Gemini, Codex) via CLI, contribute your own analysis, and synthesize all perspectives for the user.
 
@@ -630,6 +630,117 @@ Combine all round files into a single chronological transcript:
         |-- r002_claude.md    <-- YOUR response
         +-- ...
 ```
+
+---
+
+## MANDATORY File Checklist
+
+**THIS IS CRITICAL. Every debate MUST have these files or the viewer won't work.**
+
+### Phase 1: Setup (Create ALL of these BEFORE running any advisor)
+
+#### 1. `debates/index.json` (create if missing, update if exists)
+```json
+{
+  "debates": [
+    "001-existing-debate",
+    "002-your-new-debate"
+  ]
+}
+```
+
+#### 2. `debates/viewer.html` (copy from skill folder if missing)
+```bash
+cp ~/.claude/skills/debate/viewer.html {cwd}/debates/
+```
+
+#### 3. `debates/NNN-topic/state.json` (REQUIRED - viewer needs this!)
+```json
+{
+  "version": 1,
+  "debate_id": "NNN-topic-slug",
+  "topic": "Human readable topic description",
+  "status": "in_progress",
+  "current_round": 0,
+  "rounds_total": 2,
+  "participants": ["gemini", "codex", "claude"],
+  "created_at": "2026-01-18T12:00:00Z",
+  "sessions": {}
+}
+```
+
+#### 4. `debates/NNN-topic/context.md`
+```markdown
+# Debate Context: {Topic}
+
+## The Question
+{User's original question or task}
+
+## Configuration
+- Rounds: {N}
+- Style: {debate_style}
+- Participants: Gemini, Codex, Claude
+
+## Files Referenced
+- {list any files mentioned}
+```
+
+#### 5. `debates/NNN-topic/rounds/` (create empty folder)
+
+### After Each Round: Update These Files
+
+#### Update `state.json`:
+```json
+{
+  "current_round": 1,
+  "status": "in_progress",
+  "sessions": {
+    "gemini": {"id": "uuid-from-list-sessions", "status": "active"},
+    "codex": {"id": "uuid-from-output", "status": "active"}
+  }
+}
+```
+
+#### Create round files:
+- `rounds/r001_gemini.md` - Gemini's response
+- `rounds/r001_codex.md` - Codex's response
+- `rounds/r001_claude.md` - YOUR response
+
+### After Final Round: Create These Files
+
+#### 1. Update `state.json`:
+```json
+{
+  "status": "completed",
+  "current_round": 2,
+  "completed_at": "2026-01-18T13:00:00Z"
+}
+```
+
+#### 2. Create `transcript.md`:
+Combine all rounds chronologically (see Phase 5 for format)
+
+#### 3. Create `synthesis.md`:
+Final analysis with all three perspectives (see Phase 5 for format)
+
+### Quick Verification Checklist
+
+Before ending ANY debate, verify these files exist:
+```
+debates/
+├── index.json              ✓ Contains this debate's folder name
+├── viewer.html             ✓ Exists
+└── NNN-topic/
+    ├── state.json          ✓ Has topic, status, participants, current_round
+    ├── context.md          ✓ Has question and config
+    ├── synthesis.md        ✓ Has final analysis (if completed)
+    └── rounds/
+        ├── r001_gemini.md  ✓
+        ├── r001_codex.md   ✓
+        └── r001_claude.md  ✓ YOUR contribution
+```
+
+**If ANY file is missing, the viewer will show incomplete or empty data!**
 
 ---
 
