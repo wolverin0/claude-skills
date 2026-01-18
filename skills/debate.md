@@ -421,26 +421,149 @@ Respond to both. Where do you agree? Disagree? {max_words} words max."
 - Update your position based on new arguments
 - Save to `rounds/r00N_claude.md`
 
-### Phase 4: Handle Failures
+### Phase 4: Handle Failures with Retry Logic
 
-| Failure | Action |
-|---------|--------|
-| Timeout (90s Gemini, 180s Codex) | Retry once, continue without |
-| Session resume fails | Fall back to fresh prompt with full context |
-| CLI error | Log error, continue with other advisor |
-| Usage limit | Continue with remaining advisor |
-| Both fail | Stop, report to user |
+**Retry Strategy:**
+1. **Network Timeouts**: Exponential backoff (2s, 4s, 8s) + increasing timeout (90s → 180s → 360s)
+2. **Rate Limiting**: Fixed 60s wait, no timeout increase
+3. **Session Expired**: Create new session with full context (no retry needed)
+4. **Usage Limits**: Skip advisor entirely for this debate
+5. **Unknown Errors**: Exponential backoff + linear timeout increase
 
-**On session resume failure fallback:**
+**Helper Functions:**
 ```bash
-# If resume by ID fails, inject full context manually
-cd "$DEBATE" && gemini "Your previous responses were:
-R1: {...}
-R2: {...}
+# Exponential backoff retry for advisor calls
+run_advisor_with_retry() {
+    local advisor="$1"
+    local prompt="$2"
+    local max_retries="${3:-3}"
+    local base_timeout="${4:-90}"
 
-Other advisor said: {...}
+    local attempt=1
+    local timeout=$base_timeout
 
-Continue the debate."
+    while [[ $attempt -le $max_retries ]]; do
+        echo "[$advisor] Attempt $attempt/$max_retries (timeout: ${timeout}s)" >&2
+
+        if run_advisor "$advisor" "$prompt" "$timeout"; then
+            echo "[$advisor] Response received" >&2
+            return 0
+        fi
+
+        local exit_code=$?
+        local error_output=$(get_last_error 2>&1)
+
+        if [[ $attempt -eq $max_retries ]]; then
+            echo "ERROR: [$advisor] Failed after $max_retries attempts" >&2
+            return 1
+        fi
+
+        local failure_mode=$(detect_failure_mode "$advisor" "$error_output")
+
+        case "$failure_mode" in
+            rate_limit)
+                echo "WARN: [$advisor] Rate limit, waiting 60s..." >&2
+                sleep 60
+                ;;
+            network_timeout)
+                local wait_time=$((2 ** (attempt - 1)))
+                echo "WARN: [$advisor] Timeout, waiting ${wait_time}s..." >&2
+                sleep "$wait_time"
+                timeout=$((timeout * 2))
+                ;;
+            session_expired)
+                echo "WARN: [$advisor] Session expired" >&2
+                return 2
+                ;;
+            usage_limit)
+                echo "ERROR: [$advisor] Usage limit reached" >&2
+                return 3
+                ;;
+            *)
+                local wait_time=$((2 ** (attempt - 1)))
+                echo "WARN: [$advisor] Error, waiting ${wait_time}s..." >&2
+                sleep "$wait_time"
+                timeout=$((timeout + base_timeout))
+                ;;
+        esac
+
+        attempt=$((attempt + 1))
+    done
+
+    return 1
+}
+
+# Detect failure mode from error output
+detect_failure_mode() {
+    local advisor="$1"
+    local error_output="$2"
+
+    # Session-related errors
+    if echo "$error_output" | grep -Eqi "session.*(expired|not found|invalid|closed)"; then
+        echo "session_expired"
+        return
+    fi
+
+    # Rate limiting (advisor-specific patterns)
+    if [[ "$advisor" == "gemini" ]]; then
+        if echo "$error_output" | grep -Eqi "quota exceeded|rate limit|too many requests|429"; then
+            echo "rate_limit"
+            return
+        fi
+    elif [[ "$advisor" == "codex" ]]; then
+        if echo "$error_output" | grep -Eqi "rate limit|too many requests|slow down|429"; then
+            echo "rate_limit"
+            return
+        fi
+    fi
+
+    # Network timeouts
+    if echo "$error_output" | grep -Eqi "timeout|timed out|connection.*closed|ETIMEDOUT|ECONNRESET"; then
+        echo "network_timeout"
+        return
+    fi
+
+    # Usage/quota limits
+    if echo "$error_output" | grep -Eqi "usage.*limit|quota.*exceeded|billing|payment|403|insufficient.*funds"; then
+        echo "usage_limit"
+        return
+    fi
+
+    # Unknown
+    echo "unknown_error"
+}
+```
+
+**Return Codes:**
+- `0`: Success
+- `1`: All retries failed (fallback to full context or skip)
+- `2`: Session expired (recreate session)
+- `3`: Usage limit (skip advisor)
+
+**Timeout Progression:**
+| Attempt | Network Timeout | Rate Limit | Usage Limit |
+|---------|----------------|------------|-------------|
+| 1 | 90s | 90s | N/A (immediate skip) |
+| 2 | 180s (2x) | 90s (same) | - |
+| 3 | 360s (2x) | 90s (same) | - |
+
+**Wait Times (Backoff):**
+| Attempt | Network/Unknown | Rate Limit |
+|---------|----------------|------------|
+| 1→2 | 2s | 60s |
+| 2→3 | 4s | 60s |
+| 3+ | 8s | 60s |
+
+**Usage in debate orchestration:**
+```bash
+# Round 1: Gemini with retry
+cd "$PROJECT" && run_advisor_with_retry "gemini" "$prompt" 3 90
+case $? in
+    0) echo "Gemini successful" ;;
+    2) echo "Session expired, creating new..." ;;
+    3) echo "Usage limit, skipping Gemini" ;;
+    *) echo "Gemini failed, continuing without" ;;
+esac
 ```
 
 ### Phase 5: Synthesis Generation
