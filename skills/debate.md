@@ -529,6 +529,18 @@ detect_failure_mode() {
         return
     fi
 
+    # CLI not found
+    if echo "$error_output" | grep -Eqi "command not found|No such file"; then
+        echo "cli_not_found"
+        return
+    fi
+
+    # Permission errors
+    if echo "$error_output" | grep -Eqi "permission denied|access denied|unauthorized|401"; then
+        echo "permission_error"
+        return
+    fi
+
     # Unknown
     echo "unknown_error"
 }

@@ -303,6 +303,48 @@ EOF
     fi
 }
 
+# Test 8: CLI not found handling
+test_cli_not_found() {
+    echo -n "Test 8: CLI not found handling... "
+
+    echo "1" > "$TEST_DIR/attempt_gemini.txt"
+    echo "gemini: command not found" > "$TEST_DIR/scenario_gemini.txt"
+    echo "gemini: command not found" > "$TEST_DIR/last_error.txt"
+
+    run_advisor_with_retry "gemini" "test" 3 90 >/dev/null 2>&1
+    result=$?
+
+    # Should retry and eventually fail with code 1 (cli_not_found not a special case)
+    if [[ $result -eq 1 ]]; then
+        echo -e "${GREEN}✓ PASS${NC} (return code 1)"
+        return 0
+    else
+        echo -e "${RED}✗ FAIL${NC} (expected code 1, got $result)"
+        return 1
+    fi
+}
+
+# Test 9: Permission error handling
+test_permission_error() {
+    echo -n "Test 9: Permission error handling... "
+
+    echo "1" > "$TEST_DIR/attempt_codex.txt"
+    echo "Error: Permission denied - unauthorized API key" > "$TEST_DIR/scenario_codex.txt"
+    echo "Error: Permission denied - unauthorized API key" > "$TEST_DIR/last_error.txt"
+
+    run_advisor_with_retry "codex" "test" 3 90 >/dev/null 2>&1
+    result=$?
+
+    # Should retry and eventually fail with code 1
+    if [[ $result -eq 1 ]]; then
+        echo -e "${GREEN}✓ PASS${NC} (return code 1)"
+        return 0
+    else
+        echo -e "${RED}✗ FAIL${NC} (expected code 1, got $result)"
+        return 1
+    fi
+}
+
 # Run all tests
 run_all_tests() {
     echo ""
@@ -324,6 +366,8 @@ run_all_tests() {
         test_usage_limit
         test_all_retries_exhausted
         test_timeout_doubling
+        test_cli_not_found
+        test_permission_error
     )
 
     for test in "${tests[@]}"; do
