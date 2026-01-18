@@ -521,6 +521,109 @@ Combine all round files into a single chronological transcript:
 
 ---
 
+## State Update Helper
+
+**IMPORTANT**: Always use this helper to update state.json safely. Direct writes (`echo > state.json`) risk corruption.
+
+```bash
+update_debate_state() {
+    local state_file="$1"
+    local new_data="$2"
+
+    # Check if flock is available
+    if ! command -v flock &>/dev/null; then
+        echo "WARN: flock not available, skipping file locking" >&2
+        # Fallback: Direct atomic write without locking
+        echo "$new_data" > "${state_file}.tmp" || return 1
+        if command -v jq &>/dev/null && ! jq empty "${state_file}.tmp" 2>/dev/null; then
+            rm "${state_file}.tmp" 2>/dev/null
+            return 1
+        fi
+        mv "${state_file}.tmp" "$state_file" || return 1
+        return 0
+    fi
+
+    # Atomic write with file locking
+    (
+        # Acquire exclusive lock (timeout after 5s)
+        flock -x -w 5 200 || {
+            echo "ERROR: Could not acquire lock on $state_file after 5s" >&2
+            return 1
+        }
+
+        # Create backup of current state
+        if [[ -f "$state_file" ]]; then
+            cp "$state_file" "${state_file}.backup" 2>/dev/null
+        fi
+
+        # Write to temporary file first (atomic operation)
+        echo "$new_data" > "${state_file}.tmp" || {
+            echo "ERROR: Failed to write new state to ${state_file}.tmp" >&2
+            return 1
+        }
+
+        # Validate JSON syntax before committing (optional but recommended)
+        if command -v jq &>/dev/null; then
+            if ! jq empty "${state_file}.tmp" 2>/dev/null; then
+                echo "ERROR: Invalid JSON in new state" >&2
+                rm "${state_file}.tmp" 2>/dev/null
+                return 1
+            fi
+        fi
+
+        # Atomic move (replaces file instantly, no partial write risk)
+        mv "${state_file}.tmp" "$state_file" || {
+            echo "ERROR: Failed to atomically update $state_file" >&2
+            # Restore from backup if move failed
+            if [[ -f "${state_file}.backup" ]]; then
+                echo "WARN: Restoring from backup..." >&2
+                mv "${state_file}.backup" "$state_file" 2>/dev/null
+            fi
+            return 1
+        }
+
+        # Success - remove backup and temp files
+        rm "${state_file}.backup" 2>/dev/null
+        rm "${state_file}.tmp" 2>/dev/null
+
+    ) 200>"${state_file}.lock"  # Lock file scoped to state_file
+}
+```
+
+**Usage**:
+```bash
+# Update current_round in state.json
+DEBATE="debates/007-topic"
+STATE_FILE="$DEBATE/state.json"
+
+# Read current state
+current_state=$(cat "$STATE_FILE")
+
+# Modify state (using jq or string manipulation)
+new_state=$(echo "$current_state" | jq '.current_round = 2')
+
+# Atomically update state
+update_debate_state "$STATE_FILE" "$new_state" || {
+    echo "FATAL: Failed to update debate state"
+    exit 1
+}
+```
+
+**Benefits**:
+- **Prevents corruption**: Atomic write ensures no partial updates
+- **Concurrent-safe**: File locking prevents race conditions (if flock available)
+- **Backup/restore**: Automatic recovery on write failure
+- **JSON validation**: Catches malformed data before committing (if jq available)
+
+**Platform Compatibility**:
+- **Linux**: Full support (flock native)
+- **macOS**: Fallback mode (atomic write without locking - install flock via Homebrew for full support: `brew install flock`)
+- **Windows/Git Bash**: Fallback mode (atomic write without locking)
+
+**Lock file cleanup**: The `.lock` file is automatically removed when the flock subshell exits.
+
+---
+
 ## State Management
 
 ### state.json
