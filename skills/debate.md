@@ -445,12 +445,35 @@ Continue the debate."
 
 ### Phase 5: Synthesis Generation
 
-**When to generate synthesis.md:**
+**When to generate synthesis.md and transcript.md:**
 - After ALL rounds complete
 - After detecting consensus (optional early stop)
 - After a failure that ends the debate
 
-**How to generate synthesis.md:**
+**Step 1: Generate transcript.md**
+
+Combine all round files into a single chronological transcript:
+```markdown
+# Debate Transcript: {topic}
+
+## Round 1
+
+### Gemini
+{content of r001_gemini.md}
+
+### Codex
+{content of r001_codex.md}
+
+### Claude
+{content of r001_claude.md}
+
+---
+
+## Round 2
+{repeat pattern for all rounds}
+```
+
+**Step 2: Generate synthesis.md**
 
 1. Read all round files from `rounds/` folder
 2. Analyze for:
@@ -576,9 +599,10 @@ Continue the debate."
 {cwd}/debates/
 |-- index.json
 +-- NNN-{topic-slug}/
-    |-- context.md
-    |-- state.json
-    |-- synthesis.md
+    |-- context.md        <-- Initial topic/config (created at start)
+    |-- state.json        <-- Debate state (updated each round)
+    |-- transcript.md     <-- Combined chronological record (created at end)
+    |-- synthesis.md      <-- Analysis and recommendations (created at end)
     +-- rounds/
         |-- r001_gemini.md
         |-- r001_codex.md

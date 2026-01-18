@@ -437,9 +437,9 @@
         </div>
 
         <div class="tabs" id="tabs" style="display: none;">
-            <div class="tab active" data-tab="transcript">Transcript</div>
-            <div class="tab" data-tab="synthesis">Synthesis</div>
+            <div class="tab active" data-tab="synthesis">Synthesis</div>
             <div class="tab" data-tab="rounds">Rounds</div>
+            <div class="tab" data-tab="transcript">Transcript</div>
             <div class="tab" data-tab="context">Context</div>
             <div class="tab" data-tab="state">State</div>
         </div>
@@ -460,7 +460,7 @@
         // Debates data loaded from folder
         let debates = [];
         let currentDebate = null;
-        let currentTab = 'transcript';
+        let currentTab = 'synthesis';
 
         // Auto-discover debates from index.json
         // The /debate skill maintains this index file automatically
@@ -500,7 +500,7 @@
                             state: state,
                             topic: state.topic || path.split('/').pop(),
                             status: state.status || 'unknown',
-                            rounds: state.rounds_completed?.length || 0,
+                            rounds: state.current_round || state.rounds_total || state.rounds_completed?.length || 0,
                             date: state.created_at || 'Unknown'
                         });
                     }
@@ -578,18 +578,39 @@
             try {
                 switch(tab) {
                     case 'transcript':
-                        const transcript = await fetchFile(`${debate.path}/transcript.md`);
-                        contentArea.innerHTML = `<div class="markdown-content">${marked.parse(transcript)}</div>`;
+                        try {
+                            const transcript = await fetchFile(`${debate.path}/transcript.md`);
+                            contentArea.innerHTML = `<div class="markdown-content">${marked.parse(transcript)}</div>`;
+                        } catch (e) {
+                            contentArea.innerHTML = `<div class="empty-state">
+                                <div class="empty-state-icon">📝</div>
+                                <p>No transcript file. View individual rounds in the <strong>Rounds</strong> tab.</p>
+                            </div>`;
+                        }
                         break;
 
                     case 'synthesis':
-                        const synthesis = await fetchFile(`${debate.path}/synthesis.md`);
-                        contentArea.innerHTML = `<div class="markdown-content">${marked.parse(synthesis)}</div>`;
+                        try {
+                            const synthesis = await fetchFile(`${debate.path}/synthesis.md`);
+                            contentArea.innerHTML = `<div class="markdown-content">${marked.parse(synthesis)}</div>`;
+                        } catch (e) {
+                            contentArea.innerHTML = `<div class="empty-state">
+                                <div class="empty-state-icon">🔄</div>
+                                <p>No synthesis yet. Debate may still be in progress.</p>
+                            </div>`;
+                        }
                         break;
 
                     case 'context':
-                        const context = await fetchFile(`${debate.path}/context.md`);
-                        contentArea.innerHTML = `<div class="markdown-content">${marked.parse(context)}</div>`;
+                        try {
+                            const context = await fetchFile(`${debate.path}/context.md`);
+                            contentArea.innerHTML = `<div class="markdown-content">${marked.parse(context)}</div>`;
+                        } catch (e) {
+                            contentArea.innerHTML = `<div class="empty-state">
+                                <div class="empty-state-icon">📋</div>
+                                <p>No context file for this debate.</p>
+                            </div>`;
+                        }
                         break;
 
                     case 'state':
@@ -611,44 +632,58 @@
 
         async function loadRoundsView(debate) {
             const contentArea = document.getElementById('contentArea');
-            const rounds = debate.state.rounds_completed || [];
+            const state = debate.state;
+
+            // Determine number of rounds from state
+            const numRounds = state.current_round || state.rounds_total ||
+                              (state.rounds_completed ? state.rounds_completed.length : 0);
+
+            // Determine participants - default to gemini/codex, but support claude too
+            const participants = state.participants || ['gemini', 'codex'];
+            const isThreeWay = participants.includes('claude');
 
             let html = '<div class="rounds-container">';
 
-            for (let i = 0; i < rounds.length; i++) {
-                const round = rounds[i];
-                let geminiContent = '', codexContent = '';
+            for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
+                const roundPadded = String(roundNum).padStart(3, '0');
 
-                try {
-                    geminiContent = await fetchFile(`${debate.path}/${round.gemini}`);
-                } catch (e) {
-                    geminiContent = '*No response*';
+                // Load content for each participant
+                let responses = {};
+                for (const participant of participants) {
+                    const filePath = `${debate.path}/rounds/r${roundPadded}_${participant}.md`;
+                    try {
+                        responses[participant] = await fetchFile(filePath);
+                    } catch (e) {
+                        responses[participant] = '*No response yet*';
+                    }
                 }
 
-                try {
-                    codexContent = await fetchFile(`${debate.path}/${round.codex}`);
-                } catch (e) {
-                    codexContent = '*No response*';
-                }
+                // Determine grid columns based on participant count
+                const gridCols = isThreeWay ? 'grid-template-columns: 1fr 1fr 1fr;' : 'grid-template-columns: 1fr 1fr;';
 
                 html += `
                     <div class="round-card">
                         <div class="round-header">
-                            <span>Round ${round.round || i + 1}</span>
+                            <span>Round ${roundNum}</span>
                         </div>
-                        <div class="round-responses">
+                        <div class="round-responses" style="${gridCols}">
+                `;
+
+                // Add response for each participant
+                for (const participant of participants) {
+                    const badgeClass = `advisor-${participant}`;
+                    const displayName = participant.charAt(0).toUpperCase() + participant.slice(1);
+                    html += `
                             <div class="advisor-response">
                                 <div class="advisor-header">
-                                    <span class="advisor-badge advisor-gemini">Gemini</span>
+                                    <span class="advisor-badge ${badgeClass}">${displayName}</span>
                                 </div>
-                                <div class="markdown-content">${marked.parse(geminiContent)}</div>
+                                <div class="markdown-content">${marked.parse(responses[participant])}</div>
                             </div>
-                            <div class="advisor-response">
-                                <div class="advisor-header">
-                                    <span class="advisor-badge advisor-codex">Codex</span>
-                                </div>
-                                <div class="markdown-content">${marked.parse(codexContent)}</div>
-                            </div>
+                    `;
+                }
+
+                html += `
                         </div>
                     </div>
                 `;
