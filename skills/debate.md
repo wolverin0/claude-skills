@@ -421,6 +421,100 @@ Respond to both. Where do you agree? Disagree? {max_words} words max."
 - Update your position based on new arguments
 - Save to `rounds/r00N_claude.md`
 
+---
+
+## Enhanced Logging Helpers
+
+### Contextual Error Messages
+
+```bash
+log_contextual_error() {
+    local advisor="$1"
+    local error_type="$2"
+    local error_details="$3"
+    local recovery_action="$4"
+
+    echo "" >&2
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+    echo "ERROR: $error_type" >&2
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+    echo "" >&2
+    echo "Advisor: $advisor" >&2
+    echo "Details: $error_details" >&2
+    echo "" >&2
+    echo "Troubleshooting Steps:" >&2
+
+    case "$error_type" in
+        "Session Resume Failed")
+            echo "  1. Check if $advisor CLI is responsive:" >&2
+            [[ "$advisor" == "gemini" ]] && echo "     gemini --version" >&2 || echo "     codex --version" >&2
+            echo "  2. List active sessions:" >&2
+            [[ "$advisor" == "gemini" ]] && echo "     gemini --list-sessions" >&2 || echo "     codex resume --all" >&2
+            echo "  3. Creating new session with full context" >&2
+            ;;
+        "Network Timeout")
+            echo "  1. Check internet connection" >&2
+            echo "  2. Retrying with longer timeout (automatic)" >&2
+            echo "  3. If persistent, check firewall/proxy" >&2
+            ;;
+        "Rate Limit")
+            echo "  1. Waiting 60s for rate limit reset..." >&2
+            echo "  2. If persistent, check API quota:" >&2
+            if [[ "$advisor" == "gemini" ]]; then
+                echo "     https://console.cloud.google.com/apis/dashboard" >&2
+            else
+                echo "     https://platform.openai.com/usage" >&2
+            fi
+            ;;
+        "Usage Limit")
+            echo "  1. Check API quota/billing:" >&2
+            if [[ "$advisor" == "gemini" ]]; then
+                echo "     https://console.cloud.google.com/billing" >&2
+            else
+                echo "     https://platform.openai.com/account/billing" >&2
+            fi
+            echo "  2. Continuing without $advisor" >&2
+            ;;
+        "CLI Not Found")
+            echo "  1. Install $advisor CLI:" >&2
+            if [[ "$advisor" == "gemini" ]]; then
+                echo "     npm install -g @anthropic-ai/gemini-cli" >&2
+            else
+                echo "     # Follow Codex installation guide" >&2
+            fi
+            echo "  2. Verify with: $advisor --version" >&2
+            ;;
+    esac
+
+    echo "" >&2
+    echo "Recovery: $recovery_action" >&2
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" >&2
+    echo "" >&2
+}
+
+log_advisor_success() {
+    local advisor="$1"
+    local round="$2"
+    local response_length="$3"
+    local time_taken="$4"
+
+    echo "✓ $advisor Round $round completed ($response_length words, ${time_taken}s)" >&2
+}
+```
+
+**Usage**:
+```bash
+# On error
+log_contextual_error "gemini" "Session Resume Failed" \
+    "Session dcf99acf not found" \
+    "Creating new session with full context"
+
+# On success
+log_advisor_success "gemini" 1 287 12
+```
+
+---
+
 ### Phase 4: Handle Failures
 
 | Failure | Action |
