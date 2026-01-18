@@ -464,9 +464,7 @@
 
         // Auto-discover debates from index.json
         // The /debate skill maintains this index file automatically
-        const INDEX_PATHS = [
-            'debates/index.json'
-        ];
+        // Viewer runs from debates/ folder, so index.json is in same directory
 
         async function loadDebates() {
             const debateList = document.getElementById('debateList');
@@ -475,18 +473,16 @@
             debates = [];
             let debatePaths = [];
 
-            // Try to load index files
-            for (const indexPath of INDEX_PATHS) {
-                try {
-                    const response = await fetch(indexPath);
-                    if (response.ok) {
-                        const index = await response.json();
-                        const basePath = indexPath.replace('/index.json', '');
-                        debatePaths.push(...index.debates.map(d => `${basePath}/${d}`));
-                    }
-                } catch (e) {
-                    console.log(`No index at ${indexPath}`);
+            // Load index.json from same directory as viewer
+            try {
+                const response = await fetch('index.json');
+                if (response.ok) {
+                    const index = await response.json();
+                    // Debates are subdirectories in same folder as viewer
+                    debatePaths.push(...index.debates);
                 }
+            } catch (e) {
+                console.log('No index.json found:', e);
             }
 
             // Load each debate's state

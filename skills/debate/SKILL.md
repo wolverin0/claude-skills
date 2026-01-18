@@ -332,10 +332,18 @@ codex resume --all
 1. Parse user's request and flags
 2. Validate flag combinations (see Flag Precedence Rules)
 3. Generate topic slug (from `--topic` or auto)
-4. Create folder: `{cwd}/debates/NNN-{topic-slug}/`
-5. Create `rounds/` subfolder
-6. Initialize `state.json` and `context.md`
-7. Store debate folder path for all subsequent commands
+4. Create debates folder if needed: `{cwd}/debates/`
+5. **Deploy viewer**: Copy `viewer.html` from skill folder to `{cwd}/debates/viewer.html`
+   ```bash
+   # Find skill folder and copy viewer
+   SKILL_DIR="$(dirname "$(find ~/.claude/skills -name 'SKILL.md' -path '*/debate/*' 2>/dev/null | head -1)")"
+   cp "$SKILL_DIR/viewer.html" "{cwd}/debates/viewer.html"
+   ```
+6. Create debate folder: `{cwd}/debates/NNN-{topic-slug}/`
+7. Create `rounds/` subfolder
+8. Initialize `state.json` and `context.md`
+9. Update `debates/index.json` with new debate entry
+10. Store debate folder path for all subsequent commands
 
 ### Phase 2: File Path Resolution
 
@@ -597,7 +605,8 @@ Combine all round files into a single chronological transcript:
 
 ```
 {cwd}/debates/
-|-- index.json
+|-- viewer.html           <-- Deployed from skill folder on first run
+|-- index.json            <-- Debate index for viewer discovery
 +-- NNN-{topic-slug}/
     |-- context.md        <-- Initial topic/config (created at start)
     |-- state.json        <-- Debate state (updated each round)
@@ -641,6 +650,17 @@ Combine all round files into a single chronological transcript:
 
 ## Viewer Integration
 
-Serve with: `python -m http.server 8000` from `ai-debate-hub/`
+The viewer is automatically deployed to `{cwd}/debates/viewer.html` during Phase 1 setup.
 
-Viewer discovers debates via `debates/index.json`.
+**To view debates:**
+```bash
+cd {cwd}/debates
+python -m http.server 8000
+# Open http://localhost:8000/viewer.html
+```
+
+**How it works:**
+- Viewer discovers debates via `index.json` in the same folder
+- Each debate's `state.json` provides metadata (topic, rounds, status)
+- Rounds tab shows all participant responses side-by-side (2 or 3 columns)
+- Synthesis tab shows the final analysis and recommendations

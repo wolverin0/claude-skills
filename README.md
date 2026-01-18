@@ -55,12 +55,15 @@ AI Debate Hub creates a three-way discussion where all three AI systems analyze 
 
 1. Clone this repository into your Claude Code skills directory:
 ```bash
+cd ~/.claude/skills
 git clone https://github.com/wolverin0/claude-skills.git
 ```
 
-2. Copy the skill to your project or reference it directly:
+2. The skill is now available at `~/.claude/skills/claude-skills/skills/debate/SKILL.md`
+
+Or copy just the debate skill:
 ```bash
-cp claude-skills/ai-debate-hub/skills/debate.md ~/.claude/skills/
+cp -r claude-skills/skills/debate ~/.claude/skills/
 ```
 
 ## Usage
@@ -127,11 +130,13 @@ Synthesis:
 ### File Structure
 
 ```
-debates/
-|-- index.json              # Debate registry
+{project}/debates/
+|-- viewer.html             # Auto-deployed from skill folder
+|-- index.json              # Debate registry for viewer
 +-- NNN-topic-slug/
     |-- context.md          # Initial context
     |-- state.json          # Session UUIDs, status
+    |-- transcript.md       # Combined chronological record
     |-- synthesis.md        # Final synthesis (all 3 perspectives)
     +-- rounds/
         |-- r001_gemini.md
@@ -143,6 +148,22 @@ debates/
         +-- ...
 ```
 
+### Viewing Debates
+
+The skill automatically deploys a web viewer to your debates folder:
+
+```bash
+cd {project}/debates
+python -m http.server 8000
+# Open http://localhost:8000/viewer.html
+```
+
+The viewer shows:
+- **Synthesis** - Final analysis and recommendations
+- **Rounds** - Side-by-side comparison (2 or 3 columns)
+- **Transcript** - Full chronological debate record
+- **State** - Debug view of debate metadata
+
 ## Debate Styles
 
 | Style | Behavior | Default Rounds |
@@ -151,15 +172,6 @@ debates/
 | `thorough` | Multi-round, verify claims | 3 |
 | `adversarial` | One proposes, one critiques | 3 |
 | `collaborative` | "Yes, and..." building | 2 |
-
-## Example Debates
-
-This repository includes test debates demonstrating the system:
-
-- `007-session-test` - Session resumption validation
-- `008-skill-final-review` - Meta-review of the skill itself
-- `009-cli-validation` - CLI flag testing
-- `010-e2e-test` - Full end-to-end architecture test
 
 ## Development
 
