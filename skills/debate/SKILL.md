@@ -342,7 +342,16 @@ codex resume --all
 6. Create debate folder: `{cwd}/debates/NNN-{topic-slug}/`
 7. Create `rounds/` subfolder
 8. Initialize `state.json` and `context.md`
-9. Update `debates/index.json` with new debate entry
+9. **CRITICAL: Update `debates/index.json`** - Add new debate to the array:
+   ```json
+   {
+     "debates": [
+       "001-existing-debate",
+       "002-new-debate"    // <-- ADD THIS
+     ]
+   }
+   ```
+   If index.json doesn't exist, create it. The viewer REQUIRES this file!
 10. Store debate folder path for all subsequent commands
 
 ### Phase 2: File Path Resolution
