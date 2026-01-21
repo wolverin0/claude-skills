@@ -1,4 +1,4 @@
-# Skill Auto-Healing Module
+# Skill Retrospective Learning Module
 
 A reusable module that enables ANY skill to automatically evaluate its own execution, learn from mistakes, and improve over time through evidence-based retrospectives.
 
@@ -268,15 +268,15 @@ Before finishing, verify:
 
 ## Part 4: Integration Guide
 
-### How to Add Auto-Healing to Any Skill
+### How to Add Retrospective Learning to Any Skill
 
 **Option A: Reference This Module**
 
 Add to your skill's header:
 ```markdown
 ## Dependencies
-This skill uses the Auto-Healing module for self-evaluation.
-See: `skill-auto-healing.md`
+This skill uses the Retrospective Learning module for self-evaluation.
+See: `skill-retrospective learning.md`
 
 At skill START: Follow "Part 1: Trigger Capture"
 At skill END: Follow "Part 3: Retrospective"
@@ -443,7 +443,7 @@ Use the complete template from Part 3, Step 5.
 
 ## Part 8: Skill Improvement Loop
 
-### How Auto-Healing Improves Skills Over Time
+### How Retrospective Learning Improves Skills Over Time
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -521,7 +521,7 @@ Select the most recently modified file.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│           SKILL AUTO-HEALING QUICK REFERENCE            │
+│           SKILL RETROSPECTIVE LEARNING QUICK REFERENCE            │
 ├─────────────────────────────────────────────────────────┤
 │                                                         │
 │  AT START:                                              │
@@ -563,7 +563,7 @@ Select the most recently modified file.
 
 ### ⚠️ WARNING: LLM Behavior Pattern
 
-**When you ask Claude to integrate auto-healing into your skill, it will likely:**
+**When you ask Claude to integrate retrospective learning into your skill, it will likely:**
 - ❌ Completely rewrite your skill from scratch
 - ❌ Remove existing phases and content
 - ❌ Change your skill's structure
@@ -580,7 +580,7 @@ Select the most recently modified file.
 
 **In your prompt, explicitly state:**
 ```
-"Backup my SKILL.md with timestamp, then apply skill-auto-healing.md to it.
+"Backup my SKILL.md with timestamp, then apply skill-retrospective learning.md to it.
 
 CRITICAL REQUIREMENTS:
 - Create backup: SKILL.md.backup-{timestamp}
@@ -760,7 +760,7 @@ After integration, verify:
 - [ ] **All middle phases renumbered correctly** (+1 from original)
 - [ ] **Critical blockers section added at top**
 - [ ] **Red flags include retrospective rules**
-- [ ] **Checklist includes auto-healing items**
+- [ ] **Checklist includes retrospective learning items**
 
 ### Common Integration Failures
 

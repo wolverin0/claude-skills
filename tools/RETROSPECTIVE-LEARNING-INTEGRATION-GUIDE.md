@@ -1,13 +1,13 @@
-# Auto-Healing Integration Guide
+# Retrospective Learning Integration Guide
 
-**How to add auto-healing to your existing skill (based on actual feature-validation integration)**
+**How to add retrospective learning to your existing skill (based on actual feature-validation integration)**
 
 ---
 
 ## Quick Start
 
 ```
-Backup my SKILL.md with timestamp, then apply skill-auto-healing.md to it.
+Backup my SKILL.md with timestamp, then apply skill-retrospective learning.md to it.
 
 CRITICAL:
 - Create backup: SKILL.md.backup-{timestamp}

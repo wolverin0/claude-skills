@@ -10,12 +10,13 @@ A collection of Claude Code skills and tools for enhanced development workflows.
 ai-debate-hub/
 ├── skills/               # Claude Code skills
 │   ├── debate/          # Three-way debate skill
-│   ├── validation/      # Comprehensive app validation skill
-│   ├── feature-validation-SKILL.md  # Feature validation example
-│   └── report-template.html          # HTML report template
+│   └── validation/      # Comprehensive app validation skill
 ├── tools/               # Reusable tools and frameworks
-│   ├── skill-auto-healing.md
-│   └── AUTO-HEALING-INTEGRATION-GUIDE.md
+│   ├── retrospective-learning.md
+│   ├── RETROSPECTIVE-LEARNING-INTEGRATION-GUIDE.md
+│   └── sample/          # Reference implementations
+│       ├── feature-validation-SKILL.md
+│       └── report-template.html
 ├── debates/             # Generated debate transcripts
 └── tests/               # Test files
 ```
@@ -86,24 +87,24 @@ Automatically discovers and tests ALL interactive elements in your web applicati
 ---
 
 ### Feature Validation (Example Skill)
-**Location:** `skills/feature-validation-SKILL.md`
-**Purpose:** Reference implementation showing auto-healing integration
+**Location:** `tools/sample/feature-validation-SKILL.md`
+**Purpose:** Reference implementation showing retrospective learning integration
 
-This is an **example skill** demonstrating how auto-healing has been integrated into a real-world validation skill. It includes:
+This is an **example skill** demonstrating how retrospective learning has been integrated into a real-world validation skill. It includes:
 - Phase 1: Trigger capture (reads session transcript)
 - Phases 2-9: Feature testing workflow
 - Phase 10: Retrospective (evidence-based self-evaluation)
 
-**Use this as a reference** when integrating auto-healing into your own skills.
+**Use this as a reference** when integrating retrospective learning into your own skills.
 
-**Report Template:** `skills/report-template.html`
+**Report Template:** `tools/sample/report-template.html`
 
 ---
 
 ## 🛠️ Tools
 
-### Auto-Healing Module
-**Location:** `tools/skill-auto-healing.md`
+### Retrospective Learning Module
+**Location:** `tools/retrospective-learning.md`
 **Purpose:** Enables skills to learn from execution through evidence-based retrospectives
 
 A reusable module that adds self-evaluation and learning capabilities to any skill by:
@@ -123,15 +124,15 @@ A reusable module that adds self-evaluation and learning capabilities to any ski
 - Evidence-based self-assessment
 - Skill improvement recommendations
 
-**[Full Documentation →](tools/skill-auto-healing.md)**
+**[Full Documentation →](tools/retrospective-learning.md)**
 
 ---
 
-### Auto-Healing Integration Guide
-**Location:** `tools/AUTO-HEALING-INTEGRATION-GUIDE.md`
-**Purpose:** Step-by-step guide for adding auto-healing to your skills
+### Retrospective Learning Integration Guide
+**Location:** `tools/RETROSPECTIVE-LEARNING-INTEGRATION-GUIDE.md`
+**Purpose:** Step-by-step guide for adding retrospective learning to your skills
 
-A practical guide showing how to integrate the auto-healing module into existing skills with minimal changes.
+A practical guide showing how to integrate the retrospective learning module into existing skills with minimal changes.
 
 **What it provides:**
 - Copy-paste prompt template for Claude
@@ -143,7 +144,7 @@ A practical guide showing how to integrate the auto-healing module into existing
 
 **Quick Start:**
 ```
-Backup my SKILL.md with timestamp, then apply skill-auto-healing.md to it.
+Backup my SKILL.md with timestamp, then apply retrospective-learning.md to it.
 
 CRITICAL:
 - Create backup: SKILL.md.backup-{timestamp}
@@ -156,7 +157,7 @@ CRITICAL:
 Use feature-validation-SKILL.md as reference.
 ```
 
-**[Full Integration Guide →](tools/AUTO-HEALING-INTEGRATION-GUIDE.md)**
+**[Full Integration Guide →](tools/RETROSPECTIVE LEARNING-INTEGRATION-GUIDE.md)**
 
 ---
 
@@ -206,9 +207,9 @@ ln -s $(pwd)/skills/validation ~/.claude/skills/validation
 /validate --fresh     # Start fresh
 ```
 
-### 4. Add Auto-Healing to Your Skills
+### 4. Add Retrospective Learning to Your Skills
 
-Follow the [Auto-Healing Integration Guide](tools/AUTO-HEALING-INTEGRATION-GUIDE.md) to add self-evaluation capabilities to your own skills.
+Follow the [Retrospective Learning Integration Guide](tools/RETROSPECTIVE LEARNING-INTEGRATION-GUIDE.md) to add self-evaluation capabilities to your own skills.
 
 ---
 
@@ -242,7 +243,7 @@ python -m http.server 8000
 - [Claude-in-Chrome MCP Extension](https://github.com/anthropics/claude-in-chrome) - Browser automation via MCP
 - Running web application (dev server or static site)
 
-### For Auto-Healing
+### For Retrospective Learning
 - Claude Code (already required for skills)
 - Session transcripts must be accessible at `~/.claude/projects/{project-slug}/*.jsonl`
 
@@ -253,15 +254,15 @@ python -m http.server 8000
 ### Skills
 - **[Debate Skill Documentation](skills/debate/README.md)** - Full debate skill usage guide
 - **[Validation Skill Documentation](skills/validation/README.md)** - Comprehensive app validation guide
-- **[Feature Validation Example](skills/feature-validation-SKILL.md)** - Reference implementation with auto-healing
+- **[Feature Validation Example](tools/sample/feature-validation-SKILL.md)** - Reference implementation with retrospective learning
 
 ### Tools
-- **[Auto-Healing Module](tools/skill-auto-healing.md)** - Technical documentation for the auto-healing module
-- **[Integration Guide](tools/AUTO-HEALING-INTEGRATION-GUIDE.md)** - How to add auto-healing to your skills
+- **[Retrospective Learning Module](tools/retrospective-learning.md)** - Technical documentation for the retrospective learning module
+- **[Integration Guide](tools/RETROSPECTIVE-LEARNING-INTEGRATION-GUIDE.md)** - How to add retrospective learning to your skills
 
 ---
 
-## 🎨 Example: Auto-Healing in Action
+## 🎨 Example: Retrospective Learning in Action
 
 **Before integration:**
 ```markdown
@@ -300,8 +301,8 @@ git diff --name-only HEAD~5
 
 Contributions welcome! Areas of interest:
 - New debate styles or moderator modes
-- Additional skills with auto-healing integration
-- Improvements to auto-healing module
+- Additional skills with retrospective learning integration
+- Improvements to retrospective learning module
 - Better visualization in debate viewer
 - Bug fixes and documentation improvements
 
@@ -338,4 +339,4 @@ MIT License - See LICENSE file for details
 ---
 
 **Built with Claude Code**
-Demonstrating self-improving skills through auto-healing and collaborative AI debate.
+Demonstrating self-improving skills through retrospective learning and collaborative AI debate.
