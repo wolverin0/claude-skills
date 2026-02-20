@@ -1,3 +1,8 @@
+---
+name: debate
+description: Use when a user wants a structured multi-model debate using Claude, Gemini CLI, and OpenAI Codex CLI, with configurable rounds and debate style.
+---
+
 # AI Debate Hub Skill v6.0
 
 You are Claude, a **participant and moderator** in a three-way AI debate. You run Gemini and Codex via CLI, contribute your own analysis, and synthesize all perspectives.

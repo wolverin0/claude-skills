@@ -1,3 +1,8 @@
+﻿---
+name: validation
+description: Use when implementation is complete and needs comprehensive UI and flow validation with evidence-based reporting.
+---
+
 # Validation Skill
 
 Comprehensive app validation with REAL verification - discovers all interactive elements, tests them with actual verification, and generates HTML reports.
@@ -130,10 +135,10 @@ Read: {project}/test-manifest/validation-state.json
 
 **If file exists AND status = "in_progress":**
 - Check `currentPhase` value
-- If "discover" with discovery incomplete → Continue discovery
-- If "test" with pending items → Continue testing
-- If "test" with no pending items → Move to report
-- If "report" → Generate report
+- If "discover" with discovery incomplete â†’ Continue discovery
+- If "test" with pending items â†’ Continue testing
+- If "test" with no pending items â†’ Move to report
+- If "report" â†’ Generate report
 
 **If file exists AND status = "completed":**
 - If `--fresh` flag provided: delete state, start fresh
@@ -144,9 +149,9 @@ Read: {project}/test-manifest/validation-state.json
 Based on `currentPhase`, read the appropriate phase file:
 
 ```
-phases/DISCOVER.md  → Discovery phase
-phases/TEST.md      → Testing phase
-phases/REPORT.md    → Report generation
+phases/DISCOVER.md  â†’ Discovery phase
+phases/TEST.md      â†’ Testing phase
+phases/REPORT.md    â†’ Report generation
 ```
 
 ### Step 3: Execute Phase
@@ -218,13 +223,13 @@ Created by this skill:
 
 ```
 1. mcp__claude-in-chrome__navigate url="{appUrl}"
-2. mcp__claude-in-chrome__read_page                    → Get element refs
-3. mcp__claude-in-chrome__resize_window width=375      → Set viewport
-4. mcp__claude-in-chrome__computer action="screenshot" → Take screenshot
+2. mcp__claude-in-chrome__read_page                    â†’ Get element refs
+3. mcp__claude-in-chrome__resize_window width=375      â†’ Set viewport
+4. mcp__claude-in-chrome__computer action="screenshot" â†’ Take screenshot
 5. ANALYZE the screenshot (Claude sees the image)
-6. mcp__claude-in-chrome__click ref="ref_5"            → Click button
-7. mcp__claude-in-chrome__read_page                    → Verify outcome
-8. mcp__claude-in-chrome__read_console_messages        → Check for errors
+6. mcp__claude-in-chrome__click ref="ref_5"            â†’ Click button
+7. mcp__claude-in-chrome__read_page                    â†’ Verify outcome
+8. mcp__claude-in-chrome__read_console_messages        â†’ Check for errors
 ```
 
 ### Screenshot Handling
@@ -364,3 +369,4 @@ Top Issues:
 **Total:** ~2040 lines across 5 files
 
 **Context per phase:** ~700-1000 lines max (orchestrator + one phase)
+

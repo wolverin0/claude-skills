@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feature Validation Report - [PHASE_NAME]</title>
+  <style>
+    :root {
+      --pass: #22c55e;
+      --fail: #ef4444;
+      --warn: #f59e0b;
+      --info: #3b82f6;
+      --bg: #f9fafb;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    header h1 { margin: 0 0 10px 0; font-size: 2rem; }
+    header p { margin: 5px 0; opacity: 0.9; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .summary-card {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .summary-card .number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      display: block;
+    }
+
+    .summary-card .label {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .summary-card.pass .number { color: var(--pass); }
+    .summary-card.fail .number { color: var(--fail); }
+    .summary-card.warn .number { color: var(--warn); }
+    .summary-card.total .number { color: var(--info); }
+
+    section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    section h2 {
+      margin-top: 0;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .test-case {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+
+    .test-header {
+      padding: 15px 20px;
+      background: var(--bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .test-header h3 { margin: 0; font-size: 1rem; }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-badge.pass { background: #dcfce7; color: #166534; }
+    .status-badge.fail { background: #fee2e2; color: #991b1b; }
+    .status-badge.warn { background: #fef3c7; color: #92400e; }
+
+    .test-body {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .test-body p { margin: 10px 0; }
+    .test-body strong { color: var(--text-muted); }
+
+    .steps-list {
+      background: var(--bg);
+      padding: 15px 15px 15px 35px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+
+    .steps-list li { margin: 8px 0; }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .screenshot-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .screenshot-item img {
+      width: 100%;
+      display: block;
+    }
+
+    .screenshot-item figcaption {
+      padding: 10px;
+      background: var(--bg);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .console-error {
+      background: #fef2f2;
+      border-left: 4px solid var(--fail);
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .console-error pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font-size: 0.875rem;
+      color: #991b1b;
+    }
+
+    .console-error .location {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .no-errors {
+      background: #dcfce7;
+      border-left: 4px solid var(--pass);
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      color: #166534;
+    }
+
+    .files-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 10px;
+    }
+
+    .file-item {
+      background: var(--bg);
+      padding: 10px 15px;
+      border-radius: 6px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .file-icon { opacity: 0.5; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Collapsible details */
+    details summary {
+      cursor: pointer;
+      padding: 10px;
+      background: var(--bg);
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+
+    details[open] summary {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Feature Validation Report</h1>
+    <p><strong>Phase:</strong> [PHASE_NAME]</p>
+    <p><strong>Date:</strong> [TIMESTAMP]</p>
+    <p><strong>Project:</strong> [PROJECT_NAME]</p>
+  </header>
+
+  <div class="summary-grid">
+    <div class="summary-card total">
+      <span class="number">[TOTAL]</span>
+      <span class="label">Total Tests</span>
+    </div>
+    <div class="summary-card pass">
+      <span class="number">[PASSED]</span>
+      <span class="label">Passed</span>
+    </div>
+    <div class="summary-card fail">
+      <span class="number">[FAILED]</span>
+      <span class="label">Failed</span>
+    </div>
+    <div class="summary-card warn">
+      <span class="number">[WARNINGS]</span>
+      <span class="label">Warnings</span>
+    </div>
+  </div>
+
+  <section>
+    <h2>Test Results</h2>
+
+    <!-- REPEAT THIS BLOCK FOR EACH TEST -->
+    <div class="test-case">
+      <div class="test-header">
+        <h3>[TEST_NAME]</h3>
+        <span class="status-badge pass">PASS</span>
+      </div>
+      <div class="test-body">
+        <p><strong>Description:</strong> [TEST_DESCRIPTION]</p>
+        <p><strong>Steps Performed:</strong></p>
+        <ol class="steps-list">
+          <li>[STEP_1]</li>
+          <li>[STEP_2]</li>
+          <li>[STEP_3]</li>
+        </ol>
+        <p><strong>Result:</strong> [TEST_RESULT]</p>
+
+        <div class="screenshot-grid">
+          <figure class="screenshot-item">
+            <img src="[SCREENSHOT_PATH]" alt="[SCREENSHOT_ALT]">
+            <figcaption>[SCREENSHOT_CAPTION]</figcaption>
+          </figure>
+        </div>
+      </div>
+    </div>
+    <!-- END REPEAT BLOCK -->
+
+  </section>
+
+  <section>
+    <h2>Console Errors</h2>
+
+    <!-- IF NO ERRORS -->
+    <div class="no-errors">
+      No console errors detected during testing.
+    </div>
+
+    <!-- IF ERRORS EXIST - REPEAT FOR EACH -->
+    <div class="console-error">
+      <pre>[ERROR_MESSAGE]</pre>
+      <div class="location">Page: [ERROR_PAGE_URL]</div>
+    </div>
+    <!-- END REPEAT -->
+
+  </section>
+
+  <section>
+    <h2>Files Tested</h2>
+    <div class="files-list">
+      <!-- REPEAT FOR EACH FILE -->
+      <div class="file-item">
+        <span class="file-icon">📄</span>
+        [FILE_PATH]
+      </div>
+      <!-- END REPEAT -->
+    </div>
+  </section>
+
+  <section>
+    <h2>Implementation Details</h2>
+    <details>
+      <summary>View git diff summary</summary>
+      <pre>[GIT_DIFF_SUMMARY]</pre>
+    </details>
+
+    <details>
+      <summary>View test environment</summary>
+      <ul>
+        <li><strong>Dev Server:</strong> [DEV_SERVER_URL]</li>
+        <li><strong>Browser:</strong> Playwright Chromium</li>
+        <li><strong>Viewport:</strong> [VIEWPORT_SIZE]</li>
+      </ul>
+    </details>
+  </section>
+
+  <footer>
+    <p>Generated by Feature Validation Skill</p>
+    <p>Report saved to: /test/[PHASE_FOLDER]/report.html</p>
+  </footer>
+</body>
+</html>
