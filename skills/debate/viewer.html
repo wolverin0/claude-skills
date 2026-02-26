@@ -23,6 +23,23 @@
             --claude-color: #d97706;
         }
 
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #eaeef2;
+            --border: #d0d7de;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --accent-blue: #0969da;
+            --accent-green: #1a7f37;
+            --accent-purple: #8250df;
+            --accent-orange: #bf8700;
+            --accent-red: #cf222e;
+            --gemini-color: #1a73e8;
+            --codex-color: #0d8c6d;
+            --claude-color: #b45309;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -51,18 +68,29 @@
         .sidebar-header {
             padding: 20px;
             border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .sidebar-header h1 {
             font-size: 18px;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
-        .sidebar-header h1::before {
-            content: "🤖";
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
         }
 
         .debate-list {
@@ -99,7 +127,8 @@
             font-size: 12px;
             color: var(--text-secondary);
             display: flex;
-            gap: 12px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .status-badge {
@@ -117,6 +146,11 @@
         .status-in_progress {
             background: rgba(210, 153, 34, 0.2);
             color: var(--accent-orange);
+        }
+
+        .status-early_stop {
+            background: rgba(168, 113, 247, 0.2);
+            color: var(--accent-purple);
         }
 
         /* Main Content */
@@ -144,6 +178,13 @@
             gap: 16px;
             font-size: 13px;
             color: var(--text-secondary);
+            flex-wrap: wrap;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         /* Tabs */
@@ -293,6 +334,13 @@
             gap: 8px;
         }
 
+        .round-duration {
+            font-weight: 400;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: auto;
+        }
+
         .round-responses {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -335,6 +383,96 @@
         .advisor-claude {
             background: rgba(217, 119, 6, 0.2);
             color: var(--claude-color);
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .copy-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .copy-btn.copied {
+            background: rgba(63, 185, 80, 0.2);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .content-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+            gap: 8px;
+        }
+
+        /* Telemetry Panel */
+        .telemetry-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .telemetry-panel h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: var(--accent-blue);
+        }
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .telemetry-stat {
+            background: var(--bg-tertiary);
+            padding: 10px 14px;
+            border-radius: 6px;
+        }
+
+        .telemetry-stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .telemetry-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Error Banner */
+        .error-banner {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            font-size: 13px;
+        }
+
+        .error-banner-title {
+            font-weight: 600;
+            color: var(--accent-red);
+            margin-bottom: 4px;
         }
 
         /* Empty State */
@@ -393,8 +531,8 @@
         }
 
         .refresh-btn:hover {
-            background: #4a90e2;
             transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
         }
 
         /* Instructions */
@@ -416,16 +554,29 @@
             padding: 2px 6px;
             border-radius: 4px;
         }
+
+        /* Version Footer */
+        .sidebar-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="sidebar-header">
             <h1>AI Debate Hub</h1>
+            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+                <span id="themeIcon">Light</span>
+            </button>
         </div>
         <div class="debate-list" id="debateList">
             <div class="loading">Loading debates...</div>
         </div>
+        <div class="sidebar-footer">v6.0.0</div>
     </div>
 
     <div class="main-content">
@@ -446,14 +597,14 @@
 
         <div class="content-area" id="contentArea">
             <div class="empty-state">
-                <div class="empty-state-icon">💬</div>
-                <p>Select a debate to view its content</p>
+                <div class="empty-state-icon">Select a debate</div>
+                <p>Choose a debate from the sidebar to view its content</p>
             </div>
         </div>
     </div>
 
     <button class="refresh-btn" onclick="loadDebates()">
-        🔄 Refresh
+        Refresh
     </button>
 
     <script>
@@ -461,11 +612,28 @@
         let debates = [];
         let currentDebate = null;
         let currentTab = 'synthesis';
+        let rawFiles = {};  // Cache for copy-to-clipboard
+
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'light' ? 'dark' : 'light';
+            html.setAttribute('data-theme', next);
+            document.getElementById('themeIcon').textContent = next === 'light' ? 'Dark' : 'Light';
+            localStorage.setItem('debate-viewer-theme', next);
+        }
+
+        // Restore saved theme
+        (function() {
+            const saved = localStorage.getItem('debate-viewer-theme');
+            if (saved === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.getElementById('themeIcon').textContent = 'Dark';
+            }
+        })();
 
         // Auto-discover debates from index.json
-        // The /debate skill maintains this index file automatically
-        // Viewer runs from debates/ folder, so index.json is in same directory
-
         async function loadDebates() {
             const debateList = document.getElementById('debateList');
             debateList.innerHTML = '<div class="loading">Loading debates...</div>';
@@ -478,7 +646,6 @@
                 const response = await fetch('index.json');
                 if (response.ok) {
                     const index = await response.json();
-                    // Debates are subdirectories in same folder as viewer
                     debatePaths.push(...index.debates);
                 }
             } catch (e) {
@@ -491,13 +658,16 @@
                     const stateResponse = await fetch(`${path}/state.json`);
                     if (stateResponse.ok) {
                         const state = await stateResponse.json();
+                        const earlyStop = state.early_stop === true;
                         debates.push({
                             path: path,
                             state: state,
                             topic: state.topic || path.split('/').pop(),
-                            status: state.status || 'unknown',
+                            status: earlyStop ? 'early_stop' : (state.status || 'unknown'),
+                            displayStatus: earlyStop ? 'early stop' : (state.status || 'unknown'),
                             rounds: state.current_round || state.rounds_total || state.rounds_completed?.length || 0,
-                            date: state.created_at || 'Unknown'
+                            date: state.created_at || 'Unknown',
+                            moderatorStyle: state.moderator_style || 'guided'
                         });
                     }
                 } catch (e) {
@@ -519,7 +689,7 @@
                         <p><code>python -m http.server 8080</code></p>
                         <p>Then open <code>http://localhost:8080/viewer.html</code></p>
                         <p style="margin-top: 12px; font-size: 11px; color: var(--text-secondary)">
-                            Debates are discovered via <code>.debates/index.json</code>
+                            Debates are discovered via <code>index.json</code>
                         </p>
                     </div>
                 `;
@@ -529,13 +699,20 @@
             debateList.innerHTML = debates.map((debate, idx) => `
                 <div class="debate-item ${currentDebate === idx ? 'active' : ''}"
                      onclick="selectDebate(${idx})">
-                    <div class="debate-item-title">${debate.topic}</div>
+                    <div class="debate-item-title">${escapeHtml(debate.topic)}</div>
                     <div class="debate-item-meta">
-                        <span class="status-badge status-${debate.status}">${debate.status}</span>
+                        <span class="status-badge status-${debate.status}">${debate.displayStatus}</span>
                         <span>${debate.rounds} rounds</span>
+                        <span>${debate.moderatorStyle}</span>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         async function selectDebate(idx) {
@@ -548,11 +725,14 @@
             // Update header
             const header = document.getElementById('contentHeader');
             header.innerHTML = `
-                <h2>${debate.topic}</h2>
+                <h2>${escapeHtml(debate.topic)}</h2>
                 <div class="content-header-meta">
-                    <span>${debate.status}</span>
-                    <span>${debate.rounds} rounds</span>
-                    <span>${debate.date}</span>
+                    <span class="meta-tag">
+                        <span class="status-badge status-${debate.status}">${debate.displayStatus}</span>
+                    </span>
+                    <span class="meta-tag">${debate.rounds} rounds</span>
+                    <span class="meta-tag">Moderator: ${debate.moderatorStyle}</span>
+                    <span class="meta-tag">${debate.date}</span>
                 </div>
             `;
 
@@ -576,10 +756,16 @@
                     case 'transcript':
                         try {
                             const transcript = await fetchFile(`${debate.path}/transcript.md`);
-                            contentArea.innerHTML = `<div class="markdown-content">${marked.parse(transcript)}</div>`;
+                            rawFiles.transcript = transcript;
+                            contentArea.innerHTML = `
+                                <div class="content-toolbar">
+                                    <button class="copy-btn" onclick="copyToClipboard('transcript', this)">Copy transcript</button>
+                                </div>
+                                <div class="markdown-content">${marked.parse(transcript)}</div>
+                            `;
                         } catch (e) {
                             contentArea.innerHTML = `<div class="empty-state">
-                                <div class="empty-state-icon">📝</div>
+                                <div class="empty-state-icon">Transcript</div>
                                 <p>No transcript file. View individual rounds in the <strong>Rounds</strong> tab.</p>
                             </div>`;
                         }
@@ -588,10 +774,16 @@
                     case 'synthesis':
                         try {
                             const synthesis = await fetchFile(`${debate.path}/synthesis.md`);
-                            contentArea.innerHTML = `<div class="markdown-content">${marked.parse(synthesis)}</div>`;
+                            rawFiles.synthesis = synthesis;
+                            contentArea.innerHTML = `
+                                <div class="content-toolbar">
+                                    <button class="copy-btn" onclick="copyToClipboard('synthesis', this)">Copy synthesis</button>
+                                </div>
+                                <div class="markdown-content">${marked.parse(synthesis)}</div>
+                            `;
                         } catch (e) {
                             contentArea.innerHTML = `<div class="empty-state">
-                                <div class="empty-state-icon">🔄</div>
+                                <div class="empty-state-icon">Synthesis</div>
                                 <p>No synthesis yet. Debate may still be in progress.</p>
                             </div>`;
                         }
@@ -600,18 +792,89 @@
                     case 'context':
                         try {
                             const context = await fetchFile(`${debate.path}/context.md`);
-                            contentArea.innerHTML = `<div class="markdown-content">${marked.parse(context)}</div>`;
+                            rawFiles.context = context;
+                            contentArea.innerHTML = `
+                                <div class="content-toolbar">
+                                    <button class="copy-btn" onclick="copyToClipboard('context', this)">Copy context</button>
+                                </div>
+                                <div class="markdown-content">${marked.parse(context)}</div>
+                            `;
                         } catch (e) {
                             contentArea.innerHTML = `<div class="empty-state">
-                                <div class="empty-state-icon">📋</div>
+                                <div class="empty-state-icon">Context</div>
                                 <p>No context file for this debate.</p>
                             </div>`;
                         }
                         break;
 
                     case 'state':
-                        const state = await fetchFile(`${debate.path}/state.json`);
-                        contentArea.innerHTML = `<pre class="json-view">${JSON.stringify(JSON.parse(state), null, 2)}</pre>`;
+                        const stateText = await fetchFile(`${debate.path}/state.json`);
+                        const stateObj = JSON.parse(stateText);
+                        rawFiles.state = stateText;
+
+                        let stateHtml = `
+                            <div class="content-toolbar">
+                                <button class="copy-btn" onclick="copyToClipboard('state', this)">Copy JSON</button>
+                            </div>
+                            <pre class="json-view">${escapeHtml(JSON.stringify(stateObj, null, 2))}</pre>
+                        `;
+
+                        // Telemetry panel
+                        if (stateObj.telemetry) {
+                            const tel = stateObj.telemetry;
+                            let telStats = '';
+
+                            if (tel.round_durations) {
+                                const durations = Object.values(tel.round_durations);
+                                const total = durations.reduce((a, b) => a + b, 0);
+                                telStats += `
+                                    <div class="telemetry-stat">
+                                        <div class="telemetry-stat-label">Total Duration</div>
+                                        <div class="telemetry-stat-value">${total}s</div>
+                                    </div>
+                                `;
+                                for (const [round, dur] of Object.entries(tel.round_durations)) {
+                                    telStats += `
+                                        <div class="telemetry-stat">
+                                            <div class="telemetry-stat-label">Round ${round}</div>
+                                            <div class="telemetry-stat-value">${dur}s</div>
+                                        </div>
+                                    `;
+                                }
+                            }
+
+                            if (tel.retries_count != null) {
+                                telStats += `
+                                    <div class="telemetry-stat">
+                                        <div class="telemetry-stat-label">Total Retries</div>
+                                        <div class="telemetry-stat-value">${tel.retries_count}</div>
+                                    </div>
+                                `;
+                            }
+
+                            if (telStats) {
+                                stateHtml += `
+                                    <div class="telemetry-panel">
+                                        <h4>Telemetry</h4>
+                                        <div class="telemetry-grid">${telStats}</div>
+                                    </div>
+                                `;
+                            }
+                        }
+
+                        // Last error banner
+                        if (stateObj.last_error) {
+                            const err = stateObj.last_error;
+                            stateHtml += `
+                                <div class="error-banner">
+                                    <div class="error-banner-title">Last Error: ${escapeHtml(err.type || 'unknown')}</div>
+                                    <div>Advisor: ${escapeHtml(err.advisor || '?')} | Round: ${err.round || '?'} | ${escapeHtml(err.timestamp || '')}</div>
+                                    <div style="margin-top: 4px; font-size: 12px; color: var(--text-secondary)">${escapeHtml(err.message || '')}</div>
+                                </div>
+                            `;
+                        }
+
+                        contentArea.innerHTML = stateHtml;
                         break;
 
                     case 'rounds':
@@ -620,8 +883,8 @@
                 }
             } catch (e) {
                 contentArea.innerHTML = `<div class="empty-state">
-                    <div class="empty-state-icon">❌</div>
-                    <p>Failed to load content: ${e.message}</p>
+                    <div class="empty-state-icon">Error</div>
+                    <p>Failed to load content: ${escapeHtml(e.message)}</p>
                 </div>`;
             }
         }
@@ -634,7 +897,7 @@
             const numRounds = state.current_round || state.rounds_total ||
                               (state.rounds_completed ? state.rounds_completed.length : 0);
 
-            // Determine participants - default to gemini/codex, but support claude too
+            // Determine participants
             const participants = state.participants || ['gemini', 'codex'];
             const isThreeWay = participants.includes('claude');
 
@@ -654,18 +917,22 @@
                     }
                 }
 
-                // Determine grid columns based on participant count
+                // Grid columns based on participant count
                 const gridCols = isThreeWay ? 'grid-template-columns: 1fr 1fr 1fr;' : 'grid-template-columns: 1fr 1fr;';
+
+                // Round duration from telemetry
+                const duration = state.telemetry?.round_durations?.[String(roundNum)];
+                const durationHtml = duration ? `<span class="round-duration">${duration}s</span>` : '';
 
                 html += `
                     <div class="round-card">
                         <div class="round-header">
                             <span>Round ${roundNum}</span>
+                            ${durationHtml}
                         </div>
                         <div class="round-responses" style="${gridCols}">
                 `;
 
-                // Add response for each participant
                 for (const participant of participants) {
                     const badgeClass = `advisor-${participant}`;
                     const displayName = participant.charAt(0).toUpperCase() + participant.slice(1);
@@ -685,6 +952,17 @@
                 `;
             }
 
+            // Early stop notice
+            if (state.early_stop) {
+                html += `
+                    <div class="round-card" style="border-color: var(--accent-purple);">
+                        <div class="round-header" style="background: rgba(168, 113, 247, 0.1); color: var(--accent-purple);">
+                            Early Stop: ${escapeHtml(state.early_stop_reason || 'consensus reached')}
+                        </div>
+                    </div>
+                `;
+            }
+
             html += '</div>';
             contentArea.innerHTML = html;
         }
@@ -693,6 +971,38 @@
             const response = await fetch(path);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return await response.text();
+        }
+
+        async function copyToClipboard(key, btn) {
+            const text = rawFiles[key];
+            if (!text) return;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                btn.classList.add('copied');
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = `Copy ${key}`;
+                }, 2000);
+            } catch (e) {
+                // Fallback for non-HTTPS
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                btn.classList.add('copied');
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.textContent = `Copy ${key}`;
+                }, 2000);
+            }
         }
 
         // Tab click handler
