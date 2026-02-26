@@ -28,28 +28,35 @@ AI Debate Hub creates a three-way discussion where all three AI systems analyze 
 |  to both  to both  to both |
 +---------------------------+
               |
-              v
+              v (early-stop if consensus)
 +---------------------------+
 |       SYNTHESIS           |
 +---------------------------+
-|   All 3 perspectives      |
+|   Advisor summary table   |
+|   Consensus + disputes    |
+|   Risks & failure modes   |
 |   Claude's recommendation |
 +---------------------------+
 ```
 
-## Features
-
-- **Multi-round debates**: Configurable 1-10 rounds of back-and-forth
-- **Session persistence**: Advisors maintain context across rounds via session UUIDs
-- **Multiple debate styles**: quick, thorough, adversarial, collaborative
-- **Automatic synthesis**: Generates summary of agreements, disagreements, and recommendations
-- **Token efficient**: Only injects other advisor's response (each remembers own context)
-
 ## Requirements
 
-- [Claude Code CLI](https://github.com/anthropics/claude-code)
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) - `npm install -g @anthropic-ai/gemini-cli`
-- [Codex CLI](https://github.com/openai/codex) - OpenAI's coding assistant
+| Dependency | Required | Notes |
+|-----------|----------|-------|
+| [Claude Code CLI](https://github.com/anthropics/claude-code) | Yes | Orchestrator + participant |
+| [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Yes | `npm install -g @google/gemini-cli` |
+| [Codex CLI](https://github.com/openai/codex) | Yes | OpenAI's coding assistant |
+| `bash` | Yes | Shell for helper scripts (or WSL on Windows) |
+| `jq` | Recommended | JSON validation in atomic writes |
+| `flock` | Optional | File locking (Linux). Fallback exists without it |
+| Node.js 18+ | Optional | Cross-platform alternative to bash helpers |
+
+### Windows Users
+
+Two options:
+
+1. **WSL (recommended)** — Run everything inside WSL. All bash helpers work natively.
+2. **Node.js alternative** — Use `tools/atomic-json.mjs` instead of bash helpers for state/index management. No `flock` or `jq` needed.
 
 ## Installation
 
@@ -66,20 +73,20 @@ Or copy just the debate skill:
 cp -r claude-skills/skills/debate ~/.claude/skills/
 ```
 
-## Usage
+## Quickstart
 
-### Basic Invocation
-```
+```bash
+# Simple one-round debate
 /debate Should we use Redis or in-memory cache for our session store?
-```
 
-### With Options
-```
+# Three-round thorough analysis
 /debate -r 3 -d thorough Review our authentication implementation
-/debate --rounds 2 --debate-style adversarial Is this API design secure?
+
+# Adversarial with authoritative moderator
+/debate -r 2 -d adversarial -m authoritative Is this API design secure?
 ```
 
-### Flags
+## Flags
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
@@ -87,6 +94,14 @@ cp -r claude-skills/skills/debate ~/.claude/skills/
 | `--debate-style STYLE` | `-d STYLE` | quick | Style: quick, thorough, adversarial, collaborative |
 | `--moderator-style MODE` | `-m MODE` | guided | Mode: transparent, guided, authoritative |
 | `--max-words N` | `-w N` | 300 | Word limit per response |
+
+### Moderator Styles
+
+| Mode | Behavior |
+|------|----------|
+| `transparent` | Claude presents all views neutrally, minimal editorial voice |
+| `guided` | Claude highlights key disagreements and steers toward resolution |
+| `authoritative` | Claude takes strong positions and challenges weak arguments |
 
 ## Architecture
 
@@ -99,8 +114,8 @@ Each advisor maintains its own session for context continuity:
 
 ```bash
 # Gemini (from project root)
-gemini -y "Initial prompt..."
-gemini -r <UUID> -y "Follow-up..."
+gemini -y -o text "Initial prompt..."
+gemini -r <UUID> -y -o text "Follow-up..."
 
 # Codex (from debate folder)
 codex exec --full-auto "Initial prompt..."
@@ -119,23 +134,38 @@ Round 2+ (all three respond):
 |-- Gemini responds to Codex + Claude
 |-- Codex responds to Gemini + Claude
 +-- Claude responds to Gemini + Codex (YOUR contribution)
+    └── Early-stop check: if strong consensus, skip remaining rounds
 
 Synthesis:
-+-- All three perspectives consolidated
++-- Advisor summary table (position, confidence, assumptions)
 +-- Points of agreement across all three
 +-- Points of disagreement
++-- Risks & failure modes
 +-- Claude's final recommendation
 ```
+
+### Output Contract
+
+Each advisor response follows a structured format for comparability:
+
+- **Position** (1 line)
+- **Key Arguments** (bullets)
+- **Assumptions**
+- **Risks / Failure Modes**
+- **What Would Change My Mind**
+- **Confidence** (0-100%)
+
+This makes synthesis meaningful — you can cross-compare assumptions and confidence levels.
 
 ### File Structure
 
 ```
 {project}/debates/
 |-- viewer.html             # Auto-deployed from skill folder
-|-- index.json              # Debate registry for viewer
+|-- index.json              # Debate registry for viewer (atomic writes)
 +-- NNN-topic-slug/
     |-- context.md          # Initial context
-    |-- state.json          # Session UUIDs, status
+    |-- state.json          # Session UUIDs, status, telemetry
     |-- transcript.md       # Combined chronological record
     |-- synthesis.md        # Final synthesis (all 3 perspectives)
     +-- rounds/
@@ -159,10 +189,11 @@ python -m http.server 8000
 ```
 
 The viewer shows:
-- **Synthesis** - Final analysis and recommendations
-- **Rounds** - Side-by-side comparison (2 or 3 columns)
-- **Transcript** - Full chronological debate record
-- **State** - Debug view of debate metadata
+- **Synthesis** — Final analysis and recommendations (with copy-to-clipboard)
+- **Rounds** — Side-by-side comparison (2 or 3 columns)
+- **Transcript** — Full chronological debate record
+- **Context** — Original question and configuration
+- **State** — Debug view of debate metadata + telemetry
 
 ## Debate Styles
 
@@ -184,29 +215,48 @@ Run a simple test debate:
 
 Verify session continuity by checking token growth in Codex output.
 
-### Version History
+### Test Checklist
 
-- **v4.7** (current) - Three-way debate structure
-  - Claude is now an active PARTICIPANT, not just orchestrator
-  - Each round has contributions from all three: Gemini, Codex, Claude
-  - Advisors receive responses from BOTH other participants
-  - Claude's responses saved to r00N_claude.md files
-
-- **v4.6** - Production-ready architecture
-  - Gemini runs from project root for file access
-  - Both advisors use explicit UUID tracking
-  - Full e2e tested and validated
-
-- **v4.5** - Fixed Codex syntax, removed broken flags
-- **v4.4** - Added session UUID persistence
-- **v4.3** - Flag precedence rules, synthesis workflow
-- **v4.2** - Session folder scoping documentation
+- [ ] Single round debate generates complete folder structure
+- [ ] 3-round debate respects session persistence across rounds
+- [ ] Simulated rate-limit triggers retry and records `last_error` in state.json
+- [ ] Two parallel debates don't corrupt `index.json`
+- [ ] `viewer.html` renders without errors and copy-to-clipboard works
 
 ## Known Limitations
 
 1. **Gemini `--include-directories`**: Flag exists but doesn't work; run from project root instead
 2. **Codex `-C` flag**: Doesn't bypass trust requirements; use `cd` instead
 3. **Codex rate limits**: May hit usage limits on extended debates
+
+## Version History
+
+- **v6.0.0** (current) — Production hardening
+  - Unified version across all files
+  - Added `--moderator-style` flag (transparent, guided, authoritative)
+  - Structured output contract per advisor (position, confidence, assumptions, risks)
+  - Early-stop on consensus detection
+  - Error telemetry in state.json (round durations, retries, last_error)
+  - Atomic index.json writes (parallel-safe)
+  - Cross-platform Node.js helper (`tools/atomic-json.mjs`)
+  - Enhanced viewer with copy-to-clipboard
+  - `disable-model-invocation: true` in frontmatter
+
+- **v4.7** — Three-way debate structure
+  - Claude is now an active PARTICIPANT, not just orchestrator
+  - Each round has contributions from all three: Gemini, Codex, Claude
+  - Advisors receive responses from BOTH other participants
+  - Claude's responses saved to r00N_claude.md files
+
+- **v4.6** — Production-ready architecture
+  - Gemini runs from project root for file access
+  - Both advisors use explicit UUID tracking
+  - Full e2e tested and validated
+
+- **v4.5** — Fixed Codex syntax, removed broken flags
+- **v4.4** — Added session UUID persistence
+- **v4.3** — Flag precedence rules, synthesis workflow
+- **v4.2** — Session folder scoping documentation
 
 ## License
 
