@@ -9,11 +9,11 @@ description: Use when implementation is complete and needs validation - tests RE
 
 **This skill has TWO mandatory file reads that CANNOT be skipped:**
 
-1. **Phase 1 BLOCKER:** You MUST read the session transcript from `C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop\{session_id}.jsonl` to identify the trigger message. Find the most recent `.jsonl` file and document the user message that invoked this skill.
+1. **Phase 1 BLOCKER:** You MUST read the session transcript from `~/.claude/projects/{project-slug}/{session_id}.jsonl` to identify the trigger message. Find the most recent `.jsonl` file and document the user message that invoked this skill.
 
 2. **Phase 10 BLOCKER:** You MUST re-read the session transcript to perform an evidence-based retrospective. Cite specific line numbers. In-context memory is NOT sufficient.
 
-**Session transcript location:** `C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop\`
+**Session transcript location:** `~/.claude/projects/` — find the subdirectory matching your current project (the slug is derived from the project's absolute path with path separators replaced by `-`).
 
 **If you cannot read the transcript:** STOP and inform the user. Do not proceed with memory-based retrospective.
 
@@ -92,14 +92,14 @@ You MUST read the actual session transcript file to identify the trigger message
 
 **Step 1: Find the current session file**
 ```
-Glob: pattern="*.jsonl" path="C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop"
+Glob: pattern="*.jsonl" path="~/.claude/projects/{project-slug}"
 ```
 Select the most recently modified `.jsonl` file (this is the current session).
 
 **Step 2: Check file size FIRST**
 ```bash
 # Check file size before reading
-ls -lh "C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop\{session_id}.jsonl"
+ls -lh ~/.claude/projects/{project-slug}/{session_id}.jsonl
 ```
 
 Or use Bash to get size in bytes:
@@ -369,7 +369,7 @@ You MUST read the actual session transcript to perform a proper retrospective. D
 
 **Step 1: Check file size FIRST (same as Phase 1)**
 ```bash
-ls -lh "C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop\{session_id}.jsonl"
+ls -lh ~/.claude/projects/{project-slug}/{session_id}.jsonl
 ```
 
 **Step 2: Choose the right tool based on file size**
@@ -381,7 +381,7 @@ ls -lh "C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop\{session_i
 
 **If file is SMALL (< 256KB):**
 ```
-Read: file_path="C:\Users\pauol\.claude\projects\G---OneDrive-OneDrive-Desktop\{session_id}.jsonl"
+Read: file_path="~/.claude/projects/{project-slug}/{session_id}.jsonl"
 ```
 
 **If file is LARGE (> 256KB):**
