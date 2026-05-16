@@ -1,619 +1,126 @@
-# Phase: TEST
+# Phase: Test
 
-**Goal:** Test EVERY element using MCP browser tools with REAL verification - not just clicking, but confirming the action happened.
+Goal: execute browser validation and store evidence after every unit of work.
 
----
+Before this phase, read `references/evidence-rules.md`, `references/state-schema.md`, and the selected backend adapter.
 
-## MCP Tools Reference
+## Resume
 
-| Action | MCP Tool |
-|--------|----------|
-| Navigate to URL | `mcp__claude-in-chrome__navigate url="{url}"` |
-| Get page snapshot | `mcp__claude-in-chrome__read_page` |
-| Click element | `mcp__claude-in-chrome__click ref="{ref}"` |
-| Fill form field | `mcp__claude-in-chrome__form_input ref="{ref}" value="{value}"` |
-| Resize viewport | `mcp__claude-in-chrome__resize_window width={w} height={h}` |
-| Take screenshot | `mcp__claude-in-chrome__computer action="screenshot"` |
-| Read console | `mcp__claude-in-chrome__read_console_messages` |
+Read `test-manifest/validation-state.json`.
 
----
+If resuming, increment `session.contextResets`, update `session.lastUpdatedAt`, save state, and continue from pending queues. Do not rediscover unless state is invalid or `--fresh` was requested.
 
-## CRITICAL: Anti-Laziness Rules
+## Test Order
 
-### Rule 1: Screenshots MUST be ANALYZED
+1. Route visual/runtime checks.
+2. Element interaction checks.
+3. Critical flow checks.
+4. Safe cleanup of `VAL_` artifacts.
 
-```
-FORBIDDEN: "Screenshot taken"
-FORBIDDEN: "Looks good"
-FORBIDDEN: "No issues"
+For long runs, pause after a saved checkpoint when context or time is getting high. Never pause in the middle of a route/element/flow without saving a partial failure or retry marker.
 
-REQUIRED: Actual analysis describing:
-- What is visible in the screenshot
-- Layout assessment (aligned? overflow? cut-off?)
-- Responsive behavior (does content reflow correctly?)
-- If no issues: WHY it's correct (e.g., "All 5 buttons visible and properly spaced")
-```
+## 1. Route Checks
 
-### Rule 2: Button Actions MUST be VERIFIED
+For each pending route:
 
-```
-FORBIDDEN: "Clicked successfully"
-FORBIDDEN: "Button responded"
+1. Navigate to `appUrl + route.path`.
+2. Wait for stable content.
+3. For each configured breakpoint:
+   - set viewport
+   - capture screenshot to `test-manifest/evidence/routes/{routeId}-{breakpoint}.png`
+   - analyze the image/visible page
+   - record specific layout findings
+4. Capture a snapshot to `test-manifest/evidence/routes/{routeId}-snapshot.{txt|json|yml}` when backend supports it.
+5. Check console/errors and record actual messages.
+6. Check failed network responses and group by HTTP status/resource.
+7. Determine verdict.
+8. Save state.
 
-REQUIRED: Verify the EXPECTED OUTCOME:
-- Delete button → Check item is GONE from list
-- Create button → Check new item APPEARS in list
-- Modal button → Check modal is VISIBLE in accessibility tree
-- Save button → Check success message OR data persisted
-- Refresh button → Check timestamp changed OR content updated
-```
+Route pass requires no blocking console/page errors, no blocking failed network responses, nonblank content, and usable layout at required breakpoints.
 
-### Rule 3: Console MUST be Actually READ
+If route rendering visually succeeds but the backend captures real console errors, failed API calls, or page errors, mark the route `fail` or `warning` according to severity. Do not leave the route as `pass` with a separate issue count unless the errors are explicitly ignored by config.
 
-```
-FORBIDDEN: "No errors"
-FORBIDDEN: "Console clean"
+If a protected route renders an access-denied page:
 
-REQUIRED: Call mcp__claude-in-chrome__read_console_messages and report:
-- Exact count of errors
-- Exact count of warnings
-- Actual message text if any
-```
+- mark it `fail` when the route was visible in navigation and not configured as allowed
+- mark it `pass` or `skip` only when `validation.config.json` explicitly declares `allowAccessDenied` or includes the route in `allowedAccessDeniedPaths`
 
-### Rule 4: ALL Elements MUST be Tested
+## 2. Element Checks
 
-```
-FORBIDDEN:
-- "Testing representative sample of buttons"
-- "Similar buttons on other pages would behave the same"
-- "Skipping duplicate functionality"
-- Testing 2 out of 50 elements and calling it done
+For each pending element:
 
-REQUIRED:
-- Every element in discovery.elements MUST be tested
-- Progress: {tested}/{total} must reach {total}/{total}
-- Each element gets its own VERIFICATION REPORT
-- State file tracks completion of EVERY element
-```
+1. Navigate to the element route.
+2. Capture pre-action snapshot and screenshot.
+3. Resolve a fresh ref/selector. Refs from discovery may be stale.
+4. Check console/errors baseline.
+5. Perform the safest meaningful action:
+   - buttons/links: click
+   - inputs: fill `VAL_Test_{timestamp}` or field-specific safe data
+   - selects: choose first non-empty safe option
+   - checkboxes/toggles: toggle and verify state
+6. Wait for the expected signal.
+7. Capture post-action snapshot and screenshot.
+8. Check console/errors delta.
+9. Check failed network responses delta.
+10. Verify expected behavior using observable evidence.
+11. Save state.
 
----
+Verification examples:
 
-## Step 0: Resume Check
+| Expected behavior | Verification |
+| --- | --- |
+| opens-dialog | dialog/modal visible in snapshot/screenshot |
+| closes-dialog | dialog no longer visible |
+| navigates | URL or page heading changed as expected |
+| submits-form | success message, validation message, redirect, or persisted data appears |
+| filters-data | result count/content/query state changed |
+| toggles-state | visible state or accessible state changed |
+| downloads | download event/file evidence exists |
 
-### Load State
+If expected behavior is unknown, document the observed outcome and mark `pass` only if the behavior is clearly valid for the UI. Otherwise use `skip` with a reason or `fail` if it appears broken.
 
-Read `test-manifest/validation-state.json`
+If an interaction cannot be executed because the validation runner used an ambiguous selector or stale backend ref, mark the element `skip` with an adapter/test-runner note. Only mark the app `fail` after verifying the same issue with a reliable locator, coordinate click, or user-visible evidence.
 
-Check:
-- `session.currentPhase` should be "test"
-- `testing.currentIndex` tells you where to resume
-- `testing.pending` has elements not yet tested
-- `testing.results` has completed test results
+For deterministic `playwright-local` standard mode, execute only safe non-destructive candidates unless the user approved deeper flows. Safe default candidates include navigation links and buttons whose labels suggest open/view/configure/filter/search/menu behavior. Skip labels that imply data mutation such as save, submit, pay, charge, approve, reject, delete, or sign out.
 
-### If Resuming
+## 3. Critical Flows
 
-```
-=== RESUMING TEST PHASE ===
+For each pending flow:
 
-Session: {session.id}
-Context resets: {contextResets + 1}
-Previously tested: {Object.keys(results).length}
-Remaining: {pending.length}
+1. Start at the flow route.
+2. Execute each step with fresh snapshots between actions.
+3. Use `VAL_` test data for creates/updates.
+4. Capture evidence at meaningful points.
+5. Verify the final user-visible outcome.
+6. If a step fails, stop that flow, record the failing step, save state, and continue to the next safe item.
 
-Continuing from element: {pending[currentIndex]}
-```
+Interactive bugs require step evidence. If supported, record video for complex reproductions; otherwise use before/action/after screenshots.
 
-Update `session.contextResets++` and save state.
+## 4. Cleanup
 
----
+Clean only data that this validation created and can identify by `VAL_`.
 
-## Step 1: Test Each Element (MANDATORY - ALL ELEMENTS)
+1. Search/list pages for `VAL_` records created during this run.
+2. Delete them through normal UI flows.
+3. Verify each deletion.
+4. Record cleanup results in state.
 
-**CRITICAL: You MUST test EVERY element in `testing.pending`, not a sample.**
+Do not delete non-`VAL_` data.
 
-For EACH element in `testing.pending`:
+## 5. Suspicion Checks
 
-### 1.1 Navigate to Element's Route
+Before moving to report, inspect the result set:
 
-```
-mcp__claude-in-chrome__navigate url="{appUrl}{element.route}"
-```
+- If many routes were tested and every issue array is empty, re-check at least the most complex route.
+- If all interactions passed but no post-action state changed, mark those tests invalid and rerun or fail them.
+- If console/errors were not actually collected, do not mark the item pass.
+- If screenshots exist but no analysis text exists, do not mark the item pass.
 
-Wait for page load.
+## 6. Save Final Test State
 
-### 1.2 Get Fresh Page Snapshot
+When queues are empty or the run is intentionally partial:
 
-```
-mcp__claude-in-chrome__read_page
-```
-
-Find the element by its `ref` or by matching text/role in the accessibility tree.
-
-**If element not found:**
-- Page may have changed since discovery
-- Record: `status: "skip"`, `reason: "element-not-found"`
-- Continue to next element
-
-### 1.3 Check Console Before Action
-
-```
-mcp__claude-in-chrome__read_console_messages
-```
-
-Record baseline console state (count of errors/warnings).
-
-### 1.4 Take Pre-Action Screenshot
-
-```
-mcp__claude-in-chrome__computer action="screenshot"
-```
-
-**ANALYZE the screenshot (Claude sees the image directly):**
-- Current page state
-- Element visible and clickable?
-- Any existing modals/overlays blocking?
-
-### 1.5 Perform the Action
-
-Based on element type:
-
-#### For Buttons
-```
-mcp__claude-in-chrome__click ref="{element.ref}"
-```
-
-#### For Form Inputs
-```
-mcp__claude-in-chrome__form_input ref="{element.ref}" value="VAL_Test_{timestamp}"
-```
-
-Use test data prefix `VAL_` so cleanup is easy.
-
-#### For Links
-```
-mcp__claude-in-chrome__click ref="{element.ref}"
-```
-
-### 1.6 Wait and Get Post-Action State
-
-Wait 500-1000ms for UI to update, then:
-
-```
-mcp__claude-in-chrome__read_page
-```
-
-### 1.7 Check Console After Action
-
-```
-mcp__claude-in-chrome__read_console_messages
-```
-
-Compare to baseline. Report DELTA (new errors caused by action).
-
-### 1.8 Take Post-Action Screenshot
-
-```
-mcp__claude-in-chrome__computer action="screenshot"
-```
-
-**ANALYZE the screenshot:**
-- What changed?
-- Did expected behavior occur?
-- Any error messages visible?
-
-### 1.9 VERIFY Outcome (CRITICAL - NOT OPTIONAL)
-
-**This is the most important step. "Clicked successfully" is NOT verification.**
-
-Based on `element.expectedBehavior`:
-
-| Expected Behavior | How to VERIFY with MCP |
-|-------------------|------------------------|
-| `opens-modal` | `read_page` → Modal element NOW in accessibility tree |
-| `closes-modal` | `read_page` → Modal element NO LONGER in tree |
-| `navigates` | URL changed, `read_page` shows new page content |
-| `creates-item` | Navigate to list, `read_page` → new item in list |
-| `deletes-item` | `read_page` → item NO LONGER in list |
-| `updates-item` | `read_page` → item data changed |
-| `shows-message` | `read_page` → success/error message in tree |
-| `triggers-download` | Download started (check for download dialog) |
-| `filters-data` | `read_page` → list content changed |
-| `submits-form` | Form cleared OR redirect OR success message |
-
-### 1.10 Generate Verification Report
-
-**For EVERY element tested, produce this report:**
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║                    VERIFICATION REPORT                        ║
-╠══════════════════════════════════════════════════════════════╣
-║ Element:     {elementId}                                      ║
-║ Route:       {route}                                          ║
-║ Type:        {button|link|input|form}                         ║
-╠══════════════════════════════════════════════════════════════╣
-║ ACTION TAKEN:                                                 ║
-║   {Specific action - e.g., "Clicked 'Add Customer' button"}   ║
-║                                                               ║
-║ EXPECTED OUTCOME:                                             ║
-║   {What should happen - e.g., "Modal should open with form"}  ║
-║                                                               ║
-║ OBSERVED OUTCOME:                                             ║
-║   {What actually happened - e.g., "Modal opened, form has     ║
-║    5 fields: Name, Email, Phone, Address, Notes"}             ║
-║                                                               ║
-║ EVIDENCE:                                                     ║
-║   - Screenshot: analyzed - {description}                      ║
-║   - DOM change: {before/after description}                    ║
-║   - Count change: {X → Y items}                               ║
-║   - Console: {errors: 0, warnings: 1}                         ║
-║                                                               ║
-║ VERDICT: [PASS] | [FAIL] | [SKIP]                            ║
-║ RATIONALE: {Why this verdict - specific evidence}             ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-### 1.11 Record Result
-
-```json
-{
-  "elementId": "customers-add-btn",
-  "route": "/customers",
-  "status": "pass|fail|skip",
-  "testedAt": "{ISO}",
-  "action": "click",
-  "verification": {
-    "expected": "opens-modal",
-    "verified": true,
-    "evidence": "Modal 'Add Customer' appeared with form fields: name, email, phone"
-  },
-  "consoleErrors": [],
-  "uiIssues": [],
-  "screenshots": {
-    "before": "analyzed - button visible at top right",
-    "after": "analyzed - modal opened with 3 form fields"
-  }
-}
-```
-
-### 1.12 Update and Save State (AFTER EVERY ELEMENT)
-
-```javascript
-state.testing.results[elementId] = result;
-state.testing.currentIndex++;
-state.testing.pending = state.testing.pending.filter(id => id !== elementId);
-if (result.status === 'fail') state.testing.failed.push(elementId);
-state.summary.tested++;
-state.summary[result.status === 'pass' ? 'passed' : result.status === 'fail' ? 'failed' : 'skipped']++;
-state.session.lastUpdatedAt = new Date().toISOString();
-```
-
-**Write state to file immediately.** This allows resume if context resets.
-
-### 1.13 Reset to Clean State
-
-After testing element, especially if it opened a modal:
-
-1. Look for close button (X or Cancel) in accessibility tree
-2. `mcp__claude-in-chrome__click ref="{closeButton.ref}"`
-3. `mcp__claude-in-chrome__read_page` to verify modal closed
-4. If stuck, navigate away: `mcp__claude-in-chrome__navigate url="{appUrl}{route}"`
-
----
-
-## Step 2: Responsive Testing (4 Breakpoints)
-
-For each route, verify layout at 4 breakpoints:
-
-| Breakpoint | Width | Height | Name |
-|------------|-------|--------|------|
-| Mobile | 375 | 812 | mobile |
-| Tablet | 768 | 1024 | tablet |
-| Laptop | 1024 | 768 | laptop |
-| Desktop | 1440 | 900 | desktop |
-
-### 2.1 For Each Route + Breakpoint
-
-```
-1. mcp__claude-in-chrome__navigate url="{appUrl}{route}"
-2. mcp__claude-in-chrome__resize_window width={width} height={height}
-3. Wait 500ms for layout to settle
-4. mcp__claude-in-chrome__computer action="screenshot"
-5. ANALYZE screenshot immediately (Claude sees the image)
-6. mcp__claude-in-chrome__read_console_messages
-```
-
-### 2.2 Screenshot Analysis (MANDATORY)
-
-**"Looks good" is NOT valid analysis.**
-
-For each screenshot, check and report:
-
-```
-{route} @ {breakpoint}px:
-
-Navigation:
-  - Visible: YES | HAMBURGER | HIDDEN
-  - All items accessible: YES | SOME_HIDDEN | NO
-  - Touch targets: ADEQUATE | TOO_SMALL
-
-Content:
-  - Text readable: YES | TRUNCATED | OVERLAPPING
-  - Images: SIZED_CORRECTLY | OVERFLOWING | MISSING
-  - Tables: SCROLLABLE | SQUISHED | BROKEN
-
-Layout:
-  - Structure: CORRECT | OVERLAPPING | BROKEN
-  - Spacing: CONSISTENT | CRAMPED | EXCESSIVE
-  - Alignment: CORRECT | MISALIGNED
-
-Issues Found:
-  - {specific issue 1}
-  - {specific issue 2}
-```
-
-### 2.3 Record UI Issues
-
-```json
-{
-  "route": "/customers",
-  "breakpoint": 375,
-  "issues": [
-    {
-      "type": "overflow",
-      "description": "Table overflows horizontally, no scroll",
-      "severity": "medium"
-    }
-  ]
-}
-```
-
----
-
-## Step 3: Test Critical Flows
-
-After individual element tests, test multi-step flows from `discovery.criticalFlows`.
-
-For EACH flow:
-
-### 3.1 Navigate to Flow Starting Point
-
-```
-mcp__claude-in-chrome__navigate url="{appUrl}{flow.route}"
-```
-
-### 3.2 Execute Each Step
-
-For each step in `flow.steps`:
-
-```
-1. mcp__claude-in-chrome__read_page - find element by elementId
-2. mcp__claude-in-chrome__click ref="{ref}" OR form_input
-3. Wait for UI update
-4. mcp__claude-in-chrome__read_page - verify intermediate state
-5. mcp__claude-in-chrome__computer action="screenshot" - document each step
-```
-
-### 3.3 Generate Flow Report
-
-```
-╔══════════════════════════════════════════════════════════════╗
-║                   CRITICAL FLOW REPORT                        ║
-╠══════════════════════════════════════════════════════════════╣
-║ Flow:        {flowId}                                         ║
-║ Description: {description}                                    ║
-╠══════════════════════════════════════════════════════════════╣
-║ Step 1: {action} → {result} [PASS/FAIL]                      ║
-║ Step 2: {action} → {result} [PASS/FAIL]                      ║
-║ Step 3: {action} → {result} [PASS/FAIL]                      ║
-╠══════════════════════════════════════════════════════════════╣
-║ FINAL VERIFICATION:                                           ║
-║   Expected: {flow goal}                                       ║
-║   Observed: {actual result}                                   ║
-║                                                               ║
-║ FLOW VERDICT: [PASS] | [FAIL at Step N]                      ║
-╚══════════════════════════════════════════════════════════════╝
-```
-
-### 3.4 Cleanup Test Data
-
-If flow created data (like a test customer):
-1. Delete the test item (find delete button, click it)
-2. Verify cleanup worked via `read_page`
-
----
-
-## Step 4: Console Error Audit
-
-### 4.1 Aggregate All Console Errors
-
-From all testing, compile unique console errors:
-
-```json
-{
-  "consoleErrors": [
-    {
-      "message": "Failed to fetch /api/customers",
-      "routes": ["/customers", "/dashboard"],
-      "count": 5,
-      "severity": "error"
-    }
-  ]
-}
-```
-
-### 4.2 Categorize Errors
-
-| Category | Examples | Severity |
-|----------|----------|----------|
-| API Errors | Failed fetch, 404, 500 | High |
-| React Errors | Unhandled rejection, key warnings | Medium |
-| Deprecation | Console warnings about deprecated APIs | Low |
-| Third-party | Analytics, tracking script errors | Info |
-
----
-
-## Step 5: Update Final State
-
-After all testing complete:
-
-```javascript
-state.session.currentPhase = 'report';
-state.testing.completedAt = new Date().toISOString();
-state.summary = {
-  totalElements: discovery.elements.length,
-  totalFlows: discovery.criticalFlows.length,
-  tested: Object.keys(results).length,
-  passed: passCount,
-  failed: failCount,
-  skipped: skipCount,
-  flowsPassed: flowPassCount,
-  flowsFailed: flowFailCount,
-  uiIssues: allUIIssues.length,
-  consoleErrors: uniqueConsoleErrors.length
-};
-```
-
-Save state file.
-
----
-
-## Step 6: Output Summary
-
-```
-=== TEST PHASE COMPLETE ===
-
-Session: {session.id}
-Duration: {startedAt} to {completedAt}
-Context resets: {contextResets}
-
-Element Tests:
-  - Total: {totalElements}
-  - Passed: {passed} ({passRate}%)
-  - Failed: {failed}
-  - Skipped: {skipped}
-
-Flow Tests:
-  - Total: {totalFlows}
-  - Passed: {flowsPassed}
-  - Failed: {flowsFailed}
-
-UI Issues: {uiIssues}
-Console Errors: {consoleErrors}
-
-Failed Elements:
-{for each failed}
-  - {elementId} on {route}: {expected} but {evidence}
-{end}
-
-Proceeding to REPORT phase...
-```
-
----
-
-## Step 7: Transition to REPORT Phase
-
-1. Update state `currentPhase: "report"`
-2. Save state file
-3. Read `phases/REPORT.md`
-4. Execute REPORT phase
-
----
-
-## Test Data Strategy (VAL_ Prefix)
-
-### All test data MUST use the VAL_ prefix
-
-```
-Pattern: VAL_Test_{timestamp}
-
-Examples:
-- Customer name:  VAL_Test_1705753042
-- Email:          val_test_1705753042@example.com
-- Phone:          555-VAL-0001
-- Description:    VAL_Test created by validation skill
-```
-
-### Form Fill Strategy
-
-When filling forms, use predictable test data:
-
-| Field Type | Test Value |
-|------------|------------|
-| Name/Title | `VAL_Test_{timestamp}` |
-| Email | `val_test_{timestamp}@example.com` |
-| Phone | `555-VAL-{last4}` |
-| Number | `99999` |
-| Date | Today's date |
-| Select | First non-empty option |
-| Checkbox | Check it |
-| Text area | `VAL_Test description - {timestamp}` |
-
----
-
-## Error Handling
-
-### Element Not Found
-```json
-{
-  "status": "skip",
-  "reason": "element-not-found",
-  "evidence": "Element ref_5 not present in current accessibility tree"
-}
-```
-
-### Click Failed
-```json
-{
-  "status": "fail",
-  "reason": "action-failed",
-  "evidence": "Click on ref_5 returned error: element not interactable"
-}
-```
-
-### Unexpected Behavior
-```json
-{
-  "status": "fail",
-  "reason": "verification-failed",
-  "expected": "opens-modal",
-  "evidence": "No modal appeared after click. Page state unchanged."
-}
-```
-
-### Console Error on Action
-```json
-{
-  "status": "fail",
-  "reason": "console-error",
-  "evidence": "Action triggered: TypeError: Cannot read property 'id' of undefined"
-}
-```
-
----
-
-## Quarantine Rules
-
-If an element fails 3 times across context resets:
-
-1. Move to `testing.quarantined`
-2. Don't retry again
-3. Mark as `status: "quarantined"`
-4. Include in report as known flaky
-
----
-
-## Anti-Laziness: Testing Validation
-
-Before marking testing complete:
-
-- [ ] EVERY element in pending list was tested (check counts match)
-- [ ] EVERY test has verification evidence (not just "clicked")
-- [ ] ALL 4 breakpoints were screenshotted per route
-- [ ] ALL critical flows were tested end-to-end
-- [ ] Console was checked on EVERY route with `read_console_messages`
-- [ ] Screenshots were ANALYZED, not just taken
-- [ ] State file saved after EVERY element (check timestamp)
-- [ ] Failed tests have specific failure evidence
-
-**If summary shows 0 failures but you saw errors, something is wrong. Re-check.**
+- update summary counts
+- set `session.currentPhase: "report"`
+- save state
+- proceed to `phases/REPORT.md`

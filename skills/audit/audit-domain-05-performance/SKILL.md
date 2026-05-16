@@ -1,0 +1,199 @@
+---
+name: audit-domain-05-performance
+description: Audit the performance domain - query efficiency, caching, async / blocking calls, payload sizes, scaling assumptions. Run as part of /audit Phase E.
+---
+
+# Skill: Audit Domain 5 - Performance
+
+This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+
+## Pre-flight
+
+```
+view ../references/audit-rules.md
+view ../references/domain-audit-contract.md
+```
+
+If you have findings from previous audit phases (hard stops, Tambon,
+blind spots), the orchestrator passes them as input. Use them - don't
+re-discover findings other phases already produced. Specifically:
+
+- Hard stops related to this domain: (none - this domain has no hard-stop classes routing to it)
+- Blind spots that route to this domain: B3, B6
+
+If the orchestrator didn't pass you these inputs, do NOT re-run the
+hard-stops or blind-spots walks. Audit your domain only and trust the
+orchestrator to stitch.
+
+## Scope
+
+Query efficiency, N+1 detection, caching, async vs blocking IO, payload sizes, pagination, scaling assumptions, in-memory state, connection pool sizing.
+
+## Key questions to answer
+
+For each, find the evidence and report it. The questions are the
+audit's spine - every finding maps back to one of them.
+
+1. Are slow queries indexed-
+2. Is caching used where appropriate, and invalidated correctly-
+3. Is IO non-blocking in async contexts (no requests / time.sleep)-
+4. Are responses paginated server-side, not just frontend-sliced-
+5. Are payload sizes bounded (max upload, max query result)-
+6. Does anything assume a single user / single instance-
+
+
+## Mandatory enumeration before verdict
+
+Before writing a finding or a "no findings" verdict for Q1, Q2, Q3, Q4, Q5, or Q6, produce the inventories below. Do not answer from memory. For every match, read the surrounding code and classify it in the requested bucket; include inventory counts and representative path:line evidence in the domain report.
+
+### Q1/Q4 DB query and API call inventory (mandatory)
+
+Run:
+
+```bash
+rg -n "(select\(|\.select\(|findMany|findAll|find\(|aggregate\(|query\(|execute\(|raw\(|\.from\(|supabase\.|prisma\.|sequelize\.|knex\.|mongoose\.|fetch\(|axios\.|requests\.|httpx\.|urllib|got\()" -g '*.{ts,tsx,js,jsx,mjs,cjs,py,go,java,cs,php,rb}' .
+find . -type f \( -name '*repo*' -o -name '*dao*' -o -name '*service*' -o -name '*api*' -o -name '*client*' \) -not -path './node_modules/*' -not -path './.git/*'
+```
+
+Classify every DB query / API call as `paginated`, `unbounded`, or `bounded-by-config`. Verdict requirement: Q1 and Q4 are not safe until every unbounded read path has been checked against indexes and response size.
+
+### Q2 cache inventory (mandatory)
+
+Run:
+
+```bash
+rg -n "(cache|Cache|redis|Redis|memcached|lru|ttl|revalidate|staleTime|invalidate|purge|etag|Cache-Control)" -g '*.{ts,tsx,js,jsx,mjs,cjs,py,go,java,cs,php,rb,yml,yaml,json}' .
+find . -type f \( -name '*cache*' -o -name '*redis*' -o -name '*worker*' \) -not -path './node_modules/*' -not -path './.git/*'
+```
+
+Classify each cache path as `has-invalidation`, `ttl-only`, `no-invalidation`, or `read-through-only`. Verdict requirement: Q2 is not safe until stale-data risk is classified for every cache hit.
+
+### Q3/Q6 blocking and singleton assumption inventory (mandatory)
+
+Run:
+
+```bash
+rg -n "(time\.sleep|sleep\(|requests\.|subprocess\.|sync\.|readFileSync|writeFileSync|execSync|spawnSync|global\.|singleton|inMemory|memory store|Map\(|new Map|setInterval|setTimeout)" -g '*.{ts,tsx,js,jsx,mjs,cjs,py,go,java,cs,php,rb}' .
+find . -type f \( -name '*worker*' -o -name '*job*' -o -name '*queue*' -o -name '*scheduler*' \) -not -path './node_modules/*' -not -path './.git/*'
+```
+
+Classify each match as `non-blocking`, `blocking-in-async-path`, `single-instance-assumption`, or `benign`. Verdict requirement: Q3 and Q6 need this inventory before a no-finding verdict.
+## Files most likely to have findings
+
+Don't read everything. Read these files first:
+
+- DB queries (especially in hot paths)
+- any 'cache' module
+- async/await usage
+- frontend list rendering
+- background job runners
+
+If you exhaust these and the budget allows, expand outward. Otherwise,
+report what you found and note what you didn't read.
+
+## Process
+
+1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
+   (quote before cite) - for a domain skill running as an isolated pass, the
+   audit context is fresh; don't assume you remember a file from
+   a previous turn.
+
+2. **Walk the key questions.** For each question, run the relevant
+   detection commands (greps, file reads, schema lookups). Capture
+   evidence at path:line. Verify by reading the actual code.
+
+3. **Cross-reference orchestrator inputs.** If the orchestrator passed
+   hard-stops or blind-spots findings tagged for this domain, include
+   them in your report. Don't re-investigate; just include with the
+   provided evidence.
+
+4. **Triage.** For each finding, set severity per the audit rubric and
+   exploitability per R4.
+
+5. **Produce the domain report.**
+
+## Output format
+
+```
+=======================================================================
+  DOMAIN 5: Performance
+=======================================================================
+
+> FOUNDER VIEW
+
+[2-4 sentences in plain English. Sample tone:]
+How does the app behave at 100x current load- Most vibe-coded apps fall over silently.
+
+> TECHNICAL EVIDENCE
+
+Scope of this domain audit:
+  Files read:        <count>
+  Files skipped:     <count> (reason: outside scope or low-priority)
+
+Findings:
+
+  F-5.1 - <one-line title>
+    Severity:        Critical | High | Medium | Low
+    Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
+    Hard-stop:       H<N> if applicable
+    Blind-spot:      B<N> if applicable
+
+    Evidence:
+      <path:line>  <one-line description>
+
+    What's wrong:
+      <one paragraph>
+
+    Why it matters:
+      <one sentence>
+
+    Recommended fix:
+      <one paragraph; for full fix prompt, use /audit-fix F-5.1>
+
+    Verification after fix:
+      <command>
+
+  F-5.2 ...
+
+Summary:
+  Total findings: <count>
+  By severity:    <counts>
+  Most urgent:    <which finding ID>
+
+[SECTION COMPLETE: Domain 5]
+```
+
+If the domain has zero findings:
+
+```
+> TECHNICAL EVIDENCE
+
+  PASS: No findings in this domain.
+
+  Verification:
+    <commands run that produced no signal>
+
+  Confidence: High | Medium | Low
+  Reason for low confidence: <if applicable>
+```
+
+
+
+## Failure modes to refuse
+
+- FAIL: Producing findings without path:line citations (R1)
+- FAIL: Citing a path you didn't read (R2)
+- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
+- FAIL: Including findings outside this domain's scope (route them to the
+  right domain instead)
+- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- FAIL: Skipping section completion marker (R6)
+---
+
+## Codex Port Notes
+
+- Audit mode is read-only for product code unless the user explicitly requests remediation.
+- Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
+- If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
+- Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

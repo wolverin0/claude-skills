@@ -10,7 +10,7 @@ This skill provides guidance for creating effective skills.
 
 ## About Skills
 
-Skills are modular, self-contained packages that extend Claude's capabilities by providing specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific domains or tasks—they transform Claude from a general-purpose agent into a specialized agent equipped with procedural knowledge that no model can fully possess.
+Skills are modular, self-contained packages that extend Claude's capabilities by providing specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific domains or tasks-they transform Claude from a general-purpose agent into a specialized agent equipped with procedural knowledge that no model can fully possess.
 
 ### What Skills Provide
 
@@ -25,7 +25,7 @@ Skills are modular, self-contained packages that extend Claude's capabilities by
 
 The context window is a public good. Skills share the context window with everything else Claude needs: system prompt, conversation history, other Skills' metadata, and the actual user request.
 
-**Default assumption: Claude is already very smart.** Only add context Claude doesn't already have. Challenge each piece of information: "Does Claude really need this explanation?" and "Does this paragraph justify its token cost?"
+**Default assumption: Claude is already very smart.** Only add context Claude doesn't already have. Challenge each piece of information: "Does Claude really need this explanation-" and "Does this paragraph justify its token cost-"
 
 Prefer concise examples over verbose explanations.
 
@@ -45,15 +45,15 @@ Every skill consists of a required SKILL.md file and optional bundled resources:
 
 ```
 skill-name/
-├── SKILL.md (required)
-│   ├── YAML frontmatter metadata (required)
-│   │   ├── name: (required)
-│   │   └── description: (required)
-│   └── Markdown instructions (required)
-└── Bundled Resources (optional)
-    ├── scripts/          - Executable code (Python/Bash/etc.)
-    ├── references/       - Documentation intended to be loaded into context as needed
-    └── assets/           - Files used in output (templates, icons, fonts, etc.)
++-- SKILL.md (required)
+|   +-- YAML frontmatter metadata (required)
+|   |   +-- name: (required)
+|   |   +-- description: (required)
+|   +-- Markdown instructions (required)
++-- Bundled Resources (optional)
+    +-- scripts/          - Executable code (Python/Bash/etc.)
+    +-- references/       - Documentation intended to be loaded into context as needed
+    +-- assets/           - Files used in output (templates, icons, fonts, etc.)
 ```
 
 #### SKILL.md (required)

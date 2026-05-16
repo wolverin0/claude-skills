@@ -29,25 +29,25 @@ Reference this skill when working on the specific project it's designed for. Pro
 
 **Services:**
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                            │
-│  Next.js 15 + TypeScript + TailwindCSS                     │
-│  Deployed: Vercel / Cloud Run                              │
-└─────────────────────────────────────────────────────────────┘
-                              │
++-------------------------------------------------------------+
+|                         Frontend                            |
+|  Next.js 15 + TypeScript + TailwindCSS                     |
+|  Deployed: Vercel / Cloud Run                              |
++-------------------------------------------------------------+
+                              |
                               ▼
-┌─────────────────────────────────────────────────────────────┐
-│                         Backend                             │
-│  FastAPI + Python 3.11 + Pydantic                          │
-│  Deployed: Cloud Run                                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
++-------------------------------------------------------------+
+|                         Backend                             |
+|  FastAPI + Python 3.11 + Pydantic                          |
+|  Deployed: Cloud Run                                       |
++-------------------------------------------------------------+
+                              |
+              +---------------+---------------+
               ▼               ▼               ▼
-        ┌──────────┐   ┌──────────┐   ┌──────────┐
-        │ Supabase │   │  Claude  │   │  Redis   │
-        │ Database │   │   API    │   │  Cache   │
-        └──────────┘   └──────────┘   └──────────┘
+        +----------+   +----------+   +----------+
+        | Supabase |   |  Claude  |   |  Redis   |
+        | Database |   |   API    |   |  Cache   |
+        +----------+   +----------+   +----------+
 ```
 
 ---
@@ -56,33 +56,33 @@ Reference this skill when working on the specific project it's designed for. Pro
 
 ```
 project/
-├── frontend/
-│   └── src/
-│       ├── app/              # Next.js app router pages
-│       │   ├── api/          # API routes
-│       │   ├── (auth)/       # Auth-protected routes
-│       │   └── workspace/    # Main app workspace
-│       ├── components/       # React components
-│       │   ├── ui/           # Base UI components
-│       │   ├── forms/        # Form components
-│       │   └── layouts/      # Layout components
-│       ├── hooks/            # Custom React hooks
-│       ├── lib/              # Utilities
-│       ├── types/            # TypeScript definitions
-│       └── config/           # Configuration
-│
-├── backend/
-│   ├── routers/              # FastAPI route handlers
-│   ├── models.py             # Pydantic models
-│   ├── main.py               # FastAPI app entry
-│   ├── auth_system.py        # Authentication
-│   ├── database.py           # Database operations
-│   ├── services/             # Business logic
-│   └── tests/                # pytest tests
-│
-├── deploy/                   # Deployment configs
-├── docs/                     # Documentation
-└── scripts/                  # Utility scripts
++-- frontend/
+|   +-- src/
+|       +-- app/              # Next.js app router pages
+|       |   +-- api/          # API routes
+|       |   +-- (auth)/       # Auth-protected routes
+|       |   +-- workspace/    # Main app workspace
+|       +-- components/       # React components
+|       |   +-- ui/           # Base UI components
+|       |   +-- forms/        # Form components
+|       |   +-- layouts/      # Layout components
+|       +-- hooks/            # Custom React hooks
+|       +-- lib/              # Utilities
+|       +-- types/            # TypeScript definitions
+|       +-- config/           # Configuration
+|
++-- backend/
+|   +-- routers/              # FastAPI route handlers
+|   +-- models.py             # Pydantic models
+|   +-- main.py               # FastAPI app entry
+|   +-- auth_system.py        # Authentication
+|   +-- database.py           # Database operations
+|   +-- services/             # Business logic
+|   +-- tests/                # pytest tests
+|
++-- deploy/                   # Deployment configs
++-- docs/                     # Documentation
++-- scripts/                  # Utility scripts
 ```
 
 ---
@@ -116,20 +116,20 @@ class ApiResponse(BaseModel, Generic[T]):
 ```typescript
 interface ApiResponse<T> {
   success: boolean
-  data?: T
-  error?: string
+  data-: T
+  error-: string
 }
 
 async function fetchApi<T>(
   endpoint: string,
-  options?: RequestInit
+  options-: RequestInit
 ): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(`/api${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...options?.headers,
+        ...options-.headers,
       },
     })
 

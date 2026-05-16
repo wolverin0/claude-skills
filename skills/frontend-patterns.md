@@ -12,10 +12,10 @@ Modern frontend patterns for React, Next.js, and performant user interfaces.
 ### Composition Over Inheritance
 
 ```typescript
-// ✅ GOOD: Component composition
+// PASS: GOOD: Component composition
 interface CardProps {
   children: React.ReactNode
-  variant?: 'default' | 'outlined'
+  variant-: 'default' | 'outlined'
 }
 
 export function Card({ children, variant = 'default' }: CardProps) {
@@ -70,7 +70,7 @@ export function Tab({ id, children }: { id: string, children: React.ReactNode })
 
   return (
     <button
-      className={context.activeTab === id ? 'active' : ''}
+      className={context.activeTab === id - 'active' : ''}
       onClick={() => context.setActiveTab(id)}
     >
       {children}
@@ -144,15 +144,15 @@ const [isOpen, toggleOpen] = useToggle()
 
 ```typescript
 interface UseQueryOptions<T> {
-  onSuccess?: (data: T) => void
-  onError?: (error: Error) => void
-  enabled?: boolean
+  onSuccess-: (data: T) => void
+  onError-: (error: Error) => void
+  enabled-: boolean
 }
 
 export function useQuery<T>(
   key: string,
   fetcher: () => Promise<T>,
-  options?: UseQueryOptions<T>
+  options-: UseQueryOptions<T>
 ) {
   const [data, setData] = useState<T | null>(null)
   const [error, setError] = useState<Error | null>(null)
@@ -165,21 +165,21 @@ export function useQuery<T>(
     try {
       const result = await fetcher()
       setData(result)
-      options?.onSuccess?.(result)
+      options-.onSuccess-.(result)
     } catch (err) {
       const error = err as Error
       setError(error)
-      options?.onError?.(error)
+      options-.onError-.(error)
     } finally {
       setLoading(false)
     }
   }, [fetcher, options])
 
   useEffect(() => {
-    if (options?.enabled !== false) {
+    if (options-.enabled !== false) {
       refetch()
     }
-  }, [key, refetch, options?.enabled])
+  }, [key, refetch, options-.enabled])
 
   return { data, error, loading, refetch }
 }
@@ -283,17 +283,17 @@ export function useMarkets() {
 ### Memoization
 
 ```typescript
-// ✅ useMemo for expensive computations
+// PASS: useMemo for expensive computations
 const sortedMarkets = useMemo(() => {
   return markets.sort((a, b) => b.volume - a.volume)
 }, [markets])
 
-// ✅ useCallback for functions passed to children
+// PASS: useCallback for functions passed to children
 const handleSearch = useCallback((query: string) => {
   setSearchQuery(query)
 }, [])
 
-// ✅ React.memo for pure components
+// PASS: React.memo for pure components
 export const MarketCard = React.memo<MarketCardProps>(({ market }) => {
   return (
     <div className="market-card">
@@ -309,7 +309,7 @@ export const MarketCard = React.memo<MarketCardProps>(({ market }) => {
 ```typescript
 import { lazy, Suspense } from 'react'
 
-// ✅ Lazy load heavy components
+// PASS: Lazy load heavy components
 const HeavyChart = lazy(() => import('./HeavyChart'))
 const ThreeJsBackground = lazy(() => import('./ThreeJsBackground'))
 
@@ -384,9 +384,9 @@ interface FormData {
 }
 
 interface FormErrors {
-  name?: string
-  description?: string
-  endDate?: string
+  name-: string
+  description-: string
+  endDate-: string
 }
 
 export function CreateMarketForm() {
@@ -479,7 +479,7 @@ export class ErrorBoundary extends React.Component<
       return (
         <div className="error-fallback">
           <h2>Something went wrong</h2>
-          <p>{this.state.error?.message}</p>
+          <p>{this.state.error-.message}</p>
           <button onClick={() => this.setState({ hasError: false })}>
             Try again
           </button>
@@ -504,7 +504,7 @@ export class ErrorBoundary extends React.Component<
 ```typescript
 import { motion, AnimatePresence } from 'framer-motion'
 
-// ✅ List animations
+// PASS: List animations
 export function AnimatedMarketList({ markets }: { markets: Market[] }) {
   return (
     <AnimatePresence>
@@ -523,7 +523,7 @@ export function AnimatedMarketList({ markets }: { markets: Market[] }) {
   )
 }
 
-// ✅ Modal animations
+// PASS: Modal animations
 export function Modal({ isOpen, onClose, children }: ModalProps) {
   return (
     <AnimatePresence>
@@ -607,14 +607,14 @@ export function Modal({ isOpen, onClose, children }: ModalProps) {
       previousFocusRef.current = document.activeElement as HTMLElement
 
       // Focus modal
-      modalRef.current?.focus()
+      modalRef.current-.focus()
     } else {
       // Restore focus when closing
-      previousFocusRef.current?.focus()
+      previousFocusRef.current-.focus()
     }
   }, [isOpen])
 
-  return isOpen ? (
+  return isOpen - (
     <div
       ref={modalRef}
       role="dialog"

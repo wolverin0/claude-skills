@@ -50,39 +50,69 @@ Claude is both a **participant and moderator**, contributing its own analysis al
 
 ### Validation Skill
 **Location:** `skills/validation/`
-**Purpose:** Comprehensive web app validation with REAL browser testing and evidence-based reporting
+**Purpose:** CLI-agnostic browser validation with evidence-based reporting.
 
-Automatically discovers and tests ALL interactive elements in your web application across 4 breakpoints (mobile, tablet, laptop, desktop). Tests with actual browser interactions, not just static analysis.
+Discovers routes, elements, and critical flows, then validates them in a real browser with screenshots, redacted snapshots, console/error checks, failed-network grouping, observed outcomes, resumable state, and an HTML report.
 
-**Key Features:**
-- **Comprehensive discovery** - Finds every button, link, form, and input
-- **Real verification** - Clicks elements and verifies outcomes actually happened
-- **Screenshot analysis** - Captures AND analyzes screenshots at each breakpoint
-- **Console error checking** - Checks for JavaScript errors after every interaction
-- **Session persistence** - Resume testing across context resets without losing progress
-- **HTML reports** - Persistent, evidence-based reports with screenshots
-- **Automatic cleanup** - Removes test artifacts after validation
-
-**Typical workflow:**
-1. **PRE-FLIGHT:** Verify dev server is running
-2. **DISCOVER:** Find all routes, elements, and critical flows
-3. **TEST:** Test each element at all breakpoints with verification
-4. **REPORT:** Generate HTML report with evidence
+**Backend strategy:**
+- Default: `agent-browser`
+- Fallbacks/adapters: project-local Playwright, `playwright-cli`, Playwright MCP, Claude/Codex Chrome MCP tools, and `browser-harness`
 
 **Usage:**
 ```bash
 /validate http://localhost:3000
-/validate --resume    # Resume from previous state
-/validate --fresh     # Start fresh validation
+/validate --interactive
+/validate --backend agent-browser --mode standard http://localhost:5173
+/validate --backend playwright-local --config validation.config.json --mode standard http://localhost:5173
+/validate --fresh
+/validate --resume
 ```
 
-**Output:** Persistent HTML reports in `test-manifest/reports/` with:
-- Screenshots for every element at every breakpoint
-- Console errors found during testing
-- Passed/failed tests with evidence
-- UI issues identified
+For deterministic runs, `skills/validation/scripts/select-backend.js` can recommend the available backend from the target project before execution.
 
-**[Full Documentation →](skills/validation/README.md)**
+**Output:** `test-manifest/validation-state.json`, evidence files under `test-manifest/evidence/`, and HTML reports under `test-manifest/reports/`. Project-local Playwright runs may use `validation.config.json` for route expectations, permission-aware access-denied handling, breakpoints, and extra redaction values.
+
+---
+
+### Audit Skill Bundle
+**Location:** `skills/audit/`
+**Purpose:** Multi-skill technical due diligence pipeline for codebase audits.
+
+The bundle includes the audit orchestrator, setup method, hard-stop checks, Tambon hunt, blind-spot walk, 13 domain audits, audit decision handling, fix-prompt generation, and audit-loop iteration.
+
+Install all audit skills by copying the children of `skills/audit/` into your active skill root:
+
+```bash
+cp -r skills/audit/* ~/.codex/skills/
+cp -r skills/audit/* ~/.claude/skills/
+```
+
+Primary entry points:
+
+- `audit-orchestrator`: full `/audit` style due diligence.
+- `audit-loop`: audit, roadmap, remediation, rerun, and skill patching loop.
+- `audit-fix-generator`: produce remediation prompts for individual findings.
+
+---
+
+### Project And Handoff Skills
+**Location:** `skills/project-setup/`, `skills/project-curate/`, `skills/project-doctor/`, `skills/handoff/`, `skills/skillify/`
+
+These are reusable workflow skills:
+
+- `project-setup`: generate or refresh `CLAUDE.md` and `AGENTS.md` from a real codebase.
+- `project-curate`: tune a project's `.claude/` directory with targeted rules/skills/agents.
+- `project-doctor`: read-only audit of project orchestration scaffolding.
+- `handoff`: write a structured session handoff for clean context transfer.
+- `skillify`: turn a successful repeated workflow into a reusable skill.
+
+---
+
+### MercadoPago Integration Skill
+**Location:** `skills/mercadopago-integration/`
+**Purpose:** MercadoPago OAuth/payment integration guidance for Supabase/React-style apps.
+
+The repo copy was checked against the installed skill copies; content differences were line-ending-only for the compared files, so the repo version remains the canonical copy.
 
 ---
 
@@ -181,6 +211,12 @@ cp -r skills/debate ~/.claude/skills/
 # Validation skill
 cp -r skills/validation ~/.claude/skills/
 
+# Audit bundle
+cp -r skills/audit/* ~/.claude/skills/
+
+# Workflow skills
+cp -r skills/handoff skills/skillify skills/project-setup skills/project-curate skills/project-doctor ~/.claude/skills/
+
 # Or link instead of copy
 ln -s $(pwd)/skills/debate ~/.claude/skills/debate
 ln -s $(pwd)/skills/validation ~/.claude/skills/validation
@@ -239,9 +275,9 @@ python -m http.server 8000
 - [OpenAI Codex CLI](https://github.com/openai/codex) - `npm install -g openai-codex`
 
 ### For Validation Skill
-- [Claude Code CLI](https://github.com/anthropics/claude-code)
-- [Claude-in-Chrome MCP Extension](https://github.com/anthropics/claude-in-chrome) - Browser automation via MCP
 - Running web application (dev server or static site)
+- Recommended backend: `agent-browser`
+- Optional backends: `playwright-cli`, Playwright MCP, Claude/Codex Chrome MCP tools, or `browser-harness`
 
 ### For Retrospective Learning
 - Claude Code (already required for skills)
@@ -253,7 +289,7 @@ python -m http.server 8000
 
 ### Skills
 - **[Debate Skill Documentation](skills/debate/README.md)** - Full debate skill usage guide
-- **[Validation Skill Documentation](skills/validation/README.md)** - Comprehensive app validation guide
+- **[Validation Skill](skills/validation/SKILL.md)** - Adapter-based browser validation skill
 - **[Feature Validation Example](tools/sample/feature-validation-SKILL.md)** - Reference implementation with retrospective learning
 
 ### Tools

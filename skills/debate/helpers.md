@@ -257,10 +257,10 @@ detect_failure_mode() {
 ```
 
 **Return codes:**
-- `0` — Success
-- `1` — All retries failed
-- `2` — Session expired (create new session)
-- `3` — Usage limit (skip advisor)
+- `0` - Success
+- `1` - All retries failed
+- `2` - Session expired (create new session)
+- `3` - Usage limit (skip advisor)
 
 ---
 
@@ -352,7 +352,7 @@ log_advisor_success() {
     local words="$3"
     local seconds="$4"
 
-    echo "✓ $advisor Round $round completed ($words words, ${seconds}s)" >&2
+    echo "PASS: $advisor Round $round completed ($words words, ${seconds}s)" >&2
 }
 ```
 

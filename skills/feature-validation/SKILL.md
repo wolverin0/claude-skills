@@ -5,7 +5,7 @@ description: Use when implementation is complete and needs validation - tests RE
 
 # Feature Validation
 
-## 🚨 CRITICAL BLOCKERS - READ FIRST
+## IMPORTANT: CRITICAL BLOCKERS - READ FIRST
 
 **This skill has TWO mandatory file reads that CANNOT be skipped:**
 
@@ -13,7 +13,7 @@ description: Use when implementation is complete and needs validation - tests RE
 
 2. **Phase 10 BLOCKER:** You MUST re-read the session transcript to perform an evidence-based retrospective. Cite specific line numbers. In-context memory is NOT sufficient.
 
-**Session transcript location:** `~/.claude/projects/` — find the subdirectory matching your current project (the slug is derived from the project's absolute path with path separators replaced by `-`).
+**Session transcript location:** `~/.claude/projects/` - find the subdirectory matching your current project (the slug is derived from the project's absolute path with path separators replaced by `-`).
 
 **If you cannot read the transcript:** STOP and inform the user. Do not proceed with memory-based retrospective.
 
@@ -86,7 +86,7 @@ git log --oneline -5
 git diff --cached --name-only
 ```
 
-**🚨 MANDATORY: Identify Trigger Context from Session Transcript**
+**IMPORTANT: MANDATORY: Identify Trigger Context from Session Transcript**
 
 You MUST read the actual session transcript file to identify the trigger message. This is NOT optional.
 
@@ -131,7 +131,7 @@ Read: file_path=".../{session_id}.jsonl" offset={trigger_line - 5} limit=10
 **Step 4: Find the trigger message**
 Search the transcript for the message where `/feature-validation` was invoked. Look for:
 - User message containing `/feature-validation` or similar skill invocation
-- The context around that message (what was the user asking for?)
+- The context around that message (what was the user asking for-)
 - Note the approximate line number or message index
 
 **Step 5: Document the trigger**
@@ -230,10 +230,10 @@ browser_console_messages
 | Hover | `browser_hover` | `selector=".dropdown-trigger"` |
 
 **Test interaction patterns:**
-1. Click/tap → Verify expected response
-2. Fill form → Verify validation feedback
-3. Submit → Verify success/error handling
-4. Navigate → Verify route change
+1. Click/tap -> Verify expected response
+2. Fill form -> Verify validation feedback
+3. Submit -> Verify success/error handling
+4. Navigate -> Verify route change
 
 ## Phase 7: CRUD Testing (If Applicable)
 
@@ -363,7 +363,7 @@ browser_take_screenshot: filename="test-crud-create-form.png"
 
 ## Phase 10: Retrospective & Learning
 
-**🚨 MANDATORY: Read Session Transcript for Evidence-Based Retrospective**
+**IMPORTANT: MANDATORY: Read Session Transcript for Evidence-Based Retrospective**
 
 You MUST read the actual session transcript to perform a proper retrospective. Do NOT rely on in-context memory alone.
 
@@ -406,11 +406,11 @@ From the transcript, identify:
 
 | Question | Evidence Required |
 |----------|-------------------|
-| Did I stick to the plan? | Quote specific tool calls or actions from transcript |
-| Did I catch all errors? | List console errors found vs. errors in final report |
-| Was the report comprehensive? | Compare screenshots taken vs. tests documented |
-| Did I skip any phases? | Check transcript for each phase marker |
-| Did user have to correct me? | Quote any user corrections from transcript |
+| Did I stick to the plan- | Quote specific tool calls or actions from transcript |
+| Did I catch all errors- | List console errors found vs. errors in final report |
+| Was the report comprehensive- | Compare screenshots taken vs. tests documented |
+| Did I skip any phases- | Check transcript for each phase marker |
+| Did user have to correct me- | Quote any user corrections from transcript |
 
 **Step 5: Structured Reflection with Citations**
 
@@ -467,14 +467,14 @@ Before finishing, verify:
 
 ## Red Flags - STOP and Fix
 
-- "I'll just screenshot my validation summary" → NO, test the REAL feature
-- "Console errors are minor" → NO, all errors are failures to document
-- "CRUD read is enough" → NO, test full create/update/delete cycle
-- "The feature looks correct" → VERIFY with interaction, don't assume
-- "I'll clean up test reports later" → NO, reports are PERMANENT
-- **"I remember what happened"** → NO, READ the session transcript file
-- **"Based on my recollection"** → NO, CITE line numbers from .jsonl file
-- **"The retrospective is from memory"** → BLOCKED - must read transcript first
+- "I'll just screenshot my validation summary" -> NO, test the REAL feature
+- "Console errors are minor" -> NO, all errors are failures to document
+- "CRUD read is enough" -> NO, test full create/update/delete cycle
+- "The feature looks correct" -> VERIFY with interaction, don't assume
+- "I'll clean up test reports later" -> NO, reports are PERMANENT
+- **"I remember what happened"** -> NO, READ the session transcript file
+- **"Based on my recollection"** -> NO, CITE line numbers from .jsonl file
+- **"The retrospective is from memory"** -> BLOCKED - must read transcript first
 
 ## Quick Reference
 
@@ -510,7 +510,7 @@ const testEmail = `test-${testId}@example.com`;
 
 Use TodoWrite to track each validation step:
 
-- [ ] **🚨 READ session transcript** (find .jsonl in `.claude/projects/`, identify trigger message)
+- [ ] **IMPORTANT: READ session transcript** (find .jsonl in `.claude/projects/`, identify trigger message)
 - [ ] **Document trigger context** (session ID, line number, user request)
 - [ ] Analyze implementation (git diff, identify changes)
 - [ ] Plan test scenarios (categorize, create test list)
@@ -522,6 +522,6 @@ Use TodoWrite to track each validation step:
 - [ ] Capture screenshots (every significant state)
 - [ ] Generate HTML report (save to /test/[phase]/)
 - [ ] Verify report is persistent (not deleted)
-- [ ] **🚨 RE-READ session transcript for Phase 10**
+- [ ] **IMPORTANT: RE-READ session transcript for Phase 10**
 - [ ] **Perform Evidence-Based Retrospective** (cite line numbers, quote transcript)
 - [ ] **Validate retrospective completeness** (all 4 checkboxes in Phase 10 Step 5)

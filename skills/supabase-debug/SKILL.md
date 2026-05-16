@@ -1,4 +1,4 @@
-﻿---
+---
 name: supabase-debug
 description: Use when diagnosing Supabase issues like RLS, auth, empty queries, webhooks, and performance problems in production apps.
 ---
@@ -13,17 +13,17 @@ Quick-reference debugging skill for Supabase-backed projects (9/11 active projec
 ```
 Symptom: Query returns empty array but data exists in DB
 ```
-1. **Check RLS policies** â€” most common cause
+1. **Check RLS policies** - most common cause
    ```sql
    -- View policies on a table
    SELECT * FROM pg_policies WHERE tablename = 'your_table';
    ```
-2. **Check auth state** â€” is user authenticated?
+2. **Check auth state** - is user authenticated-
    ```typescript
    const { data: { user } } = await supabase.auth.getUser();
-   console.log('Auth state:', user?.id, user?.role);
+   console.log('Auth state:', user-.id, user-.role);
    ```
-3. **Check tenant filtering** â€” multi-tenant apps filter by `company_id`
+3. **Check tenant filtering** - multi-tenant apps filter by `company_id`
    ```typescript
    // Verify the company_id matches
    const { data } = await supabase.from('table').select('*').eq('company_id', companyId);
@@ -42,7 +42,7 @@ Symptom: 401 Unauthorized, session expired, login loops
 ```
 Symptom: Function call returns error or unexpected result
 ```
-1. Check Supabase dashboard â†’ Edge Functions â†’ Logs
+1. Check Supabase dashboard -> Edge Functions -> Logs
 2. Verify function exists and is deployed: `supabase functions list`
 3. Check function has correct permissions (auth required vs public)
 4. Test directly: `curl -X POST <supabase_url>/functions/v1/<function_name>`
@@ -62,7 +62,7 @@ Symptom: UI not updating when data changes
 ```
 1. Verify Realtime is enabled for the table in Supabase dashboard
 2. Check subscription filter matches: `.on('postgres_changes', { event: '*', schema: 'public', table: 'your_table' })`
-3. RLS applies to realtime too â€” check policies
+3. RLS applies to realtime too - check policies
 4. Check browser console for WebSocket errors
 
 ## Quick Diagnostic Commands

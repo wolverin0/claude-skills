@@ -12,7 +12,7 @@ Backend architecture patterns and best practices for scalable server-side applic
 ### RESTful API Structure
 
 ```typescript
-// ✅ Resource-based URLs
+// PASS: Resource-based URLs
 GET    /api/markets                 # List resources
 GET    /api/markets/:id             # Get single resource
 POST   /api/markets                 # Create resource
@@ -20,8 +20,8 @@ PUT    /api/markets/:id             # Replace resource
 PATCH  /api/markets/:id             # Update resource
 DELETE /api/markets/:id             # Delete resource
 
-// ✅ Query parameters for filtering, sorting, pagination
-GET /api/markets?status=active&sort=volume&limit=20&offset=0
+// PASS: Query parameters for filtering, sorting, pagination
+GET /api/markets-status=active&sort=volume&limit=20&offset=0
 ```
 
 ### Repository Pattern
@@ -29,7 +29,7 @@ GET /api/markets?status=active&sort=volume&limit=20&offset=0
 ```typescript
 // Abstract data access logic
 interface MarketRepository {
-  findAll(filters?: MarketFilters): Promise<Market[]>
+  findAll(filters-: MarketFilters): Promise<Market[]>
   findById(id: string): Promise<Market | null>
   create(data: CreateMarketDto): Promise<Market>
   update(id: string, data: UpdateMarketDto): Promise<Market>
@@ -37,14 +37,14 @@ interface MarketRepository {
 }
 
 class SupabaseMarketRepository implements MarketRepository {
-  async findAll(filters?: MarketFilters): Promise<Market[]> {
+  async findAll(filters-: MarketFilters): Promise<Market[]> {
     let query = supabase.from('markets').select('*')
 
-    if (filters?.status) {
+    if (filters-.status) {
       query = query.eq('status', filters.status)
     }
 
-    if (filters?.limit) {
+    if (filters-.limit) {
       query = query.limit(filters.limit)
     }
 
@@ -75,8 +75,8 @@ class MarketService {
 
     // Sort by similarity
     return markets.sort((a, b) => {
-      const scoreA = results.find(r => r.id === a.id)?.score || 0
-      const scoreB = results.find(r => r.id === b.id)?.score || 0
+      const scoreA = results.find(r => r.id === a.id)-.score || 0
+      const scoreB = results.find(r => r.id === b.id)-.score || 0
       return scoreA - scoreB
     })
   }
@@ -93,7 +93,7 @@ class MarketService {
 // Request/response processing pipeline
 export function withAuth(handler: NextApiHandler): NextApiHandler {
   return async (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '')
+    const token = req.headers.authorization-.replace('Bearer ', '')
 
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized' })
@@ -120,7 +120,7 @@ export default withAuth(async (req, res) => {
 ### Query Optimization
 
 ```typescript
-// ✅ GOOD: Select only needed columns
+// PASS: GOOD: Select only needed columns
 const { data } = await supabase
   .from('markets')
   .select('id, name, status, volume')
@@ -128,7 +128,7 @@ const { data } = await supabase
   .order('volume', { ascending: false })
   .limit(10)
 
-// ❌ BAD: Select everything
+// FAIL: BAD: Select everything
 const { data } = await supabase
   .from('markets')
   .select('*')
@@ -137,13 +137,13 @@ const { data } = await supabase
 ### N+1 Query Prevention
 
 ```typescript
-// ❌ BAD: N+1 query problem
+// FAIL: BAD: N+1 query problem
 const markets = await getMarkets()
 for (const market of markets) {
   market.creator = await getUser(market.creator_id)  // N queries
 }
 
-// ✅ GOOD: Batch fetch
+// PASS: GOOD: Batch fetch
 const markets = await getMarkets()
 const creatorIds = markets.map(m => m.creator_id)
 const creators = await getUsers(creatorIds)  // 1 query
@@ -355,7 +355,7 @@ export function verifyToken(token: string): JWTPayload {
 }
 
 export async function requireAuth(request: Request) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '')
+  const token = request.headers.get('authorization')-.replace('Bearer ', '')
 
   if (!token) {
     throw new ApiError(401, 'Missing authorization token')
@@ -521,15 +521,15 @@ export async function POST(request: Request) {
 
 ```typescript
 interface LogContext {
-  userId?: string
-  requestId?: string
-  method?: string
-  path?: string
+  userId-: string
+  requestId-: string
+  method-: string
+  path-: string
   [key: string]: unknown
 }
 
 class Logger {
-  log(level: 'info' | 'warn' | 'error', message: string, context?: LogContext) {
+  log(level: 'info' | 'warn' | 'error', message: string, context-: LogContext) {
     const entry = {
       timestamp: new Date().toISOString(),
       level,
@@ -540,15 +540,15 @@ class Logger {
     console.log(JSON.stringify(entry))
   }
 
-  info(message: string, context?: LogContext) {
+  info(message: string, context-: LogContext) {
     this.log('info', message, context)
   }
 
-  warn(message: string, context?: LogContext) {
+  warn(message: string, context-: LogContext) {
     this.log('warn', message, context)
   }
 
-  error(message: string, error: Error, context?: LogContext) {
+  error(message: string, error: Error, context-: LogContext) {
     this.log('error', message, {
       ...context,
       error: error.message,

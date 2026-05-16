@@ -1,9 +1,9 @@
-﻿---
+---
 name: debug-resolve
 description: Use when debugging a bug or incident and you need a strict end-to-end investigation loop from reproduction to verified fix.
 ---
 
-# Debug & Resolve â€” Don't Stop Until Green
+# Debug & Resolve - Don't Stop Until Green
 
 Systematic debugging skill that enforces resolution. Use when debugging a bug or investigating an issue.
 
@@ -17,7 +17,7 @@ Systematic debugging skill that enforces resolution. Use when debugging a bug or
 ### Step 1: Gather Context
 - Read the error message / bug report carefully
 - Identify which service is affected (check project CLAUDE.md)
-- Read relevant source files (entry point â†’ error location)
+- Read relevant source files (entry point -> error location)
 - Check logs: server logs, browser console, Supabase logs, Docker logs
 
 ### Step 2: Reproduce
@@ -39,7 +39,7 @@ Systematic debugging skill that enforces resolution. Use when debugging a bug or
 
 ### Step 5: Verify (MANDATORY)
 ```bash
-# Run the failing test â€” it should now pass
+# Run the failing test - it should now pass
 npm test / pytest / cargo test
 
 # Build check

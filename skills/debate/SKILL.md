@@ -1,7 +1,6 @@
 ---
 name: debate
 description: Multi-LLM debate orchestration (Claude vs Codex vs Gemini) with rounds + synthesis.
-disable-model-invocation: true
 ---
 
 # AI Debate Hub Skill v6.0.0
@@ -21,15 +20,15 @@ You are Claude, a **participant and moderator** in a three-way AI debate. You ru
 ```
 
 **Flags:**
-- `-r N` / `--rounds N` — Number of rounds (1-10, default: 1)
-- `-d STYLE` / `--debate-style STYLE` — quick|thorough|adversarial|collaborative
-- `-m MODE` / `--moderator-style MODE` — transparent|guided|authoritative (default: guided)
-- `-w N` / `--max-words N` — Word limit per response (default: 300)
+- `-r N` / `--rounds N` - Number of rounds (1-10, default: 1)
+- `-d STYLE` / `--debate-style STYLE` - quick|thorough|adversarial|collaborative
+- `-m MODE` / `--moderator-style MODE` - transparent|guided|authoritative (default: guided)
+- `-w N` / `--max-words N` - Word limit per response (default: 300)
 
 **Moderator styles:**
-- `transparent` — Claude presents all views neutrally, minimal editorial voice
-- `guided` (default) — Claude highlights key disagreements and steers toward resolution
-- `authoritative` — Claude takes strong positions and challenges weak arguments
+- `transparent` - Claude presents all views neutrally, minimal editorial voice
+- `guided` (default) - Claude highlights key disagreements and steers toward resolution
+- `authoritative` - Claude takes strong positions and challenges weak arguments
 
 **Style defaults (when --rounds not specified):** quick=1, thorough=3, adversarial=3, collaborative=2
 
@@ -46,12 +45,12 @@ You are Claude, a **participant and moderator** in a three-way AI debate. You ru
 3. Create folder structure:
    ```
    {cwd}/debates/
-   ├── index.json          # Add debate ID to array
-   ├── viewer.html         # Copy from skill folder if missing
-   └── NNN-topic-slug/
-       ├── state.json      # Initialize (see below)
-       ├── context.md      # Question + config
-       └── rounds/         # Empty folder
+   +-- index.json          # Add debate ID to array
+   +-- viewer.html         # Copy from skill folder if missing
+   +-- NNN-topic-slug/
+       +-- state.json      # Initialize (see below)
+       +-- context.md      # Question + config
+       +-- rounds/         # Empty folder
    ```
 
 4. **Initialize state.json:**
@@ -76,15 +75,15 @@ You are Claude, a **participant and moderator** in a three-way AI debate. You ru
    ```
 
    **Telemetry fields:**
-   - `round_durations` — Object mapping round number to seconds: `{"1": 45, "2": 38}`
-   - `retries_count` — Total retry attempts across all rounds
-   - `last_error` — `null` or `{"type": "rate_limit", "message": "429 Too Many Requests", "round": 2, "advisor": "gemini", "timestamp": "ISO-8601"}`
+   - `round_durations` - Object mapping round number to seconds: `{"1": 45, "2": 38}`
+   - `retries_count` - Total retry attempts across all rounds
+   - `last_error` - `null` or `{"type": "rate_limit", "message": "429 Too Many Requests", "round": 2, "advisor": "gemini", "timestamp": "ISO-8601"}`
 
-5. **Update index.json atomically** — Add debate folder name to the `debates` array. Use `update_debate_index()` from helpers.md to prevent corruption during parallel debates.
+5. **Update index.json atomically** - Add debate folder name to the `debates` array. Use `update_debate_index()` from helpers.md to prevent corruption during parallel debates.
 
 ### Phase 2: Run Rounds
 
-**Round 1 — All three analyze independently:**
+**Round 1 - All three analyze independently:**
 
 ```bash
 # Gemini (from project root for file access)
@@ -106,7 +105,7 @@ After both respond:
 - Capture session UUIDs and store in state.json
 - Record round duration in `telemetry.round_durations`
 
-**Round 2+ — All three respond to each other:**
+**Round 2+ - All three respond to each other:**
 
 ```bash
 # Gemini (resume session)
@@ -134,10 +133,10 @@ After both respond:
 On failure, read `helpers.md` in this skill folder for retry logic and error handling functions.
 
 **Quick reference:**
-- Timeout → Retry with exponential backoff (2s, 4s, 8s)
-- Rate limit → Wait 60s, retry
-- Session expired → Create new session with full context
-- Usage limit → Skip advisor, continue with others
+- Timeout -> Retry with exponential backoff (2s, 4s, 8s)
+- Rate limit -> Wait 60s, retry
+- Session expired -> Create new session with full context
+- Usage limit -> Skip advisor, continue with others
 
 **Always record failures in state.json:**
 ```json
@@ -157,7 +156,7 @@ On failure, read `helpers.md` in this skill folder for retry logic and error han
 
 After all rounds complete (or early-stop triggered):
 
-1. **Create transcript.md** — Combine all rounds chronologically
+1. **Create transcript.md** - Combine all rounds chronologically
 2. **Create synthesis.md** using the structured output contract:
    ```markdown
    # Debate Synthesis: {topic}
@@ -235,12 +234,12 @@ Each round, write YOUR analysis to `rounds/r00N_claude.md` following the output 
 
 Wrong: "Gemini said X, Codex said Y. Both make good points."
 
-Right: "Gemini raises a valid concern about performance, but misses our existing cache. Codex's security point is critical—I agree. However, BOTH missed the rate limiting vulnerability. My recommendation: address security first (agreeing with Codex), use existing cache (disagreeing with Gemini)."
+Right: "Gemini raises a valid concern about performance, but misses our existing cache. Codex's security point is critical-I agree. However, BOTH missed the rate limiting vulnerability. My recommendation: address security first (agreeing with Codex), use existing cache (disagreeing with Gemini)."
 
 **Adapt tone to `--moderator-style`:**
-- `transparent` — Present your position alongside others, equal weight
-- `guided` — Highlight the strongest arguments, steer toward resolution
-- `authoritative` — Take a firm stance, challenge weak reasoning directly
+- `transparent` - Present your position alongside others, equal weight
+- `guided` - Highlight the strongest arguments, steer toward resolution
+- `authoritative` - Take a firm stance, challenge weak reasoning directly
 
 ---
 
@@ -265,17 +264,17 @@ Before ending any debate, verify:
 
 ```
 debates/
-├── index.json              ✓ Contains this debate
-├── viewer.html             ✓ Exists
-└── NNN-topic/
-    ├── state.json          ✓ Has status, participants, current_round
-    ├── context.md          ✓ Has question
-    ├── transcript.md       ✓ (if completed)
-    ├── synthesis.md        ✓ (if completed)
-    └── rounds/
-        ├── r001_gemini.md  ✓
-        ├── r001_codex.md   ✓
-        └── r001_claude.md  ✓ YOUR contribution
++-- index.json              PASS: Contains this debate
++-- viewer.html             PASS: Exists
++-- NNN-topic/
+    +-- state.json          PASS: Has status, participants, current_round
+    +-- context.md          PASS: Has question
+    +-- transcript.md       PASS: (if completed)
+    +-- synthesis.md        PASS: (if completed)
+    +-- rounds/
+        +-- r001_gemini.md  PASS:
+        +-- r001_codex.md   PASS:
+        +-- r001_claude.md  PASS: YOUR contribution
 ```
 
 ---
@@ -286,10 +285,10 @@ For error handling, retry logic, and atomic state updates, read:
 `helpers.md` in this skill folder.
 
 This contains:
-- `update_debate_state()` — Safe atomic state writes
-- `update_debate_index()` — Safe atomic index.json writes (parallel-safe)
-- `run_advisor_with_retry()` — Exponential backoff retry with telemetry
-- `log_contextual_error()` — User-friendly error output
+- `update_debate_state()` - Safe atomic state writes
+- `update_debate_index()` - Safe atomic index.json writes (parallel-safe)
+- `run_advisor_with_retry()` - Exponential backoff retry with telemetry
+- `log_contextual_error()` - User-friendly error output
 
 **Cross-platform alternative:** For Windows/macOS without `flock`, use:
 ```bash

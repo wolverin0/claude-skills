@@ -15,7 +15,7 @@ CRITICAL:
 - DO NOT rewrite existing content
 - ONLY add Phase 1 trigger capture (before current Phase 1)
 - ONLY add Phase 10 retrospective (after current Phase 9)
-- Update phase numbers: Phase 1→2, Phase 2→3, etc.
+- Update phase numbers: Phase 1->2, Phase 2->3, etc.
 - Line count should increase ~40-50% (not double or triple)
 
 Use feature-validation/SKILL.md as reference for what sections to add.
@@ -29,7 +29,7 @@ Use feature-validation/SKILL.md as reference for what sections to add.
 
 **Before (SKILL.md.bak):**
 - 353 lines
-- 9 phases (Analyze → Plan → Server → Navigate → Console → Interact → CRUD → Screenshot → Report)
+- 9 phases (Analyze -> Plan -> Server -> Navigate -> Console -> Interact -> CRUD -> Screenshot -> Report)
 
 **After (SKILL.md):**
 - 528 lines (+175 lines, +49%)
@@ -146,11 +146,11 @@ From the transcript, identify:
 
 | Question | Evidence Required |
 |----------|-------------------|
-| Did I stick to the plan? | Quote specific tool calls from transcript |
-| Did I catch all errors? | List errors found vs. documented |
-| Was the output comprehensive? | Compare actions taken vs. expected |
-| Did I skip any phases? | Check transcript for each phase marker |
-| Did user have to correct me? | Quote any corrections from transcript |
+| Did I stick to the plan- | Quote specific tool calls from transcript |
+| Did I catch all errors- | List errors found vs. documented |
+| Was the output comprehensive- | Compare actions taken vs. expected |
+| Did I skip any phases- | Check transcript for each phase marker |
+| Did user have to correct me- | Quote any corrections from transcript |
 
 **Step 5: Structured Reflection with Citations**
 
@@ -211,9 +211,9 @@ Add these rows to your existing "Common Mistakes" table:
 Add these items:
 
 ```markdown
-- **"I remember what happened"** → NO, READ the session transcript file
-- **"Based on my recollection"** → NO, CITE line numbers from .jsonl file
-- **"The retrospective is from memory"** → BLOCKED - must read transcript first
+- **"I remember what happened"** -> NO, READ the session transcript file
+- **"Based on my recollection"** -> NO, CITE line numbers from .jsonl file
+- **"The retrospective is from memory"** -> BLOCKED - must read transcript first
 ```
 
 ---
@@ -242,7 +242,7 @@ Add these items at the start and end:
 After integration, check:
 
 ### Line Count
-- [ ] Increased by 40-60% (e.g., 353 → 528 lines)
+- [ ] Increased by 40-60% (e.g., 353 -> 528 lines)
 - [ ] NOT doubled or tripled
 
 ### Phase Count
@@ -262,7 +262,7 @@ After integration, check:
 
 ## Common Failures
 
-### File size exploded (353 → 2000+ lines)
+### File size exploded (353 -> 2000+ lines)
 **Problem:** Claude rewrote everything
 **Fix:** Restore backup, be MORE explicit: "DO NOT REWRITE, ONLY ADD 2 PHASES"
 
@@ -322,7 +322,7 @@ Based on actual feature-validation integration:
 
 ## Red Flags
 
-+- **"I remember what happened"** → NO, READ the session transcript
++- **"I remember what happened"** -> NO, READ the session transcript
 
 ## Checklist
 
@@ -339,10 +339,10 @@ Based on actual feature-validation integration:
 ## Done
 
 Your skill now has:
-- ✅ Trigger capture in Phase 1
-- ✅ Evidence-based retrospective in final phase
-- ✅ Session transcript reading with size handling
-- ✅ Self-improvement capability through learning
+- PASS: Trigger capture in Phase 1
+- PASS: Evidence-based retrospective in final phase
+- PASS: Session transcript reading with size handling
+- PASS: Self-improvement capability through learning
 
 **Backup preserved at:** `SKILL.md.backup-{timestamp}`
 

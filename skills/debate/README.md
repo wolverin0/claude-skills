@@ -55,8 +55,8 @@ AI Debate Hub creates a three-way discussion where all three AI systems analyze 
 
 Two options:
 
-1. **WSL (recommended)** — Run everything inside WSL. All bash helpers work natively.
-2. **Node.js alternative** — Use `tools/atomic-json.mjs` instead of bash helpers for state/index management. No `flock` or `jq` needed.
+1. **WSL (recommended)** - Run everything inside WSL. All bash helpers work natively.
+2. **Node.js alternative** - Use `tools/atomic-json.mjs` instead of bash helpers for state/index management. No `flock` or `jq` needed.
 
 ## Installation
 
@@ -134,7 +134,7 @@ Round 2+ (all three respond):
 |-- Gemini responds to Codex + Claude
 |-- Codex responds to Gemini + Claude
 +-- Claude responds to Gemini + Codex (YOUR contribution)
-    └── Early-stop check: if strong consensus, skip remaining rounds
+    +-- Early-stop check: if strong consensus, skip remaining rounds
 
 Synthesis:
 +-- Advisor summary table (position, confidence, assumptions)
@@ -155,7 +155,7 @@ Each advisor response follows a structured format for comparability:
 - **What Would Change My Mind**
 - **Confidence** (0-100%)
 
-This makes synthesis meaningful — you can cross-compare assumptions and confidence levels.
+This makes synthesis meaningful - you can cross-compare assumptions and confidence levels.
 
 ### File Structure
 
@@ -189,11 +189,11 @@ python -m http.server 8000
 ```
 
 The viewer shows:
-- **Synthesis** — Final analysis and recommendations (with copy-to-clipboard)
-- **Rounds** — Side-by-side comparison (2 or 3 columns)
-- **Transcript** — Full chronological debate record
-- **Context** — Original question and configuration
-- **State** — Debug view of debate metadata + telemetry
+- **Synthesis** - Final analysis and recommendations (with copy-to-clipboard)
+- **Rounds** - Side-by-side comparison (2 or 3 columns)
+- **Transcript** - Full chronological debate record
+- **Context** - Original question and configuration
+- **State** - Debug view of debate metadata + telemetry
 
 ## Debate Styles
 
@@ -231,7 +231,7 @@ Verify session continuity by checking token growth in Codex output.
 
 ## Version History
 
-- **v6.0.0** (current) — Production hardening
+- **v6.0.0** (current) - Production hardening
   - Unified version across all files
   - Added `--moderator-style` flag (transparent, guided, authoritative)
   - Structured output contract per advisor (position, confidence, assumptions, risks)
@@ -240,23 +240,23 @@ Verify session continuity by checking token growth in Codex output.
   - Atomic index.json writes (parallel-safe)
   - Cross-platform Node.js helper (`tools/atomic-json.mjs`)
   - Enhanced viewer with copy-to-clipboard
-  - `disable-model-invocation: true` in frontmatter
+  - Explicit-command behavior documented in `SKILL.md` body
 
-- **v4.7** — Three-way debate structure
+- **v4.7** - Three-way debate structure
   - Claude is now an active PARTICIPANT, not just orchestrator
   - Each round has contributions from all three: Gemini, Codex, Claude
   - Advisors receive responses from BOTH other participants
   - Claude's responses saved to r00N_claude.md files
 
-- **v4.6** — Production-ready architecture
+- **v4.6** - Production-ready architecture
   - Gemini runs from project root for file access
   - Both advisors use explicit UUID tracking
   - Full e2e tested and validated
 
-- **v4.5** — Fixed Codex syntax, removed broken flags
-- **v4.4** — Added session UUID persistence
-- **v4.3** — Flag precedence rules, synthesis workflow
-- **v4.2** — Session folder scoping documentation
+- **v4.5** - Fixed Codex syntax, removed broken flags
+- **v4.4** - Added session UUID persistence
+- **v4.3** - Flag precedence rules, synthesis workflow
+- **v4.2** - Session folder scoping documentation
 
 ## License
 

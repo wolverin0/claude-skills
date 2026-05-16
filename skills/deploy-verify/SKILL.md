@@ -1,4 +1,4 @@
-﻿---
+---
 name: deploy-verify
 description: Use after deployments to verify health endpoints, run API smoke tests, and confirm release integrity with CLI checks.
 ---
@@ -47,10 +47,10 @@ curl -s <URL>/api/endpoint | python -m json.tool | head -20
 
 ### 4. Docker-Specific Checks
 ```bash
-# Container running?
+# Container running-
 docker ps | grep <service>
 
-# Recent logs (errors?)
+# Recent logs (errors-)
 docker logs <container> --tail 50 2>&1 | grep -i error
 
 # Container health
@@ -63,7 +63,7 @@ docker inspect --format='{{.State.Health.Status}}' <container>
 docker logs <container> --since 10m 2>&1 | grep -iE "error|fatal|exception"
 
 # Supabase: check edge function logs
-# Check Supabase dashboard â†’ Edge Functions â†’ Logs
+# Check Supabase dashboard -> Edge Functions -> Logs
 
 # Server logs
 ssh user@server 'journalctl -u <service> --since "10 minutes ago" | grep -i error'

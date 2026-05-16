@@ -1,372 +1,147 @@
-﻿---
+---
 name: validation
-description: Use when implementation is complete and needs comprehensive UI and flow validation with evidence-based reporting.
+description: Use when an implemented web app, UI feature, workflow, or frontend change needs evidence-based validation in a real browser. Runs interactive discovery, browser execution, screenshot analysis, console/error checks, critical-flow testing, stateful resume, and HTML reporting. Supports CLI-agnostic adapters including agent-browser, playwright-cli, Playwright MCP, Claude/Codex Chrome MCP tools, and browser-harness.
 ---
 
-# Validation Skill
+# Validation
 
-Comprehensive app validation with REAL verification - discovers all interactive elements, tests them with actual verification, and generates HTML reports.
+Evidence-based browser validation for web apps. The skill must prove what it tested with screenshots, snapshots, console/error output, and observed state changes. A click without an observed outcome is not a pass.
 
-## Invocation
+## Start
 
-```
-/validate [app-url]
-```
+Invocation examples:
 
-If no URL provided, looks for running dev server or asks user.
-
----
-
-## Core Principles
-
-**LLMs don't naturally test like humans.** This skill enforces:
-
-1. **PRE-FLIGHT first** - Verify environment before any testing
-2. **DISCOVER everything** - Find EVERY button on every page
-3. **ANALYZE context** - Determine what each button SHOULD do
-4. **VERIFY actions** - Confirm the action actually happened (with evidence)
-5. **ANALYZE screenshots** - Look for UI issues, not just take pictures
-6. **Test critical flows** - Validate key user journeys, not just elements
-7. **Persist state** - Resume across sessions without losing progress
-8. **Clean up** - Remove VAL_* test artifacts after testing
-9. **Report with evidence** - Every verdict needs proof
-
----
-
-## Phase Architecture
-
-This skill has 3 phases, each in a separate file:
-
-| Phase | File | Purpose |
-|-------|------|---------|
-| DISCOVER | `phases/DISCOVER.md` | Find all testable elements |
-| TEST | `phases/TEST.md` | Execute tests with verification |
-| REPORT | `phases/REPORT.md` | Generate HTML report |
-
-**Load phases using Read tool** - only load what's needed for current phase.
-
----
-
-## State Management
-
-**State file:** `{project}/test-manifest/validation-state.json`
-
-### State Schema
-
-```json
-{
-  "session": {
-    "id": "uuid",
-    "startedAt": "ISO timestamp",
-    "lastUpdatedAt": "ISO timestamp",
-    "status": "in_progress|completed",
-    "currentPhase": "discover|test|cleanup|report",
-    "appUrl": "http://localhost:XXXX",
-    "contextResets": 0
-  },
-  "preflight": {
-    "passed": true,
-    "serverStatus": "responding|failed",
-    "loadTime": 1.2,
-    "consoleErrors": 0,
-    "consoleWarnings": 0,
-    "authRequired": false
-  },
-  "discovery": {
-    "completedAt": null,
-    "routes": [],
-    "elements": [],
-    "criticalFlows": []
-  },
-  "testing": {
-    "currentIndex": 0,
-    "results": {},
-    "pending": [],
-    "failed": [],
-    "quarantined": []
-  },
-  "cleanup": {
-    "completed": false,
-    "itemsFound": 0,
-    "itemsDeleted": 0,
-    "itemsFailed": 0,
-    "failedItems": []
-  },
-  "summary": {
-    "totalElements": 0,
-    "totalFlows": 0,
-    "tested": 0,
-    "passed": 0,
-    "failed": 0,
-    "skipped": 0,
-    "flowsPassed": 0,
-    "flowsFailed": 0,
-    "uiIssues": 0,
-    "consoleErrors": 0
-  }
-}
+```bash
+/validate http://localhost:3000
+/validate --backend agent-browser --mode standard http://localhost:5173
+/validate --backend playwright-local --config validation.config.json --mode standard http://localhost:5173
+/validate --interactive
+/validate --fresh
+/validate --resume
 ```
 
-### State Update Rule
+If no URL is provided, look for a running local server. If none is obvious, ask for the URL.
 
-**After EVERY element test:**
-1. Read state file
-2. Add result to `testing.results`
-3. Remove from `testing.pending`
-4. Update `summary` counts
-5. Update `lastUpdatedAt`
-6. Write state file
+## Defaults
 
-**This ensures zero progress loss on context overflow.**
+- Backend: `agent-browser`
+- Mode: `standard`
+- Auth: `manual` when protected routes are found, otherwise `none`
+- Output: `{project}/test-manifest/`
+- State: `{project}/test-manifest/validation-state.json`
+- Report: `{project}/test-manifest/reports/validation-{timestamp}.html`
 
----
+## Modes
 
-## Orchestrator Flow
+| Mode | Use | Coverage |
+| --- | --- | --- |
+| `smoke` | Fast confidence after small changes | preflight, key routes, key flows, 2 breakpoints |
+| `standard` | Default PR validation | all discovered routes, interactive elements, 4 breakpoints, critical flows |
+| `exhaustive` | Release/regression validation | standard plus deeper forms, CRUD-like flows, network/perf/a11y where backend supports it |
 
-### Step 1: Check for Existing State
+## Interactive Startup
 
-```
-Read: {project}/test-manifest/validation-state.json
-```
+If `--interactive` is set, or if backend/mode/auth cannot be inferred safely, ask concise questions before discovery:
 
-**If file NOT exists:**
-- Create state with `currentPhase: "discover"`
-- Read and execute `phases/DISCOVER.md`
+1. Browser backend: recommend `agent-browser`; offer `playwright-cli`, `playwright-mcp`, `chrome-mcp`, or `browser-harness`.
+2. Coverage mode: recommend `standard`; offer `smoke` or `exhaustive`.
+3. Auth mode: recommend `manual login`; offer `none`, `saved state`, or `headers/config`.
 
-**If file exists AND status = "in_progress":**
-- Check `currentPhase` value
-- If "discover" with discovery incomplete â†’ Continue discovery
-- If "test" with pending items â†’ Continue testing
-- If "test" with no pending items â†’ Move to report
-- If "report" â†’ Generate report
+For non-interactive runs, use flags or `validation.config.json`. Do not block on questions unless continuing would produce misleading results.
 
-**If file exists AND status = "completed":**
-- If `--fresh` flag provided: delete state, start fresh
-- Else: show previous results summary
+## Backend Selection
 
-### Step 2: Load Phase File
+Load exactly one adapter from `adapters/` before browser work:
 
-Based on `currentPhase`, read the appropriate phase file:
+| Backend | Adapter | When to choose |
+| --- | --- | --- |
+| `agent-browser` | `adapters/agent-browser.md` | Default. Fast CLI, JSON output, sessions, screenshots, console/errors, network, Web Vitals. |
+| `playwright-local` | `adapters/playwright-local.md` | Best fallback when the target project has Playwright installed; deterministic scripts write state/report directly. |
+| `playwright-cli` | `adapters/playwright-cli.md` | Official Playwright CLI path, cross-browser needs, projects already invested in Playwright. |
+| `playwright-mcp` | `adapters/playwright-mcp.md` | Host already exposes Playwright MCP and rich iterative introspection is more valuable than token cost. |
+| `chrome-mcp` | `adapters/chrome-mcp.md` | Claude-in-Chrome, Codex-in-Chrome, or another host browser MCP is the only available browser. |
+| `browser-harness` | `adapters/browser-harness.md` | Advanced real-Chrome/CDP fallback for unusual apps, iframe-heavy sites, or custom helper work. |
 
-```
-phases/DISCOVER.md  â†’ Discovery phase
-phases/TEST.md      â†’ Testing phase
-phases/REPORT.md    â†’ Report generation
-```
+Use `agent-browser` unless the user chose another backend, the command is unavailable, or the environment clearly requires another adapter. If `agent-browser` is unavailable and the target project has `playwright` installed, prefer `playwright-local` before `playwright-cli`.
 
-### Step 3: Execute Phase
+## Bundled Scripts
 
-Follow loaded phase instructions completely.
+Use scripts when their assumptions match the task; they are more repeatable than hand-driving the browser.
 
-### Step 4: Resume Check
+| Script | Purpose |
+| --- | --- |
+| `scripts/select-backend.js` | Detect available validation backend from the target project and print a JSON recommendation. |
+| `scripts/run-smoke-playwright.js` | Project-local Playwright validation with config support, text redaction, route screenshots, network/console grouping, safe standard-mode element checks, state, and HTML report. |
+| `scripts/redact-artifacts.js` | Redact provided secrets from generated text artifacts, including `test-manifest*` folders, and fail if leaks remain. |
 
-When resuming from existing state:
+Prefer the script for `playwright-local`:
 
-```
-=== RESUMING VALIDATION ===
-
-Session: {session.id}
-Started: {session.startedAt}
-Context resets: {contextResets}
-
-Progress: {tested}/{totalElements} elements
-Completion: {percentage}%
-
-Continuing from {currentPhase} phase...
+```bash
+node path/to/scripts/select-backend.js
+node path/to/scripts/run-smoke-playwright.js --url http://localhost:5173 --mode standard --config validation.config.json
+node path/to/scripts/redact-artifacts.js .
 ```
 
-Increment `contextResets`, save state, then continue.
+## Required References
 
----
+Read these when needed:
 
-## Directory Structure
+- `references/evidence-rules.md` before marking any route, element, or flow pass.
+- `references/state-schema.md` before creating or modifying `validation-state.json`.
+- `references/interactive-start.md` when running in interactive mode.
+- `references/config-schema.md` when the app has expected protected routes, custom breakpoints, or route-specific access rules.
 
-Created by this skill:
+## Phase Router
 
-```
-{project}/
-  test-manifest/
-    validation-state.json      # Persistent state
-    screenshots/
-      routes/                  # Route screenshots by breakpoint
-      elements/                # Element interaction screenshots
-    reports/
-      validation-YYYY-MM-DD.html
-```
+1. Check `test-manifest/validation-state.json`.
+2. If `--fresh`, archive or replace old state and start at discovery.
+3. If state exists with `status: in_progress`, resume from `session.currentPhase`.
+4. If state exists with `status: completed` and no `--fresh`, show the last summary and report path, then ask whether to rerun.
+5. Load only the current phase file:
 
----
+| Phase | File |
+| --- | --- |
+| `discover` | `phases/DISCOVER.md` |
+| `test` | `phases/TEST.md` |
+| `report` | `phases/REPORT.md` |
 
-## Browser Tools (MCP Chrome Extension)
+## State Rules
 
-**This skill uses MCP browser tools via the Claude-in-Chrome extension.** Claude calls these tools directly - no scripts needed.
+- Write state after every route, element, flow, and report step.
+- Never keep progress only in conversation context.
+- Use append-only evidence where practical: screenshots, snapshots, console logs, and issue records.
+- On context pressure or long runs, pause cleanly after saving state and tell the user to run `/validate --resume`.
 
-### MCP Tools Reference
+## Pass/Fail Standard
 
-| Action | MCP Tool |
-|--------|----------|
-| **Navigate** | `mcp__claude-in-chrome__navigate url="{url}"` |
-| **Get page state** | `mcp__claude-in-chrome__read_page` |
-| **Click element** | `mcp__claude-in-chrome__click ref="{ref}"` |
-| **Fill form** | `mcp__claude-in-chrome__form_input ref="{ref}" value="{value}"` |
-| **Resize viewport** | `mcp__claude-in-chrome__resize_window width={w} height={h}` |
-| **Take screenshot** | `mcp__claude-in-chrome__computer action="screenshot"` |
-| **Read console** | `mcp__claude-in-chrome__read_console_messages` |
+Pass requires evidence:
 
-### How MCP Tools Work
+- Page loaded and was not blank.
+- Screenshot or visual observation was analyzed.
+- Console/errors were checked.
+- Expected UI outcome was observed after interaction.
+- State file contains the result and evidence paths.
 
-1. **Direct tool calls** - Claude calls MCP tools directly, no scripts needed
-2. **Accessibility tree** - `read_page` returns element refs for clicking
-3. **Visual analysis** - Claude sees screenshots directly and analyzes them
-4. **Console access** - `read_console_messages` returns actual error/warning text
+Fail when a real user-facing break is observed: route crash, broken navigation, unhandled error, missing required interaction, unusable layout, failed form submission, broken modal/dialog, or verification mismatch.
 
-### Typical Test Sequence
+Skip only when a route/element cannot be tested for a documented reason, such as missing auth, unsupported browser capability, or destructive action not approved.
 
-```
-1. mcp__claude-in-chrome__navigate url="{appUrl}"
-2. mcp__claude-in-chrome__read_page                    â†’ Get element refs
-3. mcp__claude-in-chrome__resize_window width=375      â†’ Set viewport
-4. mcp__claude-in-chrome__computer action="screenshot" â†’ Take screenshot
-5. ANALYZE the screenshot (Claude sees the image)
-6. mcp__claude-in-chrome__click ref="ref_5"            â†’ Click button
-7. mcp__claude-in-chrome__read_page                    â†’ Verify outcome
-8. mcp__claude-in-chrome__read_console_messages        â†’ Check for errors
-```
+## Output
 
-### Screenshot Handling
+At completion, report:
 
-**Screenshots are captured and analyzed in real-time by Claude:**
-
-- Claude sees screenshots directly when `mcp__claude-in-chrome__computer action="screenshot"` is called
-- Claude MUST analyze each screenshot immediately (not just note it was taken)
-- Screenshot analysis is recorded in the state for the report
-
-### Breakpoints (4 Required)
-
-| Breakpoint | Width | Height |
-|------------|-------|--------|
-| Mobile | 375 | 812 |
-| Tablet | 768 | 1024 |
-| Laptop | 1024 | 768 |
-| Desktop | 1440 | 900 |
-
----
-
-## Anti-Laziness Rules (CRITICAL)
-
-These rules are embedded in each phase but repeated here for emphasis:
-
-### Screenshots MUST be ANALYZED
-
-```
-WRONG: "Screenshot taken successfully"
-RIGHT: "Screenshot analysis:
-  - Header: Visible, properly aligned
-  - Navigation: All items visible, no overflow
-  - Main content: Cards display correctly
-  - Mobile (375px): Menu collapses to hamburger
-  - Issue: Footer text cut off at 375px"
-```
-
-### Button Actions MUST be VERIFIED
-
-```
-WRONG: "Clicked delete button successfully"
-RIGHT: "Delete button clicked:
-  - Confirmation modal appeared: YES
-  - Confirmed deletion
-  - Item 'Test Customer 12345' removed from list: VERIFIED
-  - List count changed from 5 to 4: VERIFIED"
-```
-
-### Console Errors MUST be READ
-
-```
-WRONG: "No console errors"
-RIGHT: "Console check:
-  - Errors: 0
-  - Warnings: 2 (React key warning, deprecation notice)
-  - Actual messages: [list them]"
-```
-
----
-
-## Quick Reference
-
-### Starting Fresh
-
-```
-1. Check if state exists
-2. If yes with --fresh flag, delete it
-3. Create test-manifest directory
-4. Load DISCOVER.md phase
-5. Execute discovery
-6. Save state with all found elements
-7. Load TEST.md phase
-8. Test each element with verification
-9. Save state after EACH element
-10. When all tested, load REPORT.md
-11. Generate HTML report
-12. Mark status = "completed"
-```
-
-### Resuming
-
-```
-1. Read existing state
-2. Identify current phase
-3. Load appropriate phase file
-4. Continue from where left off
-5. State already has progress - use it
-```
-
----
-
-## Output Format
-
-When complete:
-
-```
+```text
 === VALIDATION COMPLETE ===
-
-PRE-FLIGHT: PASSED
-  Server: responding (1.2s)
-  Console: 0 errors, 2 warnings
-
-Summary:
-- Routes tested: X
-- Elements tested: Y
-- Critical flows: Z
-- Passed: A
-- Failed: B
-- UI Issues: C
-- Console Errors: D
-
-Cleanup:
-- Items found: N
-- Items deleted: N
-- Items failed: 0
-
-Report: test-manifest/reports/validation-YYYY-MM-DD.html
-
-Top Issues:
-1. [Issue description with evidence]
-2. [Issue description with evidence]
-3. [Issue description with evidence]
+Backend: {backend}
+Mode: {mode}
+Routes: {passed}/{tested} passed
+Elements: {passed}/{tested} passed
+Flows: {passed}/{tested} passed
+Issues: {count}
+Report: test-manifest/reports/validation-{timestamp}.html
+State: test-manifest/validation-state.json
+Top issues:
+1. ...
 ```
 
----
-
-## Files in This Skill
-
-| File | Lines | Purpose |
-|------|-------|---------|
-| SKILL.md | ~350 | This file - orchestrator |
-| phases/DISCOVER.md | ~300 | PRE-FLIGHT + element discovery + critical flows |
-| phases/TEST.md | ~650 | Testing with verification reports + cleanup |
-| phases/REPORT.md | ~280 | HTML report generation |
-| templates/report.html | ~460 | Report template |
-
-**Total:** ~2040 lines across 5 files
-
-**Context per phase:** ~700-1000 lines max (orchestrator + one phase)
-
+Keep the final user-facing summary brief. The HTML report contains the detail.
