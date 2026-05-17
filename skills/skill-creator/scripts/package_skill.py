@@ -17,6 +17,18 @@ from pathlib import Path
 # Import validation from same directory
 from quick_validate import validate_skill
 
+EXCLUDED_DIRS = {'.git', '__pycache__', '.pytest_cache'}
+EXCLUDED_SUFFIXES = {'.pyc', '.pyo'}
+
+
+def should_package(file_path):
+    """Return False for generated/cache files that should never ship."""
+    if any(part in EXCLUDED_DIRS for part in file_path.parts):
+        return False
+    if file_path.suffix in EXCLUDED_SUFFIXES:
+        return False
+    return True
+
 
 def package_skill(skill_path, output_dir=None):
     """Package a skill folder into a .skill file."""
@@ -60,7 +72,7 @@ def package_skill(skill_path, output_dir=None):
     try:
         with zipfile.ZipFile(skill_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for file_path in skill_path.rglob('*'):
-                if file_path.is_file():
+                if file_path.is_file() and should_package(file_path):
                     arcname = file_path.relative_to(skill_path.parent)
                     zipf.write(file_path, arcname)
                     print(f"  Added: {arcname}")

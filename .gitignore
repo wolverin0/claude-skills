@@ -4,3 +4,9 @@ debates/
 
 # CLI documentation (local only)
 mainprompt.md
+
+# Local agent/session artifacts
+handoffs/
+.playwright-mcp/
+obsidian-vault/
+repo/

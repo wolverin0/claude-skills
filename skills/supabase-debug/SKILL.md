@@ -21,7 +21,7 @@ Symptom: Query returns empty array but data exists in DB
 2. **Check auth state** - is user authenticated-
    ```typescript
    const { data: { user } } = await supabase.auth.getUser();
-   console.log('Auth state:', user-.id, user-.role);
+   console.log('Auth state:', user?.id, user?.role);
    ```
 3. **Check tenant filtering** - multi-tenant apps filter by `company_id`
    ```typescript
@@ -92,4 +92,3 @@ npx supabase db dump --schema public | grep "CREATE TABLE your_table" -A 20
 | goodmorning/nereidas | via project config | public | Real-time order subscriptions |
 | mutual | ueagbmyhdvje... | public + socios + financial + properties + loans | Multi-schema! |
 | pedrito | via project config | public | Legacy SQLite references exist but unused |
-

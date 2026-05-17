@@ -1,6 +1,6 @@
 ---
 name: validation
-description: Use when an implemented web app, UI feature, workflow, or frontend change needs evidence-based validation in a real browser. Runs interactive discovery, browser execution, screenshot analysis, console/error checks, critical-flow testing, stateful resume, and HTML reporting. Supports CLI-agnostic adapters including agent-browser, playwright-cli, Playwright MCP, Claude/Codex Chrome MCP tools, and browser-harness.
+description: Validate implemented web apps and UI workflows in a real browser with screenshots, console checks, critical-flow evidence, resumable state, and reports.
 ---
 
 # Validation

@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Write a structured session handoff file for clean context transfer. Use when ending a session, before /clear, when context is heavy, when handing off work to another pane, or when asked to "handoff", "checkpoint", "session-transfer", "save state", "prepare for clear".
+description: Write a structured session handoff before ending, clearing context, or transferring work to another agent or pane.
 metadata:
   argument-hint: "[focus-instruction]"
   disable-model-invocation: false

@@ -1,6 +1,6 @@
 ---
 name: mercadopago-integration
-description: Integrate MercadoPago OAuth payments into web applications. Use when adding MercadoPago payment processing, OAuth account connection, or checkout functionality. Covers Supabase Edge Functions, React/frontend setup, and database schema for multi-tenant SaaS platforms.
+description: Integrate MercadoPago OAuth, checkout, webhooks, and token storage in Supabase/React-style multi-tenant web apps.
 ---
 
 # MercadoPago Integration
@@ -67,7 +67,7 @@ Frontend (Dashboard) -> MercadoPago Authorization -> Supabase Edge Function -> D
 const MP_CLIENT_ID = import.meta.env.VITE_MP_CLIENT_ID;
 const MP_REDIRECT_URI = import.meta.env.VITE_MP_REDIRECT_URI;
 
-const authUrl = `https://auth.mercadopago.com.ar/authorization-` +
+const authUrl = `https://auth.mercadopago.com.ar/authorization?` +
   `client_id=${MP_CLIENT_ID}&response_type=code&platform_id=mp&` +
   `redirect_uri=${encodeURIComponent(MP_REDIRECT_URI)}&state=${tenantId}`;
 
@@ -138,7 +138,7 @@ serve(async (req) => {
 
   // MercadoPago sends: { action: "payment.updated", data: { id: "123" } }
   if (body.action === "payment.updated" || body.action === "payment.created") {
-    const paymentId = body.data-.id;
+    const paymentId = body.data?.id;
 
     // Fetch payment details from MercadoPago
     const paymentResponse = await fetch(

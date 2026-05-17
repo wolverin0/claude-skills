@@ -1,6 +1,6 @@
 ---
 name: project-doctor
-description: Audit the current project for stale or broken orchestration setup. Verifies monitoring.md, AGENTS.md/CLAUDE.md, graphify freshness, dead script references, placeholder values still in YAML frontmatter. Read-only - never mutates. Use after /monitoring-setup, after pulling someone else's setup, or when something feels off.
+description: Read-only audit for stale or broken project orchestration files, agent instructions, monitoring config, graphify output, and referenced skills.
 ---
 
 # project-doctor
