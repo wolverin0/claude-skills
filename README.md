@@ -12,6 +12,7 @@ iterating.
 ```text
 skills/
   audit/                     Multi-skill technical due diligence bundle
+  checklist-design-app-audit/ Checklist Design UI/UX applicability and evidence audits
   debate/                    Multi-provider debate workflow
   handoff/                   Structured session handoffs
   mercadopago-integration/   MercadoPago OAuth/payment integration
@@ -65,6 +66,21 @@ Primary entry points:
 - `audit-loop`: audit, roadmap, remediation, rerun, and missed-finding skill
   patch loop.
 - `audit-fix-generator`: create remediation prompts for individual findings.
+
+### Checklist Design App Audit
+
+Location: `skills/checklist-design-app-audit/`
+
+Comprehensive or targeted website, web-app, mobile, design-system, and flow
+audits against a validated Checklist Design snapshot. It includes an all-110
+applicability inventory, 703 auditable items, source-linked inspiration and
+documentation examples, evidence-aware scoring, and deterministic search and
+packet scripts.
+
+```bash
+python skills/checklist-design-app-audit/scripts/checklist_audit.py stats
+python skills/checklist-design-app-audit/scripts/checklist_audit.py search "login authentication"
+```
 
 ### Project Workflow Skills
 
@@ -134,6 +150,7 @@ Claude Code:
 
 ```bash
 cp -r skills/validation ~/.claude/skills/
+cp -r skills/checklist-design-app-audit ~/.claude/skills/
 cp -r skills/handoff skills/skillify ~/.claude/skills/
 cp -r skills/project-setup skills/project-curate skills/project-doctor ~/.claude/skills/
 cp -r skills/mercadopago-integration ~/.claude/skills/
@@ -144,6 +161,7 @@ Codex:
 
 ```bash
 cp -r skills/validation ~/.codex/skills/
+cp -r skills/checklist-design-app-audit ~/.codex/skills/
 cp -r skills/handoff skills/skillify ~/.codex/skills/
 cp -r skills/project-setup skills/project-curate skills/project-doctor ~/.codex/skills/
 cp -r skills/mercadopago-integration ~/.codex/skills/
