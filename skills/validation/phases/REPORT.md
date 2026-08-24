@@ -12,13 +12,20 @@ Validate that summary counts match actual result objects. If they do not match, 
 
 ## 2. Determine Completeness
 
-Complete when all queues are empty:
+Complete only when `scripts/assert-coverage.js` exits `0`. At minimum this requires:
 
 - `queues.routes`
 - `queues.elements`
 - `queues.flows`
+- `queues.modals`
+- `queues.crud`
+- `queues.visualReviews`
+- `session.coverageComplete: true` for standard/exhaustive, or
+  `session.smokeScopeComplete: true` for smoke
+- `coverage.unaccounted` is empty and no inventory truncation is hidden
 
-If any queue still has items, generate a partial report and keep `session.status: "in_progress"`.
+If any requirement is missing, generate a partial report and keep `session.status: "incomplete"`.
+Do not infer completeness merely because the queues created by a capped discovery pass are empty.
 
 ## 3. Report Contents
 
@@ -27,6 +34,8 @@ The HTML report must include:
 - app URL, backend, mode, timestamps
 - completion status and resume command if partial
 - summary cards
+- coverage inventory and ledger, including skips by reason and unaccounted items
+- semantic screenshot-review findings beside the corresponding images
 - top issues sorted by severity
 - route results with screenshot links and analysis
 - element results with expected vs observed outcomes

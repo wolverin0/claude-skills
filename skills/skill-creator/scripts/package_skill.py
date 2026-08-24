@@ -6,8 +6,8 @@ Usage:
     python package_skill.py <path/to/skill-folder> [output-directory]
 
 Example:
-    python package_skill.py C:/Users/pauol/.claude/skills/my-skill
-    python package_skill.py C:/Users/pauol/.claude/skills/my-skill ./dist
+    python package_skill.py ~/.claude/skills/my-skill
+    python package_skill.py ~/.claude/skills/my-skill ./dist
 """
 
 import sys
@@ -89,7 +89,7 @@ def main():
     if len(sys.argv) < 2:
         print("Usage: python package_skill.py <path/to/skill-folder> [output-directory]")
         print("\nExample:")
-        print("  python package_skill.py C:/Users/pauol/.claude/skills/my-skill")
+        print("  python package_skill.py ~/.claude/skills/my-skill")
         sys.exit(1)
 
     skill_path = sys.argv[1]

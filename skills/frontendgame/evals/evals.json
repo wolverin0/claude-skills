@@ -1,0 +1,29 @@
+{
+  "skill_name": "endgame-mobile-product-design",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I attached screenshots of a fintech mobile app. When I scroll, the yellow header turns into a search bar, cards stack while scrolling, and Pesos/Dolares/Reservas tabs slide smoothly. What are these called and how do I prompt Codex to build them in Next.js?",
+      "expected_output": "Names the patterns as collapsing header/morphing search bar, sticky card stack, and animated segmented control/pager; explains start/transition/end states; gives a Next.js/Tailwind/Framer Motion prompt and QA checklist.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Build me a React Native Expo screen for a finance dashboard with MercadoPago-style scrolling header, swipe tabs, and promo card pile. I want real code, not just explanation.",
+      "expected_output": "Produces a component plan and React Native/Reanimated-oriented implementation using SafeArea, scroll shared values, interpolated header/search styles, segmented tabs or pager, and a card stack; includes accessibility and reduced-motion notes.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Audit my mobile CRM PWA UI. It looks generic AI generated. Make it feel like a real premium internal tool without adding random glassmorphism.",
+      "expected_output": "Diagnoses generic UI issues, chooses a coherent internal-tool visual direction, defines tokens, layout hierarchy, component/state improvements, and avoids generic purple gradients/glassmorphism/random decoration.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I need a reusable prompt for Claude Code to implement sticky stacked cards in an existing Next.js page without breaking scroll performance.",
+      "expected_output": "Gives a copy-paste prompt describing sticky card stack mechanics, CSS sticky top offsets, z-index, overlap, transform/opacity performance, reduced motion, and integration constraints for existing code.",
+      "files": []
+    }
+  ]
+}

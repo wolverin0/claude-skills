@@ -1,28 +1,28 @@
 ---
 name: audit-tambon-hunt
-description: "Hunt the three Tambon LLM-failure-mode signatures (Hallucinated Object, Wrong Attribute, Silly Mistake) across an audit scope. Use during the audit pipeline AFTER hard-stops and BEFORE blind-spots. Output: counts per signature, top occurrences, density per 1000 LoC. Findings flow into Domain 13 (Code Integrity)."
+description: Hunt the three Tambon LLM-failure-mode signatures (Hallucinated Object, Wrong Attribute, Silly Mistake) across an audit scope. Use during the audit pipeline AFTER hard-stops and BEFORE blind-spots. Output: counts per signature, top occurrences, density per 1000 LoC. Findings flow into Domain 13 (Code Integrity).
 ---
 
 # Skill: Audit Tambon Hunt
 
 This skill detects the three LLM-specific bug patterns documented in
-Tambon et al. 2025 - patterns that are nearly absent from human-written
+Tambon et al. 2025 — patterns that are nearly absent from human-written
 code. Finding them is double signal: each occurrence is a correctness
 defect AND evidence of unreviewed AI generation.
 
 The full taxonomy and detection guidance is in
-`../references/audit-tambon-signatures.md`. Load it before starting.
+`@.claude/context/audit-tambon-signatures.md`. Load it before starting.
 
 ## Process
 
 ### Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/audit-tambon-signatures.md
+view @.claude/context/audit-rules.md
+view @.claude/context/audit-tambon-signatures.md
 ```
 
-### Phase 1 - Static type-check (the heavy lifter)
+### Phase 1 — Static type-check (the heavy lifter)
 
 The single most effective Tambon detector is a strict type-checker. Run
 the appropriate one(s):
@@ -35,7 +35,7 @@ which pyright &>/dev/null && pyright src/ 2>&1 | tee /tmp/pyright.log
 # TypeScript
 which tsc &>/dev/null && tsc --noEmit --strict 2>&1 | tee /tmp/tsc.log
 
-# If nothing is installed, that's a finding in its own right -
+# If nothing is installed, that's a finding in its own right —
 # "no static type checking configured." Continue with grep-based hunts.
 ```
 
@@ -48,7 +48,7 @@ Filter the output for the relevant error categories:
   `has no exported member`
 
 Each unique error of those classes is a candidate Tambon finding.
-Verify by reading the cited path:line - sometimes type-checker output
+Verify by reading the cited path:line — sometimes type-checker output
 points at a real Tambon, sometimes at a missing type stub for a real
 library. Distinguish:
 
@@ -60,7 +60,7 @@ library. Distinguish:
   Hallucinated Object OR a recent API change. Cross-reference with the
   pinned version in the manifest.
 
-### Phase 2 - Silly Mistake hunt
+### Phase 2 — Silly Mistake hunt
 
 Static type checkers don't catch most Silly Mistakes. Use linters:
 
@@ -84,14 +84,14 @@ For patterns the linter doesn't catch (e.g., both branches of an if
 returning the same thing), use grep heuristics:
 
 ```bash
-# Both-branch-returns-same - heuristic
+# Both-branch-returns-same — heuristic
 # Find functions where the same identifier is returned in both branches
 grep -rEnA15 "if .*:\s*$" src/ --include="*.py" | \
   awk '/return / { print prev "\n" $0 } { prev = $0 }' | \
   uniq -d
 ```
 
-### Phase 3 - Mixed-version-API hunt (Wrong Attribute, common case)
+### Phase 3 — Mixed-version-API hunt (Wrong Attribute, common case)
 
 Pydantic v1/v2 mixing is endemic in vibe-coded Python:
 
@@ -115,7 +115,7 @@ grep -rEn "create_async_engine.*sessionmaker.*class_=AsyncSession" src/
 grep -rEn "async_sessionmaker" src/
 ```
 
-### Phase 4 - Manual confirmation pass
+### Phase 4 — Manual confirmation pass
 
 The static analysis surfaces candidates. For each candidate that's NOT
 obviously a false positive, read the actual code to confirm (R2):
@@ -136,76 +136,76 @@ Drop candidates that turn out to be:
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   TAMBON SIGNATURE HUNT
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
 Scan scope:  <path>
 Total LoC:   <N>
 
 Tooling used:
-  Static type checker: <mypy / pyright / tsc / NONE - finding>
-  Linter:             <ruff / pylint / eslint / NONE - finding>
+  Static type checker: <mypy / pyright / tsc / NONE — finding>
+  Linter:             <ruff / pylint / eslint / NONE — finding>
 
-------------------------------------------------------------------------
-SIGNATURE 1 - Hallucinated Object
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
+SIGNATURE 1 — Hallucinated Object
+────────────────────────────────────────────────────────────────────────
 
 Total occurrences: <N>
 
 Top occurrences (severity-sorted):
-  F-T1.1 - <path:line>
+  F-T1.1 — <path:line>
     Pattern:        <what was hallucinated>
     Severity:       Critical | High | Medium
     Evidence:
       <the exact code line>
     Fix:            <one sentence>
 
-  F-T1.2 - <path:line>
+  F-T1.2 — <path:line>
     [same shape]
 
   [Up to 10 top findings; if more, append]
-  [+ <N> additional Hallucinated Object findings - see appendix]
+  [+ <N> additional Hallucinated Object findings — see appendix]
 
-------------------------------------------------------------------------
-SIGNATURE 2 - Wrong Attribute
-------------------------------------------------------------------------
-
-Total occurrences: <N>
-
-[Same shape]
-
-------------------------------------------------------------------------
-SIGNATURE 3 - Silly Mistake
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
+SIGNATURE 2 — Wrong Attribute
+────────────────────────────────────────────────────────────────────────
 
 Total occurrences: <N>
 
 [Same shape]
 
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
+SIGNATURE 3 — Silly Mistake
+────────────────────────────────────────────────────────────────────────
+
+Total occurrences: <N>
+
+[Same shape]
+
+────────────────────────────────────────────────────────────────────────
 TAMBON DENSITY
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 
 Total signatures:    <H + W + S>
 Total LoC:           <N>
 Density:             <total / N * 1000> per 1000 LoC
 
 Density band:
-  [ ] 0-1 per 1000 LoC: code is reviewed
-  [ ] 2-5 per 1000 LoC: light review
-  [ ] 6-15 per 1000 LoC: most code unreviewed
+  [ ] 0–1 per 1000 LoC: code is reviewed
+  [ ] 2–5 per 1000 LoC: light review
+  [ ] 6–15 per 1000 LoC: most code unreviewed
   [ ] >15 per 1000 LoC: AI-as-shipped
 
 Critical-path findings (in auth/payment/delete code):
   <count> findings
   [list each with path:line if any]
 
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 INTERPRETATION
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 
-[2-3 sentences. Density band -> what it implies about the codebase ->
+[2-3 sentences. Density band → what it implies about the codebase →
 recommended response. Examples:]
 
 "Tambon density of 8.3/kLoC places this codebase in the 'most code is
@@ -226,26 +226,17 @@ specific module."
 - Run the code (audit is read-only)
 - Speculate about which model generated the code (irrelevant; the
   density band is what matters)
-- Skip occurrences in test files (test code matters too - broken tests
+- Skip occurrences in test files (test code matters too — broken tests
   give false confidence)
 
 ## Failure modes to refuse
 
-- FAIL: Reporting Tambon density without running a type-checker (the
+- ❌ Reporting Tambon density without running a type-checker (the
   density number requires the static analysis)
-- FAIL: Counting type-checker errors that are actually missing-stub issues
+- ❌ Counting type-checker errors that are actually missing-stub issues
   as Tambon findings
-- FAIL: Calling something "Hallucinated Object" without verifying the
-  package/method actually doesn't exist (R2 - quote before cite)
-- FAIL: Producing a 50-finding list of trivial Silly Mistakes that
+- ❌ Calling something "Hallucinated Object" without verifying the
+  package/method actually doesn't exist (R2 — quote before cite)
+- ❌ Producing a 50-finding list of trivial Silly Mistakes that
   obscures the 3 real Critical-path Hallucinated Objects (severity sort
   matters)
----
-
-## Codex Port Notes
-
-- Audit mode is read-only for product code unless the user explicitly requests remediation.
-- Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
-- If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
-- Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

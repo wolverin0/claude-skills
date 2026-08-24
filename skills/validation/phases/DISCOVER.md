@@ -2,9 +2,11 @@
 
 Goal: build a complete enough test manifest to drive real browser validation without guessing.
 
-Before this phase, the orchestrator must load one backend adapter and `references/state-schema.md`. If `validation.config.json` exists, also load `references/config-schema.md`.
+Before this phase, the orchestrator must load one backend adapter, `references/state-schema.md`, and `references/auth.md`. If `validation.config.json` exists, also load `references/config-schema.md`. In `standard` and `exhaustive`/`human` modes also load `references/coverage-contract.md` — discovery must enumerate the full surface (every route, modal, button, CRUD module, and in exhaustive mode every backend API endpoint), not a sample.
 
-If using the `playwright-local` adapter, prefer `scripts/run-smoke-playwright.js`; it performs discovery, testing, state writing, redacted text artifacts, and report generation in one deterministic pass.
+If using the `playwright-local` adapter, prefer `scripts/run-smoke-playwright.js` for deterministic
+evidence collection. It does not certify the run: the agent must still inspect every queued
+screenshot, exercise configured modal/flow/CRUD work, and run `assert-coverage.js`.
 
 ## 1. Preflight
 
@@ -25,9 +27,32 @@ If using the `playwright-local` adapter, prefer `scripts/run-smoke-playwright.js
 
 If preflight fails, write state with `session.currentPhase: "discover"` and `preflight.passed: false`, then stop with concrete blockers.
 
+## 1b. Auth Gate (mandatory before testing protected surface)
+
+Apply `references/auth.md`:
+
+1. If the landing route or any expected route sits behind a login form/redirect, set
+   `preflight.authRequired: true`.
+2. Determine the available auth method: per-role env credentials, saved storage-state files, or
+   (interactive only) approved manual login.
+3. **If `authRequired` and no auth method is available, STOP** with the credentials-required
+   message from `references/auth.md`. Do not enumerate or test protected routes as if anonymous.
+   Public routes may still be tested as a partial run. Write `auth.blocked: true` to state.
+4. Enumerate roles from `validation.config.json` → `roles`. If none declared but the app clearly
+   has multiple access levels, ask (interactive) or document the assumption that one role is being
+   covered and flag the others as untested in the ledger.
+5. For each role, establish auth, verify the role is actually logged in (a role-identifying
+   element, not merely "left the login screen"), and save storage-state to
+   `test-manifest/auth/{role}-state.json` for reuse.
+
 ## 2. Route Discovery
 
 Use both code and browser evidence when available.
+
+For `standard`/`exhaustive`, reconcile code scan and runtime crawl, then write the complete inventory
+to `validation.config.json` with `inventoryComplete: true`. Do not set that flag when a framework,
+router, API handler/RPC surface, permission surface, or dynamic-route source remains unexamined. The deterministic runner
+fails closed without this declaration.
 
 Discovery source order:
 
@@ -129,6 +154,25 @@ Inference guide:
 
 Mark destructive actions and do not execute them in testing unless they target `VAL_` data or the user approved destructive validation.
 
+## 4b. Modal / Dialog Code Scan (standard + exhaustive)
+
+Runtime crawl misses overlays behind permissions or unlinked triggers. Code-scan so each modal
+is inventoried even if no obvious button opens it:
+
+- Glob: `**/*Dialog.*`, `**/*Modal.*`, `**/*Sheet.*`, `**/*Drawer.*`, `**/*Popover.*`.
+- Grep: `DialogContent`, `AlertDialog`, `Modal`, `role="dialog"`, `aria-modal`.
+
+For each, record type (`create|edit|view|confirmation` from its name), the route/component that
+imports it, its trigger button when findable, and `reachable: true|false`. Add an element row
+with `type: "dialog-trigger"` for each reachable modal. Modals with no findable trigger stay in
+the inventory as `reachable: false` so the gap is visible in the report, not silently dropped.
+
+## 4c. CRUD Module Enumeration (standard + exhaustive)
+
+List every data module that has a list view plus create/edit/delete (Customers, Products,
+Invoices, ...). Each becomes a CRUD flow candidate (§5). In `exhaustive`/`human` mode the full
+create→read→update→delete cycle per module is required, using `VAL_`-prefixed data.
+
 ## 5. Critical Flows
 
 Identify flows users would expect to work:
@@ -156,6 +200,15 @@ Minimum flow candidates:
 - one delete cleanup flow for `VAL_` data
 - primary search/filter workflow if present
 
+## 5b. API Endpoint Inventory (exhaustive)
+
+Enumerate backend method/path pairs from the server router, framework handlers, RPC declarations,
+edge/serverless functions, and OpenAPI or generated route manifests. Reconcile them with browser
+network traffic, but do not treat traffic as the complete inventory. Record `id`, `method`, `path`,
+`access`, owning source file, `destructive`, and expected safe status/shape. Queue every endpoint
+for the exhaustive pass; destructive endpoints require isolated `VAL_` data or an explicit skip
+reason.
+
 ## 6. Save State
 
 Write `test-manifest/validation-state.json` with:
@@ -164,7 +217,20 @@ Write `test-manifest/validation-state.json` with:
 - selected backend and mode
 - preflight results
 - discovered routes, elements, flows
-- pending queues for route, element, and flow tests
+- discovered modals, CRUD modules, and API endpoints
+- pending queues for route, element, modal, flow, CRUD, API, and semantic screenshot-review tests
 - evidence path references
+
+In `standard`/`exhaustive` modes, also print and save the coverage inventory gap report from
+`references/coverage-contract.md`:
+
+```text
+=== COVERAGE INVENTORY ===
+Routes:   {found} found ({code} code, {crawl} crawl, {both} both) | reachable: {n} unreachable: {n}
+Modals:   {found} found (code scan)                               | trigger known: {n} unreachable: {n}
+Elements: {n} discovered across reachable routes
+CRUD modules: {n} ({list})
+API endpoints: {n} ({readOnly} read-only, {mutation} mutation)
+```
 
 Output a short discovery summary and proceed to `phases/TEST.md`.

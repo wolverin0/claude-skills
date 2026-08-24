@@ -1,25 +1,27 @@
 ---
 name: audit-domain-07-reliability
-description: Audit the reliability domain - error handling, retries, idempotency, race conditions, partial failures, timeouts, graceful degradation. Run as part of /audit Phase E.
+description: Audit the reliability domain — error handling, retries, idempotency, race conditions, partial failures, timeouts, graceful degradation. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 7 - Reliability & Edge Cases
+# Skill: Audit Domain 7 — Reliability & Edge Cases
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view ~/.codex/context\audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
 - Hard stops related to this domain: H5
-- Blind spots that route to this domain: B2, B5, B6, B10, B11
+- Blind spots that route to this domain: B2, B5, B6, B10, B11, B16, B18
 
 If the orchestrator didn't pass you these inputs, do NOT re-run the
 hard-stops or blind-spots walks. Audit your domain only and trust the
@@ -32,14 +34,26 @@ Error handling completeness, retry logic, idempotency, race conditions, partial 
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Does every external call have a timeout-
-2. Are retries bounded (no infinite retry loops)-
-3. Are write operations idempotent where they need to be-
-4. Are partial failures handled (multi-step ops that succeed halfway)-
-5. Are exceptions logged with enough context to debug, or just swallowed-
-6. Does the app degrade gracefully when a dependency is down-
+1. Does every external call have a timeout?
+2. Are retries bounded (no infinite retry loops)?
+3. Are write operations idempotent where they need to be?
+4. Are partial failures handled (multi-step ops that succeed halfway)?
+5. Are exceptions logged with enough context to debug, or just swallowed?
+6. Does the app degrade gracefully when a dependency is down?
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Try-catch on every external call (payment/API/DB) with a fallback, not a blank screen (playbook L2, FM-6).
+- Retry with exponential backoff on transient failures (playbook L12).
+- Idempotency on user-initiated create/charge/submit actions (double-click must not double-charge) — not just webhooks (playbook B18, FM-9).
+- A one-page incident runbook written during calm time (what to check first) (playbook L13, PRIN-8).
+- Uptime monitoring that alerts before users notice (playbook L12, L13).
+- Graceful degradation + circuit breakers for failing external services (playbook L13).
+- Heavy operations are async (not inline in the request) (playbook B16, FM-9).
 
 
 ## Mandatory enumeration before verdict
@@ -94,8 +108,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -115,16 +129,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 7: Reliability & Edge Cases
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-When something goes wrong (network blip, DB hiccup, third-party outage) - does the app recover, or does it corrupt state-
+When something goes wrong (network blip, DB hiccup, third-party outage) — does the app recover, or does it corrupt state?
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -132,7 +146,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-7.1 - <one-line title>
+  F-7.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -166,9 +180,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -181,19 +195,20 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)
 ---
 
 ## Codex Port Notes
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

@@ -2,6 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const { createRequire } = require('module');
+const { __validationResponsiveAudit } = require('./responsive-audit');
+const { applyLimit, evaluateCoverage, modePolicy, normalizeMode, positiveLimit } = require('./validation-contract');
 
 function parseArgs(argv) {
   const args = { mode: 'smoke' };
@@ -11,9 +13,13 @@ function parseArgs(argv) {
     else if (a === '--out') args.out = argv[++i];
     else if (a === '--config') args.config = argv[++i];
     else if (a === '--mode') args.mode = argv[++i];
+    else if (a === '--full') args.mode = 'exhaustive';
     else if (a === '--max-routes') args.maxRoutes = Number(argv[++i]);
     else if (a === '--max-elements') args.maxElements = Number(argv[++i]);
     else if (a === '--headed') args.headed = true;
+    else if (a === '--channel') args.channel = argv[++i];
+    else if (a === '--storage-state') args.storageState = argv[++i];
+    else if (a === '--role') args.role = argv[++i];
     else if (a === '--help') args.help = true;
   }
   return args;
@@ -27,6 +33,12 @@ const args = parseArgs(process.argv.slice(2));
 if (args.help || !args.url) {
   usage();
   process.exit(args.help ? 0 : 1);
+}
+try {
+  args.mode = normalizeMode(args.mode);
+} catch (error) {
+  console.error(error.message);
+  process.exit(2);
 }
 
 const root = process.cwd();
@@ -89,20 +101,9 @@ const secretValues = [
 ].filter(Boolean);
 const appUrl = new URL(args.url).toString();
 
-function modeDefaultMaxRoutes(mode) {
-  if (mode === 'exhaustive') return 80;
-  if (mode === 'standard') return 30;
-  return 6;
-}
-
-function modeDefaultMaxElements(mode) {
-  if (mode === 'exhaustive') return 40;
-  if (mode === 'standard') return 12;
-  return 0;
-}
-
-args.maxRoutes = Number.isFinite(args.maxRoutes) ? args.maxRoutes : Number(config.maxRoutes || modeDefaultMaxRoutes(args.mode));
-args.maxElements = Number.isFinite(args.maxElements) ? args.maxElements : Number(config.maxElements || modeDefaultMaxElements(args.mode));
+const policy = modePolicy(args.mode);
+args.maxRoutes = positiveLimit(args.maxRoutes) || positiveLimit(config.maxRoutes) || policy.defaultMaxRoutes;
+args.maxElements = positiveLimit(args.maxElements) || positiveLimit(config.maxElements) || policy.defaultMaxElements;
 
 function rel(p) { return path.relative(root, p).replace(/\\/g, '/'); }
 function reportHref(relPath) { return path.relative(dirs.reports, path.resolve(root, relPath)).replace(/\\/g, '/'); }
@@ -237,6 +238,8 @@ function makeState() {
       authMode: email && password ? 'env-credentials' : 'none-or-manual',
       configPath: loadedConfig.path ? rel(loadedConfig.path) : null,
       status: 'in_progress',
+      coverageComplete: false,
+      smokeScopeComplete: false,
       currentPhase: 'discover',
       startedAt: started.toISOString(),
       lastUpdatedAt: started.toISOString(),
@@ -252,9 +255,10 @@ function makeState() {
       allowedAccessDeniedPaths: Array.isArray(config.allowedAccessDeniedPaths) ? config.allowedAccessDeniedPaths : [],
     },
     preflight: { passed: false, serverStatus: 'unknown', loadTimeMs: null, authRequired: false, console: [], errors: [], blockers: [] },
-    discovery: { completedAt: null, routes: [], elements: [], flows: [] },
-    queues: { routes: [], elements: [], flows: [] },
-    results: { routes: {}, elements: {}, flows: {} },
+    discovery: { completedAt: null, routes: [], elements: [], modals: config.modals || [], flows: config.flows || [], crudModules: config.crudModules || [], apiEndpoints: config.apiEndpoints || [], truncation: { routes: false, elements: false } },
+    queues: { routes: [], elements: [], modals: [], flows: [], crud: [], api: [], visualReviews: [] },
+    results: { routes: {}, elements: {}, modals: {}, flows: {}, crud: {}, api: {}, visualReviews: {} },
+    coverage: null,
     cleanup: { attempted: false, itemsFound: 0, itemsDeleted: 0, itemsFailed: 0, failures: [] },
     summary: {
       routesTested: 0, routesPassed: 0, routesFailed: 0, routesSkipped: 0,
@@ -282,17 +286,13 @@ async function snapshotPage(page, file) {
     url: redactString(page.url()),
     title: redactString(await page.title().catch(() => '')),
     text: redactString((await bodyText(page)).slice(0, 8000)),
-    interactive: await page.locator('button, a, input, select, textarea, [role="button"]').evaluateAll(els => els.slice(0, 120).map((el, i) => {
+    interactive: await page.locator('button, a, input, select, textarea, [role="button"]').evaluateAll(els => els.map((el, i) => {
       const rect = el.getBoundingClientRect();
       const style = window.getComputedStyle(el);
       const visible = style.visibility !== 'hidden'
         && style.display !== 'none'
         && rect.width > 0
-        && rect.height > 0
-        && rect.bottom > 0
-        && rect.right > 0
-        && rect.top < window.innerHeight
-        && rect.left < window.innerWidth;
+        && rect.height > 0;
       return {
         index: i,
         tag: el.tagName,
@@ -300,6 +300,7 @@ async function snapshotPage(page, file) {
         href: el.getAttribute('href'),
         type: el.getAttribute('type'),
         visible,
+        inViewport: rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth,
         text: (el.innerText || el.getAttribute('aria-label') || el.getAttribute('placeholder') || '').trim(),
       };
     })).then(items => items.map(item => ({
@@ -360,7 +361,7 @@ function discoverRoutes(snapshot, currentUrl) {
     const priority = /inicio|dashboard|socios|cajas|proveedores|stock|perfil/i.test(label) ? 'critical' : 'normal';
     seen.set(pathOnly, { id: slug(pathOnly), path: pathOnly, label, source: 'browser-link', access: 'protected', priority, status: 'pending' });
   }
-  return [...seen.values()].slice(0, args.maxRoutes);
+  return [...seen.values()];
 }
 
 function accessDeniedAllowed(route) {
@@ -379,6 +380,7 @@ async function checkRoute(page, route, consoleStart, errorsStart, networkStart) 
   let observed = '';
   const screenshots = [];
   const snapshots = [];
+  const responsiveMeasurements = [];
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
     await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
@@ -389,18 +391,22 @@ async function checkRoute(page, route, consoleStart, errorsStart, networkStart) 
       const shot = path.join(dirs.routes, `${routeId}-${bp.name}.png`);
       await page.screenshot({ path: shot });
       screenshots.push(rel(shot));
+      const measurement = await page.evaluate(__validationResponsiveAudit, { mobile: bp.width <= 768 });
+      const responsiveFile = path.join(dirs.routes, `${routeId}-${bp.name}-responsive.json`);
+      fs.writeFileSync(responsiveFile, JSON.stringify(measurement, null, 2));
+      responsiveMeasurements.push({ breakpoint: bp.name, file: rel(responsiveFile), ...measurement });
     }
     const snapFile = path.join(dirs.routes, `${routeId}-snapshot.json`);
     const snap = await snapshotPage(page, snapFile);
     snapshots.push(rel(snapFile));
-    const overflow = await page.evaluate(() => ({ bodyScrollWidth: document.body.scrollWidth, innerWidth: window.innerWidth, hasHorizontalOverflow: document.body.scrollWidth > window.innerWidth }));
     const blank = !snap.text || snap.text.trim().length < 5;
     const unauthorized = /acceso no autorizado|no tienes los permisos/i.test(snap.text || '');
-    observed = `Route rendered ${snap.text.trim().length} chars; mobile overflow=${overflow.hasHorizontalOverflow}.`;
-    if (blank || overflow.hasHorizontalOverflow || (unauthorized && !accessDeniedAllowed(route))) {
+    const responsiveHigh = responsiveMeasurements.reduce((sum, item) => sum + Number(item.bySeverity && item.bySeverity.high || 0), 0);
+    observed = `Route rendered ${snap.text.trim().length} chars; responsive-high=${responsiveHigh} across ${responsiveMeasurements.length} breakpoints.`;
+    if (blank || responsiveHigh > 0 || (unauthorized && !accessDeniedAllowed(route))) {
       status = 'fail';
-      severity = blank ? 'critical' : unauthorized ? 'high' : 'medium';
-      observed += blank ? ' Page appears blank.' : unauthorized ? ' Access denied page shown after navigating from visible app navigation.' : ' Horizontal overflow detected.';
+      severity = blank ? 'critical' : 'high';
+      observed += blank ? ' Page appears blank.' : unauthorized ? ' Access denied page shown after navigating from visible app navigation.' : ' High-severity responsive findings detected.';
     } else if (unauthorized) {
       observed += ' Access denied page matched configured expectation.';
     }
@@ -426,8 +432,8 @@ async function checkRoute(page, route, consoleStart, errorsStart, networkStart) 
     expected: route.expected || `Route ${route.path} should render without blocking console/API errors or mobile overflow.`,
     observed,
     source: status === 'fail' ? 'app' : 'app',
-    evidence: { screenshots, snapshots, console: consoleIssues, errors: [], network: networkIssues, notes: [] },
-    rationale: status === 'pass' ? 'Route rendered with required visual/runtime evidence.' : 'Route violated smoke validation gates.',
+    evidence: { screenshots, snapshots, responsiveMeasurements, console: consoleIssues, errors: [], network: networkIssues, notes: ['semantic-screenshot-review-pending'] },
+    rationale: status === 'pass' ? 'Route rendered with measured layout/runtime evidence; semantic screenshot review is still required.' : 'Route violated validation collection gates.',
   };
 }
 
@@ -435,22 +441,43 @@ function isDestructiveLabel(label) {
   return /delete|remove|borrar|eliminar|cerrar sesi|logout|sign out|pagar|cobrar|guardar|save|submit|enviar|confirmar|aprobar|rechazar/i.test(label || '');
 }
 
-function safeElementCandidates(elements) {
-  const seen = new Set();
-  return elements.filter(item => {
-    if (item.visible === false) return false;
+function skippedElementResult(item, reason) {
+  return {
+    id: item.id,
+    type: 'element',
+    status: 'skip',
+    severity: 'info',
+    source: 'runner',
+    expected: `${item.type} "${item.label || ''}" is explicitly accounted for.`,
+    observed: `Not exercised by the deterministic collector: ${reason}.`,
+    skipReason: reason,
+    evidence: { screenshots: [], snapshots: [], console: [], errors: [], network: [], notes: [reason] },
+    rationale: 'Coverage accounting requires an explicit result even when execution is unsafe or unsupported.',
+  };
+}
+
+function selectElementCandidates(elements) {
+  const candidates = [];
+  const skipped = [];
+  for (const item of elements) {
     const label = String(item.label || '').trim();
-    if (!label || item.destructive || isDestructiveLabel(label)) return false;
-    const key = `${item.route}:${item.type}:${label}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    if (item.type === 'a') return true;
-    if (item.type === 'button') {
-      if (/^cerrar\b|^close\b|^x$/i.test(label)) return false;
-      return /abrir|mas|más|ver|configurar|settings|filtro|filtrar|buscar|search|menu|menú/i.test(label);
-    }
-    return false;
-  }).slice(0, args.maxElements);
+    let reason = null;
+    if (item.visible === false) reason = 'not-rendered';
+    else if (!label) reason = 'missing-accessible-name';
+    else if (item.destructive || isDestructiveLabel(label)) reason = 'destructive-unapproved';
+    else if (item.type === 'a') candidates.push(item);
+    else if (item.type === 'button' || item.type === '[role="button"]' || item.type === 'role=button') {
+      if (/^cerrar\b|^close\b|^x$/i.test(label)) reason = 'close-control-requires-open-state';
+      else if (/\b(open|abrir|view|ver|details?|detalles?|info|more|mas|m[aá]s|expand|expandir|show|mostrar|preview|previsualizar|config|configurar|settings|ajustes|opciones|options|filter|filtro|filtrar|search|buscar|menu|men[uú]|tab|panel|nuevo|nueva|new|add|agregar|a[nñ]adir|create|crear|edit|editar)\b/i.test(label)) candidates.push(item);
+      else reason = 'unsupported-safe-button-semantics';
+    } else reason = 'form-field-requires-flow-plan';
+    if (reason) skipped.push(skippedElementResult(item, reason));
+  }
+  const limited = applyLimit(candidates, args.maxElements);
+  for (const item of candidates.slice(limited.items.length)) {
+    skipped.push(skippedElementResult(item, 'explicit-element-cap'));
+  }
+  return { candidates: limited.items, skipped, truncated: limited.truncated };
 }
 
 async function checkElement(page, item, consoleStart, errorsStart, networkStart) {
@@ -477,9 +504,10 @@ async function checkElement(page, item, consoleStart, errorsStart, networkStart)
     screenshots.push(rel(preShot));
 
     let locator;
-    if (item.type === 'a') locator = page.getByRole('link', { name: item.label }).first();
-    else if (item.type === 'button') locator = page.getByRole('button', { name: item.label }).first();
-    else locator = page.locator(item.type).filter({ hasText: item.label }).first();
+    const matchIndex = Number.isInteger(item.matchIndex) ? item.matchIndex : 0;
+    if (item.type === 'a') locator = page.getByRole('link', { name: item.label }).nth(matchIndex);
+    else if (item.type === 'button') locator = page.getByRole('button', { name: item.label }).nth(matchIndex);
+    else locator = page.locator(item.type).filter({ hasText: item.label }).nth(matchIndex);
 
     let count = await locator.count().catch(() => 0);
     if (!count) {
@@ -519,7 +547,10 @@ async function checkElement(page, item, consoleStart, errorsStart, networkStart)
 
     const urlChanged = page.url() !== beforeUrl;
     const textChanged = afterText !== beforeText;
-    const dialogVisible = await page.locator('[role="dialog"], dialog, [data-state="open"]').count().catch(() => 0);
+    const dialogVisible = await page.locator('[role="dialog"], dialog, [data-state="open"]').evaluateAll(els => els.filter(el => {
+      const cs = getComputedStyle(el); const r = el.getBoundingClientRect();
+      return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0;
+    }).length).catch(() => 0);
     if (urlChanged || textChanged || dialogVisible > 0) {
       observed = `Action changed observable state: urlChanged=${urlChanged}, textChanged=${textChanged}, dialogOrOpenState=${dialogVisible > 0}.`;
     } else if (item.type === 'a' && targetPath === currentPath) {
@@ -607,9 +638,30 @@ body{font-family:system-ui,Segoe UI,sans-serif;margin:24px;line-height:1.45;colo
   fs.writeFileSync(reportPath, html);
 }
 
+async function launchResilient(channel, headed) {
+  // Many dev machines have system Chrome but never ran `playwright install` (no bundled Chromium).
+  if (channel) return chromium.launch({ channel, headless: !headed });
+  const attempts = [{}, { channel: 'chrome' }, { channel: 'msedge' }];
+  let lastErr;
+  for (const a of attempts) {
+    try { return await chromium.launch(Object.assign({ headless: !headed }, a)); }
+    catch (e) { lastErr = e; }
+  }
+  throw new Error('Could not launch a browser. Run `npx playwright install chromium`, install Chrome, or pass --channel. Last error: ' + (lastErr && lastErr.message));
+}
+
 (async () => {
-  const browser = await chromium.launch({ headless: !args.headed });
-  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  const browser = await launchResilient(args.channel, args.headed);
+  // Authenticated runs (SSO/OAuth/MFA or pre-saved sessions) load a storage-state so we start
+  // logged in. --storage-state file or VALIDATION_STORAGE_STATE env.
+  const storageStatePath = args.storageState || process.env.VALIDATION_STORAGE_STATE;
+  const ctxOpts = { viewport: { width: 1440, height: 900 } };
+  if (storageStatePath) {
+    if (!fs.existsSync(storageStatePath)) { console.error('storage-state file not found: ' + storageStatePath); process.exit(2); }
+    ctxOpts.storageState = storageStatePath;
+  }
+  const context = await browser.newContext(ctxOpts);
+  const page = await context.newPage();
   const consoleMessages = [];
   const pageErrors = [];
   const networkEvents = [];
@@ -661,37 +713,93 @@ body{font-family:system-ui,Segoe UI,sans-serif;margin:24px;line-height:1.45;colo
     };
     save();
 
+    // HARD GATE: never validate the login screen as if it were the app.
+    // If the app is login-gated and we are not authenticated, stop before testing protected
+    // routes instead of silently reporting the login page as covered surface.
+    const authRequired = state.preflight.authRequired || loginResult.reason === 'credentials-not-provided' || loginResult.stillLogin;
+    const authEstablished = loginResult.passed;
+    if (authRequired && !authEstablished) {
+      state.preflight.blockers = state.preflight.blockers || [];
+      state.preflight.blockers.push(
+        loginResult.reason === 'credentials-not-provided'
+          ? 'Login required but no credentials provided. Set VALIDATION_EMAIL / VALIDATION_PASSWORD (per role) or supply a saved storage-state. No protected route was tested.'
+          : 'Login was attempted but the app stayed on the login screen. Credentials may be wrong or the login selectors did not match. No protected route was tested.'
+      );
+      state.session.status = 'blocked';
+      save();
+      console.error('=== VALIDATION BLOCKED: authentication not established ===');
+      state.preflight.blockers.forEach(b => console.error('- ' + b));
+      console.error('Re-run with valid credentials. Protected routes were NOT marked pass.');
+      await browser.close();
+      process.exit(4);
+    }
+
     const postSnapFile = path.join(dirs.routes, 'post-auth-discovery.json');
     const snap = await snapshotPage(page, postSnapFile);
-    const routes = discoverRoutes(snap, page.url());
+    const routeSelection = applyLimit(discoverRoutes(snap, page.url()), args.maxRoutes);
+    const routes = routeSelection.items;
+    state.discovery.truncation.routes = routeSelection.truncated;
     state.discovery.routes = routes;
-    state.discovery.elements = (snap.interactive || []).map(item => ({
-      id: `post-auth-${item.tag?.toLowerCase() || 'el'}-${item.index}`,
-      route: new URL(page.url()).pathname || '/',
-      type: (item.tag || 'element').toLowerCase(),
-      label: item.text || item.href || '',
-      href: item.href || null,
-      visible: item.visible !== false,
-      expectedBehavior: item.tag === 'A' ? 'navigates' : item.tag === 'BUTTON' ? 'action' : 'input-or-other',
-      destructive: /delete|remove|borrar|eliminar/i.test(item.text || ''),
-      status: 'pending',
-    }));
+    state.discovery.elements = [];
     state.discovery.completedAt = new Date().toISOString();
     state.queues.routes = routes.map(r => r.id);
+    state.queues.modals = (state.discovery.modals || []).map((item, index) => item.id || item.name || `modal-${index}`);
+    state.queues.flows = (state.discovery.flows || []).map((item, index) => item.id || item.name || `flow-${index}`);
+    state.queues.crud = (state.discovery.crudModules || []).map((item, index) => item.id || item.name || `crud-${index}`);
+    state.queues.api = policy.mode === 'exhaustive'
+      ? (state.discovery.apiEndpoints || []).map((item, index) => item.id || `${item.method || 'ANY'}-${item.path || index}`)
+      : [];
     save();
 
+    // Per-route element discovery: capture each route's own buttons / dialog-triggers / links,
+    // not just the landing page. checkRoute leaves `page` on the route, so snapshot it there.
+    // This is what raises element/modal coverage from "a couple of landing elements" to the
+    // interactive surface of every route a role can reach.
+    const perRouteCap = policy.samplingAllowed
+      ? positiveLimit(config.maxElementsPerRoute) || 10
+      : positiveLimit(config.maxElementsPerRoute);
     for (const route of routes) {
       const result = await checkRoute(page, route, getConsole, getErrors, getNetwork);
       state.results.routes[result.id] = result;
       state.queues.routes = state.queues.routes.filter(id => id !== result.id);
+      try {
+        const routeSnapFile = path.join(dirs.routes, `${result.id}-elements.json`);
+        const routeSnap = await snapshotPage(page, routeSnapFile);
+        const routeElementSelection = applyLimit(routeSnap.interactive || [], perRouteCap);
+        state.discovery.truncation.elements ||= routeElementSelection.truncated;
+        const occurrences = new Map();
+        const routeEls = routeElementSelection.items.map((item, i) => {
+          const label = item.text || item.href || '';
+          const type = (item.tag || 'element').toLowerCase();
+          const occurrenceKey = `${type}:${label}`;
+          const matchIndex = occurrences.get(occurrenceKey) || 0;
+          occurrences.set(occurrenceKey, matchIndex + 1);
+          return {
+          id: slug(`${result.id}-${(item.tag || 'el').toLowerCase()}-${item.index ?? i}-${item.text || item.href || i}`),
+          route: route.path,
+          type,
+          label,
+          href: item.href || null,
+          visible: item.visible !== false,
+          matchIndex,
+          expectedBehavior: item.tag === 'A' ? 'navigates' : item.tag === 'BUTTON' ? 'action' : 'input-or-other',
+          destructive: /delete|remove|borrar|eliminar|pay|charge|cobrar|aprobar|approve/i.test(item.text || ''),
+          status: 'pending',
+          };
+        });
+        state.discovery.elements.push(...routeEls);
+      } catch { /* element discovery is best-effort; route verdict already recorded */ }
       recomputeSummary();
       save();
     }
 
-    const elementCandidates = safeElementCandidates(state.discovery.elements);
-    state.queues.elements = elementCandidates.map(e => e.id);
+    const selection = selectElementCandidates(state.discovery.elements);
+    state.discovery.truncation.elements ||= selection.truncated;
+    for (const skipped of selection.skipped) state.results.elements[skipped.id] = skipped;
+    state.queues.elements = selection.candidates.map(e => e.id);
+    state.queues.visualReviews = routes.flatMap(route => state.config.breakpoints.map(bp => `${route.id}:${bp.name}`));
     save();
-    for (const element of elementCandidates) {
+    for (const element of selection.candidates) {
       const result = await checkElement(page, element, getConsole, getErrors, getNetwork);
       state.results.elements[result.id] = result;
       state.queues.elements = state.queues.elements.filter(id => id !== element.id);
@@ -700,16 +808,20 @@ body{font-family:system-ui,Segoe UI,sans-serif;margin:24px;line-height:1.45;colo
     }
 
     recomputeSummary();
-    state.session.currentPhase = 'report';
-    state.session.status = 'completed';
-    state.session.completedAt = new Date().toISOString();
+    state.coverage = evaluateCoverage(state, config);
+    state.session.coverageComplete = state.coverage.coverageComplete;
+    state.session.smokeScopeComplete = state.coverage.smokeScopeComplete;
+    state.session.currentPhase = 'visual-review';
+    state.session.status = 'in_progress';
     state.report.path = rel(reportPath);
     state.report.generatedAt = new Date().toISOString();
-    state.report.partial = false;
+    state.report.partial = true;
     writeReport();
     save();
     await browser.close();
-    console.log(JSON.stringify({ ok: true, state: rel(statePath), report: rel(reportPath), summary: state.summary }, null, 2));
+    const appFailures = state.summary.routesFailed + state.summary.elementsFailed;
+    console.log(JSON.stringify({ ok: appFailures === 0, collectionComplete: true, certificationPending: true, state: rel(statePath), report: rel(reportPath), summary: state.summary, coverage: state.coverage }, null, 2));
+    process.exit(appFailures === 0 ? 0 : 1);
   } catch (err) {
     state.runner.failures.push({ message: err.message, stack: err.stack });
     state.session.status = 'failed';

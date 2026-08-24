@@ -1,21 +1,23 @@
 ---
 name: audit-domain-13-code-integrity
-description: Audit code integrity and coherence - duplication, hallucinated references, Tambon signatures, spec drift, Frankenstein patterns, mystery code. THIS DOMAIN incorporates findings from the Tambon hunt and most of the blind-spots walk. Run as part of /audit Phase E.
+description: Audit code integrity and coherence — duplication, hallucinated references, Tambon signatures, spec drift, Frankenstein patterns, mystery code. THIS DOMAIN incorporates findings from the Tambon hunt and most of the blind-spots walk. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 13 - Code Integrity & Coherence (LLM-failure-mode domain)
+# Skill: Audit Domain 13 — Code Integrity & Coherence (LLM-failure-mode domain)
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view ~/.codex/context\audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
 - Hard stops related to this domain: H9
@@ -32,15 +34,22 @@ Duplication (Type-1 through Type-4 clones), hallucinated references, Tambon sign
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Tambon density: how many LLM-specific signatures per kLoC-
-2. Are there duplicate functions / endpoints / utilities-
-3. Are there imports of packages not in the manifest-
-4. Do comments match the code-
-5. Are tests asserting behavior or implementation-
-6. How many 'utility' / 'helpers' / 'lib' directories exist-
-7. Are there modules nothing imports-
+1. Tambon density: how many LLM-specific signatures per kLoC?
+2. Are there duplicate functions / endpoints / utilities?
+3. Are there imports of packages not in the manifest?
+4. Do comments match the code?
+5. Are tests asserting behavior or implementation?
+6. How many 'utility' / 'helpers' / 'lib' directories exist?
+7. Are there modules nothing imports?
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Vibe-coding hallmark: happy-path-only code (no error/empty branches), AI-written tests that mock the function under test, and comment-code drift after AI refactors — cross-reference the Tambon hunt and blind-spots B13/B14 (playbook PRIN-1).
+- Note: the new production-readiness blind-spots B16-B19 route to Domains 5/6/7/10, not here; this domain still owns duplication, dead code, and hallucinated references.
 
 ## Files most likely to have findings
 
@@ -56,8 +65,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Enumerate helper and utility files before verdict.** List all
@@ -97,16 +106,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 13: Code Integrity & Coherence (LLM-failure-mode domain)
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-How coherent is the codebase as a whole- Vibe-coded apps often look fine file-by-file but are incoherent overall - this domain catches that.
+How coherent is the codebase as a whole? Vibe-coded apps often look fine file-by-file but are incoherent overall — this domain catches that.
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -114,7 +123,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-13.1 - <one-line title>
+  F-13.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -148,9 +157,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -171,13 +180,13 @@ Format the trace as:
 ```
 FLOW: <auth login | payment webhook | account delete | data export | etc.>
 
-  Entry:        <path:line> - <one-line description>
-  Validates:    <path:line> - <what's validated>
-  Authorizes:   <path:line> - <what auth check>
-  Mutates:      <path:line> - <what side effect>
-  Returns:      <path:line> - <what response>
+  Entry:        <path:line> — <one-line description>
+  Validates:    <path:line> — <what's validated>
+  Authorizes:   <path:line> — <what auth check>
+  Mutates:      <path:line> — <what side effect>
+  Returns:      <path:line> — <what response>
 
-  Trace status: COMPLETE | PARTIAL - could not determine <X>
+  Trace status: COMPLETE | PARTIAL — could not determine <X>
 ```
 
 A PARTIAL trace is itself a finding. Severity scales with the flow's
@@ -199,19 +208,20 @@ listed in this domain's findings section.
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)
 ---
 
 ## Codex Port Notes
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

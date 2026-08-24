@@ -166,7 +166,7 @@ def main():
     if len(sys.argv) < 4 or sys.argv[2] != '--path':
         print("Usage: init_skill.py <skill-name> --path <path>")
         print("\nExamples:")
-        print("  init_skill.py my-new-skill --path C:/Users/pauol/.claude/skills")
+        print("  init_skill.py my-new-skill --path ~/.claude/skills")
         sys.exit(1)
 
     skill_name = sys.argv[1]

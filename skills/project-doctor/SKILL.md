@@ -24,7 +24,7 @@ The user types `/project-doctor` from any project root. You then:
 node "$HOME/.claude/skills/project-doctor/check.js"
 ```
 
-(On Windows in bash: same command - `$HOME` resolves to `/c/Users/pauol`.)
+(On Windows in bash: same command - `$HOME` resolves to `/c/Users/<you>`.)
 
 2. The script prints a structured table to stdout: one row per check with verdict (`PASS`/`WARN`/`FAIL`/`SKIP`) and a remediation hint.
 

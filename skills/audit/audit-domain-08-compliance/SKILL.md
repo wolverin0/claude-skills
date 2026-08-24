@@ -1,25 +1,27 @@
 ---
 name: audit-domain-08-compliance
-description: Audit the legal/privacy/compliance signals - privacy policy alignment, data retention, GDPR/CCPA basics, cookie consent, export/delete capabilities. Run as part of /audit Phase E.
+description: Audit the legal/privacy/compliance signals — privacy policy alignment, data retention, GDPR/CCPA basics, cookie consent, export/delete capabilities. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 8 - Legal / Privacy / Compliance Signals
+# Skill: Audit Domain 8 — Legal / Privacy / Compliance Signals
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view ~/.codex/context\audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
 - Hard stops related to this domain: H1, H4
-- Blind spots that route to this domain: (none - this domain has no blind-spot classes routing to it)
+- Blind spots that route to this domain: (none — this domain has no blind-spot classes routing to it)
 
 If the orchestrator didn't pass you these inputs, do NOT re-run the
 hard-stops or blind-spots walks. Audit your domain only and trust the
@@ -32,14 +34,29 @@ Privacy policy / ToS presence and alignment, data retention policy, GDPR/CCPA ba
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Is there a privacy policy / ToS, and does the code match what it claims-
-2. Is there a data retention policy, and are old records actually deleted-
-3. Can a user export their data (GDPR Article 20)-
-4. Can a user delete their data (GDPR Article 17)-
-5. Is sensitive-data access audit-logged-
-6. Are cookie consent flows present (if applicable)-
+1. Is there a privacy policy / ToS, and does the code match what it claims?
+2. Is there a data retention policy, and are old records actually deleted?
+3. Can a user export their data (GDPR Article 20)?
+4. Can a user delete their data (GDPR Article 17)?
+5. Is sensitive-data access audit-logged?
+6. Are cookie consent flows present (if applicable)?
+7. **Who is the merchant of record?** If the app takes money: who legally sells —
+   the operator directly (then local tax/invoicing obligations apply: for AR
+   projects, AFIP electronic invoicing wired?) or a MoR platform (Paddle/LemonSqueezy
+   — then verify the integration actually delegates tax)? "Stripe/MercadoPago
+   connected" alone is NOT an answer — they are processors, not MoR. Undefined
+   MoR on a paid product = compliance finding.
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Privacy policy and Terms of Service present (playbook L8, CHK-5).
+- GDPR "right to be forgotten": a data-deletion mechanism + data export (playbook L8, FM-24).
+- CCPA/GDPR opt-in consent where required (playbook L8).
+- No PII in logs, databases, or backups without encryption (playbook L8).
 
 
 ## Mandatory enumeration before verdict
@@ -93,8 +110,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -114,16 +131,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 8: Legal / Privacy / Compliance Signals
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-Are you legally OK- Most vibe-coded apps haven't thought past 'login works.'
+Are you legally OK? Most vibe-coded apps haven't thought past 'login works.'
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -131,7 +148,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-8.1 - <one-line title>
+  F-8.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -165,9 +182,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -180,19 +197,20 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)
 ---
 
 ## Codex Port Notes
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

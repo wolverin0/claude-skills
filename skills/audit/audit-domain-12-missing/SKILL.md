@@ -1,25 +1,27 @@
 ---
 name: audit-domain-12-missing
-description: Audit what a normal production app at this scale would have but is absent - health checks, error tracking, feature flags, audit logs, on-call. Run as part of /audit Phase E.
+description: Audit what a normal production app at this scale would have but is absent — health checks, error tracking, feature flags, audit logs, on-call. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 12 - What's Missing But Expected
+# Skill: Audit Domain 12 — What's Missing But Expected
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view ~/.codex/context\audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
-- Hard stops related to this domain: (none - this domain has no hard-stop classes routing to it)
-- Blind spots that route to this domain: (none - this domain has no blind-spot classes routing to it)
+- Hard stops related to this domain: (none — this domain has no hard-stop classes routing to it)
+- Blind spots that route to this domain: (none — this domain has no blind-spot classes routing to it)
 
 If the orchestrator didn't pass you these inputs, do NOT re-run the
 hard-stops or blind-spots walks. Audit your domain only and trust the
@@ -32,14 +34,28 @@ What's absent that should be present at this stage: health checks, error trackin
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Is there a /health endpoint-
-2. Is error tracking integrated (Sentry, Rollbar, Honeycomb)-
-3. Is there a feature-flag system, or is everything env-toggled-
-4. Are sensitive operations (admin changes, deletes) audit-logged-
-5. Is there an on-call rotation / runbook-
-6. Are backups configured and tested-
+1. Is there a /health endpoint?
+2. Is error tracking integrated (Sentry, Rollbar, Honeycomb)?
+3. Is there a feature-flag system, or is everything env-toggled?
+4. Are sensitive operations (admin changes, deletes) audit-logged?
+5. Is there an on-call rotation / runbook?
+6. Are backups configured and tested?
+7. Is analytics not just installed but MEASURING something: is at least one
+   conversion funnel (signup → activation → paid, or the app's equivalent)
+   actually configured and firing? "Analytics SDK present" with zero funnels
+   means the team is flying blind on whether the product works — report it.
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Error tracking (Sentry or equivalent) capturing every exception with stack trace + affected users (playbook L12, FM-14).
+- Uptime monitoring with alerting (playbook L13).
+- Structured logging (timestamps, user/request IDs), not console.log (playbook L12, FM-14).
+- Health checks on critical endpoints; feature flags; audit logs for sensitive ops (playbook L13).
+- Automated backups WITH a tested restore (playbook L13).
 
 
 ## Mandatory enumeration before verdict
@@ -94,8 +110,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Enumerate feature flags before verdict.** Grep the codebase and DB
@@ -137,16 +153,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 12: What's Missing But Expected
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-What would an experienced engineer expect to see in a production app, that this app doesn't have- Absence is itself a signal.
+What would an experienced engineer expect to see in a production app, that this app doesn't have? Absence is itself a signal.
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -154,7 +170,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-12.1 - <one-line title>
+  F-12.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -188,9 +204,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -203,19 +219,20 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)
 ---
 
 ## Codex Port Notes
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

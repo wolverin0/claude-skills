@@ -1,0 +1,14 @@
+[
+  {"query": "these screenshots have a header that becomes a search bar when scrolling. how do I build this in my mobile pwa?", "should_trigger": true},
+  {"query": "build a Next.js mobile dashboard with animated tabs, bottom nav, and stacked promo cards", "should_trigger": true},
+  {"query": "my UI looks like AI slop, redesign the app screen and give me components", "should_trigger": true},
+  {"query": "what is the method called when cards pile up as you scroll on mobile?", "should_trigger": true},
+  {"query": "convert this fintech screenshot into React Native Expo components with Reanimated", "should_trigger": true},
+  {"query": "make me a polished mobile CRM screen with design tokens and safe area", "should_trigger": true},
+  {"query": "generate a SQL migration for my invoices table", "should_trigger": false},
+  {"query": "summarize this PDF contract", "should_trigger": false},
+  {"query": "write a cold email to a client", "should_trigger": false},
+  {"query": "explain what a compiler is", "should_trigger": false},
+  {"query": "draw a logo for my security company", "should_trigger": false},
+  {"query": "fix this Python script that parses CSV files", "should_trigger": false}
+]

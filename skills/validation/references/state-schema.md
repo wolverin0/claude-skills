@@ -19,12 +19,22 @@ test-manifest/validation-state.json
     "authMode": "none|manual|saved-state|config",
     "backendDetail": "playwright-project",
     "configPath": "validation.config.json",
-    "status": "in_progress|completed|failed",
-    "currentPhase": "discover|test|report",
+    "status": "in_progress|incomplete|completed|failed|blocked",
+    "currentPhase": "discover|test|visual-review|report",
+    "coverageComplete": false,
+    "smokeScopeComplete": false,
     "startedAt": "ISO",
     "lastUpdatedAt": "ISO",
     "completedAt": null,
     "contextResets": 0
+  },
+  "auth": {
+    "required": false,
+    "blocked": false,
+    "method": "none|env|storage-state|manual",
+    "roles": [
+      {"id": "admin", "authenticated": false, "stateFile": "test-manifest/auth/admin-state.json", "verifiedBy": "role-identifying element"}
+    ]
   },
   "config": {
     "breakpoints": [
@@ -35,8 +45,8 @@ test-manifest/validation-state.json
     ],
     "ignoreConsolePatterns": ["ResizeObserver loop", "favicon.ico"],
     "destructiveActions": "skip|val-only|allow",
-    "maxRoutes": 30,
-    "maxElements": 12,
+    "maxRoutes": null,
+    "maxElements": null,
     "allowedAccessDeniedPaths": []
   },
   "preflight": {
@@ -52,17 +62,39 @@ test-manifest/validation-state.json
     "completedAt": null,
     "routes": [],
     "elements": [],
-    "flows": []
+    "modals": [],
+    "flows": [],
+    "crudModules": [],
+    "apiEndpoints": [],
+    "truncation": {"routes": false, "elements": false}
   },
   "queues": {
     "routes": [],
     "elements": [],
-    "flows": []
+    "modals": [],
+    "flows": [],
+    "crud": [],
+    "api": [],
+    "visualReviews": []
   },
   "results": {
     "routes": {},
     "elements": {},
-    "flows": {}
+    "modals": {},
+    "flows": {},
+    "crud": {},
+    "api": {},
+    "visualReviews": {}
+  },
+  "coverage": {
+    "mode": "standard",
+    "requestedScopeComplete": false,
+    "coverageComplete": false,
+    "smokeScopeComplete": false,
+    "inventoryDeclared": false,
+    "truncated": false,
+    "unaccounted": [],
+    "counts": {}
   },
   "cleanup": {
     "attempted": false,
@@ -124,5 +156,6 @@ Use stable IDs:
 - route: route id or path slug
 - element: `{routeId}-{type}-{labelSlug}-{index}`
 - flow: short descriptive slug
+- API endpoint: `{METHOD}-{path}` such as `GET-/api/customers`
 
 Do not use backend refs as stable IDs. Browser refs are session-specific and go stale.

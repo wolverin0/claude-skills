@@ -1,25 +1,27 @@
 ---
 name: audit-domain-01-security
-description: Audit the security domain - auth, authz, secrets, transport, sensitive data exposure, dependency CVEs. Run as part of /audit Phase E.
+description: Audit the security domain — auth, authz, secrets, transport, sensitive data exposure, dependency CVEs. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 1 - Security
+# Skill: Audit Domain 1 — Security
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view ~/.codex/context\audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
-- Hard stops related to this domain: H1, H2, H3, H6, H7, H8
-- Blind spots that route to this domain: B1, B7, B8
+- Hard stops related to this domain: H1, H2, H3, H6, H7, H8, H11 (H10 related)
+- Blind spots that route to this domain: B1, B7, B8, B18
 
 If the orchestrator didn't pass you these inputs, do NOT re-run the
 hard-stops or blind-spots walks. Audit your domain only and trust the
@@ -32,16 +34,35 @@ Authentication, authorization, session management, secrets handling, transport s
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Is auth wired to every protected route, not just defined-
-2. Are sessions invalidated on logout server-side-
-3. Are passwords hashed with a slow algorithm (bcrypt/argon2)-
-4. Are tokens in httpOnly cookies, not localStorage-
-5. Is CORS scoped to specific origins, not `*`-
-6. Is rate limiting in place on login, password reset, and AI calls-
-7. Are dependencies free of known high/critical CVEs-
-8. Are TLS certs valid, modern, and HSTS-enforced-
+1. Is auth wired to every protected route, not just defined?
+2. Are sessions invalidated on logout server-side?
+3. Are passwords hashed with a slow algorithm (bcrypt/argon2)?
+4. Are tokens in httpOnly cookies, not localStorage?
+5. Is CORS scoped to specific origins, not `*`?
+6. Is rate limiting in place on login, password reset, and AI calls?
+7. Are dependencies free of known high/critical CVEs?
+8. Are TLS certs valid, modern, and HSTS-enforced?
+9. Are public forms (signup, login, contact, waitlist) protected from bots — CAPTCHA/Turnstile/hCaptcha in code OR Supabase Auth captcha enabled? An unprotected public form is a spam/abuse and credential-stuffing vector.
+10. Do auth flows avoid user/account enumeration — do signup-with-existing-email, password-reset-for-nonexistent-email, and wrong-password all return GENERIC responses that don't reveal whether an account exists?
+11. Do error responses return generic messages to the client (no raw `error.message`, stack traces, or SQL/schema/table names), with full errors logged server-side only? Also flag rate limiters / auth checks that "fail open" on error.
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Secrets in the client bundle: open built JS / search for `sk_`, `sk_live`, `AIza`, OpenAI/Stripe keys, or public-prefixed secret env vars (NEXT_PUBLIC_/VITE_/PUBLIC_). Any paid-API secret reachable in the browser = serious (playbook H11, FM-4, L8).
+- Session expiry: copy the URL/session after logout and reuse it — must fail (playbook CHK-4, L4).
+- IDOR manual test: change the user/resource id in the URL or body — can you see another user's data? (playbook CHK-4, B8).
+- Dependency CVEs: run `npm audit` / equivalent; flag critical/high and abandoned packages (playbook FM-20, L8).
+- Password-reset links must expire and be single-use (playbook L4).
+- Unique API keys per environment (dev/staging/prod), never shared (playbook L8).
+- XSS / log-injection: ~86% of AI code fails XSS, ~88% log injection — verify output is escaped/sanitized (playbook FM-3, L8).
+- Rate limit AND spend cap on auth + AI/paid endpoints (playbook H10, FM-5, L9).
+- CAPTCHA / bot-protection on public forms (signup, login, contact, waitlist): grep `captcha|turnstile|hcaptcha|recaptcha` in app code (exclude node_modules); if none, check whether the form posts to Supabase Auth with captcha enabled dashboard-side. No protection on a public form = bot-spam + credential-stuffing vector (vibe-coder playbook §5).
+- User/account enumeration: read the signup, login, and password-reset handlers. A differential response (e.g. "email already registered" vs generic success, or "user not found" vs generic error on reset) leaks which emails have accounts. Verdict requires reading all three handlers (vibe-coder playbook §3).
+- Error-message info disclosure: grep `error.message|err.message|\.stack|res.*json\(\{.*error` in API/route handlers. Any client-facing response that returns a raw error string, stack trace, or DB/schema detail is a finding — show generic message to the client, log full error server-side only. Also flag any limiter/auth that "fails open" on its own error path (vibe-coder playbook §2).
 
 
 ## Mandatory enumeration before verdict
@@ -98,8 +119,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -119,16 +140,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 1: Security
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-What can a stranger break by visiting your site- This domain answers that, in concrete attack scenarios.
+What can a stranger break by visiting your site? This domain answers that, in concrete attack scenarios.
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -136,7 +157,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-1.1 - <one-line title>
+  F-1.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -170,9 +191,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -185,19 +206,20 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)
 ---
 
 ## Codex Port Notes
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Battle Test"
+  short_description: "Fail-closed project audit and hardening"
+  default_prompt: "Use $battle-test with no options to run the full diagnose, exhaustive runtime validation, hardening, and re-verification cycle."

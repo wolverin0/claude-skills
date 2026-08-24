@@ -6,7 +6,7 @@ description: Generate a detailed AI fix prompt for a specific audit finding. Use
 # Skill: Audit Fix Generator
 
 When an audit finds 30 issues, the developer doesn't want 30 paragraphs
-of advice - they want 30 prompts they can paste into a fresh AI session
+of advice — they want 30 prompts they can paste into a fresh AI session
 to fix each one. This skill produces those prompts on demand.
 
 The fix prompt for each finding follows a strict template that includes:
@@ -26,9 +26,9 @@ is just a guess; without rollback, it's an unsafe guess.
 
 The user invokes this skill referencing a finding by ID:
 
-> "/audit-fix F-H1.1" -> Hard stop H1, finding 1
-> "/audit-fix F-1.3"  -> Domain 1, finding 3
-> "/audit-fix F-T1.1" -> Tambon Signature 1, finding 1
+> "/audit-fix F-H1.1" → Hard stop H1, finding 1
+> "/audit-fix F-1.3"  → Domain 1, finding 3
+> "/audit-fix F-T1.1" → Tambon Signature 1, finding 1
 
 The orchestrator's audit report has all findings tagged with an ID in
 this format. Look up the finding from the report (or ask the user to
@@ -36,12 +36,12 @@ paste the finding's full block if the report isn't in context).
 
 ### Generation steps
 
-1. **Re-read the cited code.** R2 - quote before fix. Don't propose a
+1. **Re-read the cited code.** R2 — quote before fix. Don't propose a
    change to a line you haven't seen recently.
 2. **Identify the blast radius.** What other files import or reference
-   the file being changed- Use `grep -rn "<symbol>" src/` to find them.
+   the file being changed? Use `grep -rn "<symbol>" src/` to find them.
 3. **Identify the test coverage.** Are there tests that exercise this
-   code path- Will the fix break them, or do they need updating-
+   code path? Will the fix break them, or do they need updating?
 4. **Choose a fix strategy.** Often there are multiple reasonable fixes.
    Pick the one that:
    - Minimizes blast radius
@@ -52,15 +52,15 @@ paste the finding's full block if the report isn't in context).
 ## Output template
 
 ```
-=======================================================================
-  AI FIX PROMPT - Finding <ID>
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
+  AI FIX PROMPT — Finding <ID>
+═══════════════════════════════════════════════════════════════════════
 
 [The block below is the prompt itself. Copy it into a fresh Claude Code
 or Cursor session. Do NOT paste it into the same session that wrote
-the original code - start fresh, clean context.]
+the original code — start fresh, clean context.]
 
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 
 # Fix: <one-line title>
 
@@ -72,8 +72,8 @@ repository.
 **Finding ID:** <ID>
 **Severity:** <Critical/High/Medium/Low>
 **Exploitability:** <EXPLOITABLE-NOW/EXPLOITABLE-LOW-EFFORT/BAD-PRACTICE/UNKNOWN>
-**Hard-stop class:** <H1-H9 if applicable>
-**Blind-spot class:** <B1-B15 if applicable>
+**Hard-stop class:** <H1-H11 if applicable>
+**Blind-spot class:** <B1-B19 if applicable>
 
 **What's wrong:**
 <finding's "what's wrong" paragraph from the audit>
@@ -133,7 +133,7 @@ If the codebase has no test infrastructure for this area:
 - [ ] Add a basic test scaffold first (one test file, one fixture if needed)
 - [ ] Document in your reply that you set up infrastructure as part of the fix
 
-## Verification (mandatory - you must run these and report the output)
+## Verification (mandatory — you must run these and report the output)
 
 ```bash
 # Run the affected test file
@@ -143,15 +143,15 @@ If the codebase has no test infrastructure for this area:
 <exact command>
 
 # Run the linter / type-checker
-<exact command - ruff, mypy, eslint, tsc>
+<exact command — ruff, mypy, eslint, tsc>
 
-# Manual verification for security/payment fixes - replay the
+# Manual verification for security/payment fixes — replay the
 # exploitable scenario and confirm it now fails:
 <curl command, or psql query, or similar>
 ```
 
 After running, paste the output of each command into your reply. If any
-fails, STOP and report - don't try to "fix the verification" by
+fails, STOP and report — don't try to "fix the verification" by
 loosening the test.
 
 ## Rollback
@@ -170,12 +170,12 @@ able to roll back without thinking.
 
 ## What you should NOT do
 
-- FAIL: Don't claim "the fix works" without showing the verification command
+- ❌ Don't claim "the fix works" without showing the verification command
   output
-- FAIL: Don't fix more than the listed finding - report related findings,
+- ❌ Don't fix more than the listed finding — report related findings,
   don't silently fix them
-- FAIL: Don't disable a test to make the fix "pass"
-- FAIL: Don't push directly to main; work in a branch
+- ❌ Don't disable a test to make the fix "pass"
+- ❌ Don't push directly to main; work in a branch
 
 ## Done criteria
 
@@ -194,7 +194,7 @@ When done, report:
 3. Any related findings you noticed but did NOT fix (so they can be
    tracked separately)
 
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 
 [End of fix prompt. The user copies the block above into a fresh AI
 session.]
@@ -202,11 +202,11 @@ session.]
 
 ## When the finding is a hard stop
 
-For H1-H9 findings, add a "STOP - read this first" preamble to the
+For H1-H11 findings, add a "STOP — read this first" preamble to the
 prompt:
 
 ```
-HARD STOP: THIS IS A HARD-STOP FIX
+🛑 THIS IS A HARD-STOP FIX
 
 This finding is a launch-blocker. The codebase MUST NOT receive
 production traffic until this is resolved AND verified. The
@@ -238,25 +238,16 @@ them together is to apply the pattern uniformly.
 - Modify any code (read-only for the audit pipeline)
 - Generate fix prompts unprompted (only on `/audit-fix <ID>` request)
 - Aggregate fix prompts into a single document by default (each fix is
-  a separate prompt for a separate session - that's deliberate, to
+  a separate prompt for a separate session — that's deliberate, to
   keep each AI session's context clean)
 
 ## Failure modes to refuse
 
-- FAIL: Producing a fix prompt without re-reading the cited code (R2)
-- FAIL: Omitting the Verification or Rollback section (the template
+- ❌ Producing a fix prompt without re-reading the cited code (R2)
+- ❌ Omitting the Verification or Rollback section (the template
   requires both)
-- FAIL: Generating a fix that requires reading 10+ files (scope is too big
-  - recommend splitting the finding into smaller fixes)
-- FAIL: Generating fix prompts in bulk for a 30-finding audit "to save
-  time" - each fix gets its own prompt, run separately, verified
+- ❌ Generating a fix that requires reading 10+ files (scope is too big
+  — recommend splitting the finding into smaller fixes)
+- ❌ Generating fix prompts in bulk for a 30-finding audit "to save
+  time" — each fix gets its own prompt, run separately, verified
   separately
----
-
-## Codex Port Notes
-
-- Audit mode is read-only for product code unless the user explicitly requests remediation.
-- Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
-- If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
-- Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

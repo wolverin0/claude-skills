@@ -1,21 +1,23 @@
 ---
 name: audit-domain-03-database
-description: Audit the database and data layer - schema design, query patterns, migrations, indexing, RLS, soft-delete, transactions. Run as part of /audit Phase E.
+description: Audit the database and data layer — schema design, query patterns, migrations, indexing, RLS, soft-delete, transactions. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 3 - Database & Data Layer
+# Skill: Audit Domain 3 — Database & Data Layer
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view @.claude/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
 - Hard stops related to this domain: H1, H7
@@ -32,16 +34,27 @@ Schema design, foreign keys, constraints, indexing, query patterns (N+1, full-ta
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Are foreign keys defined and enforced-
-2. Are indexes present on every column queried by WHERE / JOIN / ORDER BY-
-3. Are queries free of N+1 patterns-
-4. Are migrations forward-only, or do they get edited after running-
-5. Is RLS enabled on user-data tables (Postgres), or app-level enforcement provably correct-
-6. Are soft-delete columns filtered in every read query-
-7. Are transactions used where multiple writes must be atomic-
-8. **Are RLS policies actually restrictive, or do they use permissive shortcuts that defeat their purpose-** (Q8 was added 2026-05-10 after a remediation pass shipped a migration with `using (true)` as the "fix" for a prior `using (true)` finding. Verification ("migration applies cleanly") missed that the new migration replicated the anti-pattern.)
+1. Are foreign keys defined and enforced?
+2. Are indexes present on every column queried by WHERE / JOIN / ORDER BY?
+3. Are queries free of N+1 patterns?
+4. Are migrations forward-only, or do they get edited after running?
+5. Is RLS enabled on user-data tables (Postgres), or app-level enforcement provably correct?
+6. Are soft-delete columns filtered in every read query?
+7. Are transactions used where multiple writes must be atomic?
+8. **Are RLS policies actually restrictive, or do they use permissive shortcuts that defeat their purpose?** (Q8 was added 2026-05-10 after a remediation pass shipped a migration with `using (true)` as the "fix" for a prior `using (true)` finding. Verification ("migration applies cleanly") missed that the new migration replicated the anti-pattern.)
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Schema is normalized (related data in separate tables), not one wide table accreted one-column-per-prompt (playbook FM-11, L3).
+- Indexes exist on foreign keys and frequently-queried columns (playbook L3, FM-1).
+- A migration file exists for every schema change; no schema edits made directly in production (playbook L3).
+- Separate dev / staging / production databases (playbook L3).
+- Automated backups WITH tested restores — not assumed (playbook L13, L3).
+- Connection pooling configured (e.g. Supabase port 6543 pooled vs 5432 direct; pgbouncer; transaction mode for serverless) (playbook L11, FM-1).
 
 ## Permissive-RLS sweep (mandatory for Q8)
 
@@ -87,7 +100,7 @@ When a migration claims to FIX an RLS issue (filename contains
 `rls`, `policy`, `tenant`, `isolation`, `security`, or migration commit
 message references a prior audit finding), grep that file for the same
 permissive patterns above. Findings that fix RLS by writing more
-permissive RLS are a regression class - flag with severity High and
+permissive RLS are a regression class — flag with severity High and
 include `Recommended fix:` that explicitly states the adversarial test
 must pass post-remediation, not just "migration applies".
 
@@ -106,8 +119,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -127,16 +140,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 3: Database & Data Layer
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-How is the data stored, queried, and protected- This is where breaches happen and where slowness compounds.
+How is the data stored, queried, and protected? This is where breaches happen and where slowness compounds.
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -144,7 +157,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-3.1 - <one-line title>
+  F-3.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -178,9 +191,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -193,10 +206,10 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)

@@ -1,12 +1,12 @@
 ---
 name: audit-blind-spots
-description: "Walk the B1-B15 AI-to-AI blind-spot catalog systematically. Use during the audit pipeline AFTER hard-stops and Tambon hunt and BEFORE the 13 domain audits. Output: PRESENT / NOT PRESENT for each B-class with evidence. Findings flow into the appropriate domains."
+description: Walk the B1-B19 AI-to-AI blind-spot catalog systematically. Use during the audit pipeline AFTER hard-stops and Tambon hunt and BEFORE the 13 domain audits. Output: PRESENT / NOT PRESENT for each B-class with evidence. Findings flow into the appropriate domains.
 ---
 
 # Skill: Audit Blind Spots Walk
 
-This skill walks the 15 AI-to-AI blind spots from
-`../references/audit-blind-spots.md` and produces a structured
+This skill walks the 19 AI-to-AI blind spots from
+`@.claude/context/audit-blind-spots.md` and produces a structured
 report. The findings are then routed by the orchestrator into the
 appropriate domain sections.
 
@@ -22,11 +22,11 @@ efficient than asking each domain to re-discover its share.
 ### Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/audit-blind-spots.md
+view @.claude/context/audit-rules.md
+view @.claude/context/audit-blind-spots.md
 ```
 
-### Walk B1-B15 in order
+### Walk B1-B19 in order
 
 For each B-class, follow the detection commands from
 audit-blind-spots.md. The walk is mostly grep + read, but B1, B7, B8
@@ -35,9 +35,9 @@ require substantial code-tracing.
 ### Per-blind-spot template
 
 ```
-=======================================================================
-  B<N> - <n>
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
+  B<N> — <n>
+═══════════════════════════════════════════════════════════════════════
 
 Detection commands run:
   <list>
@@ -45,7 +45,7 @@ Detection commands run:
 If output is clean:
   Status:   NOT PRESENT
   Notes:    <e.g., "no auth middleware found, but app uses Supabase Auth
-                    integrated into FastAPI dependencies - different
+                    integrated into FastAPI dependencies — different
                     pattern, B1 doesn't apply">
 
 If output has matches:
@@ -63,20 +63,20 @@ If output has matches:
     [F-B<N>.2 etc. if more]
 ```
 
-## Routing table - where each B finding goes
+## Routing table — where each B finding goes
 
 The orchestrator uses this to put findings in the right domain section:
 
 | Blind spot | Primary domain | Secondary domain |
 |---|---|---|
-| B1 (Auth not wired) | Domain 1 (Security) | - |
+| B1 (Auth not wired) | Domain 1 (Security) | — |
 | B2 (Error returns success) | Domain 7 (Reliability) | Domain 1 |
 | B3 (FE-only pagination) | Domain 5 (Performance) | Domain 3 |
 | B4 (Soft-delete unfiltered) | Domain 3 (Database) | Domain 1 |
 | B5 (Env var existence-only) | Domain 4 (DevOps) | Domain 7 |
 | B6 (Single-user assumptions) | Domain 5 (Performance) | Domain 7 |
 | B7 (Validation asymmetry) | Domain 1 (Security) | Domain 6 |
-| B8 (IDOR) | Domain 1 (Security) | - |
+| B8 (IDOR) | Domain 1 (Security) | — |
 | B9 (Dead utilities) | Domain 13 (Code Integrity) | Domain 9 |
 | B10 (Optimistic UI no rollback) | Domain 6 (UX/A11y) | Domain 7 |
 | B11 (Webhook idempotency) | Domain 7 (Reliability) | Domain 1 |
@@ -84,39 +84,47 @@ The orchestrator uses this to put findings in the right domain section:
 | B13 (Test mirrors code) | Domain 13 (Code Integrity) | Domain 9 |
 | B14 (Comment-code drift) | Domain 13 (Code Integrity) | Domain 9 |
 | B15 (Coverage theater) | Domain 9 (Maintainability) | Domain 13 |
+| B16 (Sync heavy op in request) | Domain 5 (Performance) | Domain 7 |
+| B17 (Missing cache on hot path) | Domain 5 (Performance) | Domain 10 (Cost) |
+| B18 (Non-idempotent user action) | Domain 7 (Reliability) | Domain 1 |
+| B19 (UI missing one of 4 states) | Domain 6 (UX/A11y) | — |
 
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   AI-TO-AI BLIND SPOTS WALK
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-Walked 15 blind-spot classes. Findings routed to domains as follows.
+Walked 19 blind-spot classes. Findings routed to domains as follows.
 
-  B1  - Auth present but not wired:           [PRESENT/NOT PRESENT]
-  B2  - Error handlers returning success:     [PRESENT/NOT PRESENT]
-  B3  - Frontend-only pagination:             [PRESENT/NOT PRESENT]
-  B4  - Soft-delete unfiltered:               [PRESENT/NOT PRESENT]
-  B5  - Env var existence-only checks:        [PRESENT/NOT PRESENT]
-  B6  - Single-user assumptions:              [PRESENT/NOT PRESENT]
-  B7  - Validation asymmetry:                 [PRESENT/NOT PRESENT]
-  B8  - Authorization gap (IDOR):             [PRESENT/NOT PRESENT]
-  B9  - Dead imports / unreachable utils:     [PRESENT/NOT PRESENT]
-  B10 - Optimistic UI without rollback:       [PRESENT/NOT PRESENT]
-  B11 - Webhook idempotency missing:          [PRESENT/NOT PRESENT]
-  B12 - Stack mixing:                         [PRESENT/NOT PRESENT]
-  B13 - Test mirrors code:                    [PRESENT/NOT PRESENT]
-  B14 - Comment-code drift:                   [PRESENT/NOT PRESENT]
-  B15 - Coverage theater:                     [PRESENT/NOT PRESENT]
+  B1  — Auth present but not wired:           [PRESENT/NOT PRESENT]
+  B2  — Error handlers returning success:     [PRESENT/NOT PRESENT]
+  B3  — Frontend-only pagination:             [PRESENT/NOT PRESENT]
+  B4  — Soft-delete unfiltered:               [PRESENT/NOT PRESENT]
+  B5  — Env var existence-only checks:        [PRESENT/NOT PRESENT]
+  B6  — Single-user assumptions:              [PRESENT/NOT PRESENT]
+  B7  — Validation asymmetry:                 [PRESENT/NOT PRESENT]
+  B8  — Authorization gap (IDOR):             [PRESENT/NOT PRESENT]
+  B9  — Dead imports / unreachable utils:     [PRESENT/NOT PRESENT]
+  B10 — Optimistic UI without rollback:       [PRESENT/NOT PRESENT]
+  B11 — Webhook idempotency missing:          [PRESENT/NOT PRESENT]
+  B12 — Stack mixing:                         [PRESENT/NOT PRESENT]
+  B13 — Test mirrors code:                    [PRESENT/NOT PRESENT]
+  B14 — Comment-code drift:                   [PRESENT/NOT PRESENT]
+  B15 — Coverage theater:                     [PRESENT/NOT PRESENT]
+  B16 — Sync heavy op in request cycle:       [PRESENT/NOT PRESENT]
+  B17 — Missing cache on hot/expensive path:  [PRESENT/NOT PRESENT]
+  B18 — Non-idempotent user action:           [PRESENT/NOT PRESENT]
+  B19 — UI missing one of 4 states:           [PRESENT/NOT PRESENT]
 
 [Then the detailed findings per PRESENT class, routed to domains]
 
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 SUMMARY
-------------------------------------------------------------------------
+────────────────────────────────────────────────────────────────────────
 
-Present:                      <N> of 15
+Present:                      <N> of 19
 Most pervasive (highest count): <which blind spot, in how many places>
 Critical findings from walk:    <count>
 High findings from walk:        <count>
@@ -126,18 +134,9 @@ High findings from walk:        <count>
 
 ## Failure modes to refuse
 
-- FAIL: Skipping a B-class because it "probably doesn't apply" - walk all 15
-- FAIL: Marking PRESENT without specific evidence (path:line)
-- FAIL: Routing all findings to the same domain to "consolidate" - use the
+- ❌ Skipping a B-class because it "probably doesn't apply" — walk all 15
+- ❌ Marking PRESENT without specific evidence (path:line)
+- ❌ Routing all findings to the same domain to "consolidate" — use the
   routing table
-- FAIL: Reading test files for B13 detection but not source files for B14
-  detection - they're complementary
----
-
-## Codex Port Notes
-
-- Audit mode is read-only for product code unless the user explicitly requests remediation.
-- Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
-- If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
-- Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.
+- ❌ Reading test files for B13 detection but not source files for B14
+  detection — they're complementary

@@ -1,25 +1,27 @@
 ---
 name: audit-domain-10-cost
-description: Audit the cost and billing risk domain - runaway loops, unbounded LLM/API calls, missing rate limits on paid services, infrastructure cost amplifiers. Run as part of /audit Phase E.
+description: Audit the cost and billing risk domain — runaway loops, unbounded LLM/API calls, missing rate limits on paid services, infrastructure cost amplifiers. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 10 - Cost & Billing Risk
+# Skill: Audit Domain 10 — Cost & Billing Risk
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view ~/.codex/context\audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
-- Hard stops related to this domain: (none - this domain has no hard-stop classes routing to it)
-- Blind spots that route to this domain: B3, B6
+- Hard stops related to this domain: H10
+- Blind spots that route to this domain: B3, B6, B17
 
 If the orchestrator didn't pass you these inputs, do NOT re-run the
 hard-stops or blind-spots walks. Audit your domain only and trust the
@@ -32,14 +34,24 @@ Runaway loops, unbounded LLM/external API calls, missing rate limits on paid ser
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Can a single user trigger an unbounded number of LLM calls (e.g., OpenAI, Anthropic)-
-2. Are external API calls rate-limited per user-
-3. Are there monthly budget alerts on the LLM / cloud account-
-4. Is the infrastructure right-sized for current scale (no $500/month for 10 users)-
-5. Are background jobs bounded in runtime / retries-
-6. Are large-result queries (full table scans, unpaginated) bounded-
+1. Can a single user trigger an unbounded number of LLM calls (e.g., OpenAI, Anthropic)?
+2. Are external API calls rate-limited per user?
+3. Are there monthly budget alerts on the LLM / cloud account?
+4. Is the infrastructure right-sized for current scale (no $500/month for 10 users)?
+5. Are background jobs bounded in runtime / retries?
+6. Are large-result queries (full table scans, unpaginated) bounded?
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Expensive/paid/AI endpoints have BOTH a rate limit and a spend cap; alert at 50%, kill at 90% of budget (playbook H10, FM-5, L9).
+- Model routing by complexity: cheap model for simple tasks, top model only when needed (~70% savings) (playbook FM-10).
+- Semantic caching of similar AI requests (40-60% hit rate) (playbook L10, FM-10).
+- Always-on resources scale to zero / are right-sized when idle (playbook L6).
+- A runaway-cost path (unbounded loop or per-request paid call with no cap) is the classic AI-vibe blowup (playbook H10, FM-5).
 
 
 ## Mandatory enumeration before verdict
@@ -94,8 +106,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -115,16 +127,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 10: Cost & Billing Risk
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-Could a single malicious user empty your bank account this month- Many vibe-coded LLM apps have unbounded API calls.
+Could a single malicious user empty your bank account this month? Many vibe-coded LLM apps have unbounded API calls.
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -132,7 +144,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-10.1 - <one-line title>
+  F-10.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -166,9 +178,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -181,19 +193,20 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)
 ---
 
 ## Codex Port Notes
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

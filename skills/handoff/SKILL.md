@@ -14,6 +14,17 @@ Write a comprehensive, structured handoff document so the NEXT session (or a cle
 
 **If `$ARGUMENTS` is provided**, treat it as a focus instruction (e.g., "focus on the auth refactor, skip the test debugging"). Prioritize that area in your handoff.
 
+## Timing contract (evolve 2026-08-23 — evidence: 2 failed runs were post-compact)
+- **Write the handoff BEFORE degradation, not at the cliff.** If context usage is at or past
+  ~70%, the handoff comes BEFORE the next task — a handoff written from a compacted summary is
+  a copy of a copy. Enforcement is deterministic, not prose: `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75`
+  fires compaction early, and the `precompact-handoff-gate` hook BLOCKS the first auto-compact
+  of a session demanding this skill run first (it also snapshots the raw transcript to
+  `~/.claude/compact-snapshots/`).
+- **If this session already compacted** (you see a "continued from a previous conversation"
+  summary at the top): mark the handoff header with `> DEGRADADO: escrito post-compact, desde
+  resumen — verificar contra el transcript snapshot y el repo antes de confiar en detalles.`
+
 ## Mandatory Sections
 
 Fill ALL of these. If a section is genuinely empty, write "None" - do NOT skip the heading.
@@ -69,6 +80,13 @@ Don't make the next session grep - give it the exact paths.
 ### 7. `## Corr ID`
 If a correlation ID was provided (e.g., `corr=handoff-abc123`), include it here for tracking. If none was provided, generate one: `handoff-` + 6 random alphanumeric characters.
 
+### 8. `## Suggested Skills & Setup`
+What the NEXT session should invoke or load first (evolve 2026-08-23, idea from mattpocock/skills):
+- Skills that apply to the pending work (e.g., `/orchestrate` if it's the orchestrator pane,
+  `/project-health` if scaffolding drifted, the project's own domain skills)
+- MCP servers or tools it will need that aren't obvious
+- The ONE file to read first if it reads nothing else
+
 ## Rules
 
 1. **NEVER include credentials, API keys, tokens, private IPs, or personal filesystem paths** (like `C:\Users\username\...`) in the handoff file. Use relative paths or `$HOME`-based references.
@@ -76,3 +94,7 @@ If a correlation ID was provided (e.g., `corr=handoff-abc123`), include it here 
 3. **Verify before writing.** Run `git status`, check the build, check if your dev server is alive. Don't guess - report facts.
 4. **The handoff file IS the contract.** The next session will read ONLY this file to understand what happened. If it's not in the file, it didn't happen.
 5. **After writing the file, STOP.** Do not continue with other work. The handoff file is the last action of this session.
+6. **Link, don't duplicate** (evolve 2026-08-23): if a spec, plan, ADR, brief, artifact, or
+   commit already documents something, reference its path — never re-narrate its content into
+   the handoff. The handoff carries what exists NOWHERE else (open threads, failed attempts,
+   in-flight decisions); everything else is a pointer.

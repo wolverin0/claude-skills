@@ -9,6 +9,9 @@ Do not mark `pass` unless all relevant gates are satisfied:
 - Route was opened in a real browser.
 - Page was not blank or stuck in an unexpected loading state.
 - Screenshot or live visual state was analyzed.
+- For routes, the responsive auditor was run at every required breakpoint and produced zero
+  high-severity findings (horizontal scroll, element overflow, missing viewport meta). A
+  screenshot without a measured audit is not sufficient evidence of a responsive layout.
 - Snapshot/page state was captured when backend supports it.
 - Console/errors were checked.
 - Failed network responses were checked when backend supports it.
@@ -23,6 +26,7 @@ These are not enough:
 - "Screenshot taken"
 - "Looks good"
 - "No errors" without actual console/error collection
+- "Looks responsive" / "renders fine on mobile" without a measured responsive audit
 - "Should work" based on source code
 - "Similar route tested" unless the mode explicitly allows sampling
 

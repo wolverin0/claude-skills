@@ -1,4 +1,4 @@
 interface:
   display_name: "Validation"
   short_description: "Evidence-based browser validation"
-  default_prompt: "Use $validation to validate this web app in a real browser and generate an evidence-based report."
+  default_prompt: "Use $validation with no options to run the complete standard browser cycle; use --full for exhaustive release-depth validation."

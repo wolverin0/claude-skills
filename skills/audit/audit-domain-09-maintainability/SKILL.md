@@ -1,21 +1,23 @@
 ---
 name: audit-domain-09-maintainability
-description: Audit the dev experience and maintainability - local setup, documentation, test quality, CI feedback time, debuggability. Run as part of /audit Phase E.
+description: Audit the dev experience and maintainability — local setup, documentation, test quality, CI feedback time, debuggability. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 9 - Developer Experience & Maintainability
+# Skill: Audit Domain 9 — Developer Experience & Maintainability
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view @.claude/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
 - Hard stops related to this domain: H9
@@ -32,14 +34,22 @@ Local setup ease (README clarity, Docker compose, seed data), code documentation
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Can a new developer run the app locally in <30 minutes from clone-
-2. Are tests fast enough to run on every commit-
-3. Do tests test behavior, not implementation-
-4. Are there integration tests, or just unit tests with mocks-
-5. Are public functions documented-
-6. Is there a CONTRIBUTING.md or similar-
+1. Can a new developer run the app locally in <30 minutes from clone?
+2. Are tests fast enough to run on every commit?
+3. Do tests test behavior, not implementation?
+4. Are there integration tests, or just unit tests with mocks?
+5. Are public functions documented?
+6. Is there a CONTRIBUTING.md or similar?
+7. Is there a *complexity tax* on the next contributor — oversized files (>800 lines), deeply nested logic, or "you have to hold the whole thing in your head" flows? Excess structural complexity is a maintainability cost even when the code works. Cross-reference Domain 2's file-size enumeration and presumptive-blocker findings; if a file is both oversized AND central to onboarding (entry point, main router, core model), that compounds the onboarding cost — report it here as a maintainability finding, not just an architecture one.
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- Dependency hygiene: lockfile committed; `npm audit` clean; a recurring (monthly) dependency-audit habit; no abandoned/phantom packages (playbook FM-20, L8).
+- Coverage theater check: high coverage % but no adversarial-input tests (already B15) (playbook B15).
 
 ## Files most likely to have findings
 
@@ -56,8 +66,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -77,16 +87,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 9: Developer Experience & Maintainability
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-If your current developer leaves, can the next one pick it up - or is the codebase only legible to its author-
+If your current developer leaves, can the next one pick it up — or is the codebase only legible to its author?
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -94,7 +104,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-9.1 - <one-line title>
+  F-9.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -128,9 +138,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -143,11 +153,11 @@ If the domain has zero findings:
 
 Inside this domain, answer ALL FIVE using only repository evidence:
 
-1. Where is the session token stored, and how is it invalidated on logout-
-2. Trace a payment webhook from HTTP request to database write - name the file that validates the signature, the file that writes the row, the function that handles retries.
-3. How is user data isolated- Can User A see User B's data by changing an ID in the URL-
+1. Where is the session token stored, and how is it invalidated on logout?
+2. Trace a payment webhook from HTTP request to database write — name the file that validates the signature, the file that writes the row, the function that handles retries.
+3. How is user data isolated? Can User A see User B's data by changing an ID in the URL?
 4. What is the deployment process from code commit to production? Is it in version control?
-5. Where are environment-specific configurations, and how do they differ between dev and prod-
+5. Where are environment-specific configurations, and how do they differ between dev and prod?
 
 If any answer is "cannot determine from code," that is itself a finding.
 Each unanswerable question = at least Medium severity, because it
@@ -156,19 +166,10 @@ it). Three or more unanswerable = High.
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
----
-
-## Codex Port Notes
-
-- Audit mode is read-only for product code unless the user explicitly requests remediation.
-- Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
-- If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
-- Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)

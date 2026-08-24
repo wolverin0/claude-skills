@@ -1,24 +1,26 @@
 ---
 name: audit-domain-02-architecture
-description: Audit the architecture and code quality domain - module boundaries, abstraction layers, code organization, naming, documentation. Run as part of /audit Phase E.
+description: Audit the architecture and code quality domain — module boundaries, abstraction layers, code organization, naming, documentation. Run as part of /audit Phase E.
 ---
 
-# Skill: Audit Domain 2 - Architecture & Code Quality
+# Skill: Audit Domain 2 — Architecture & Code Quality
 
-This skill audits one specific domain. Run it as an isolated pass from the audit-orchestrator: either in a fresh delegated context when the host supports delegation, or sequentially in the main context when it does not. Load this skill and the audit rules, audit only the requested scope, and return a concise findings report.
+This skill audits one specific domain. It runs in an isolated subagent
+context spawned by the audit-orchestrator. The subagent loads this
+skill and the audit rules, runs against the audit scope, and returns
+a ~2K-token findings report.
 
 ## Pre-flight
 
 ```
-view ../references/audit-rules.md
-view ../references/domain-audit-contract.md
+view @.claude/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
-blind spots), the orchestrator passes them as input. Use them - don't
+blind spots), the orchestrator passes them as input. Use them — don't
 re-discover findings other phases already produced. Specifically:
 
-- Hard stops related to this domain: (none - this domain has no hard-stop classes routing to it)
+- Hard stops related to this domain: (none — this domain has no hard-stop classes routing to it)
 - Blind spots that route to this domain: B12
 
 If the orchestrator didn't pass you these inputs, do NOT re-run the
@@ -32,16 +34,25 @@ Module boundaries, layering, separation of concerns, dependency direction, abstr
 ## Key questions to answer
 
 For each, find the evidence and report it. The questions are the
-audit's spine - every finding maps back to one of them.
+audit's spine — every finding maps back to one of them.
 
-1. Do modules have clear single responsibilities, or are concerns mixed-
-2. Is business logic separated from HTTP handling-
-3. Is the dependency direction sane (UI -> service -> repo -> DB), or does it cycle-
-4. Are similar concerns (e.g., 'utility') consolidated, or scattered across utils/helpers/lib-
-5. Are abstractions earning their complexity, or premature-
-6. Is code documented where it needs to be (public APIs, complex algorithms)-
-7. Are modules deep (small interface, large leverage) or shallow (interface nearly as complex as implementation)-
-8. Are friction points present - concepts whose understanding requires bouncing through 3+ files-
+1. Do modules have clear single responsibilities, or are concerns mixed?
+2. Is business logic separated from HTTP handling?
+3. Is the dependency direction sane (UI → service → repo → DB), or does it cycle?
+4. Are similar concerns (e.g., 'utility') consolidated, or scattered across utils/helpers/lib?
+5. Are abstractions earning their complexity, or premature?
+6. Is code documented where it needs to be (public APIs, complex algorithms)?
+7. Are modules deep (small interface, large leverage) or shallow (interface nearly as complex as implementation)?
+8. Are friction points present — concepts whose understanding requires bouncing through 3+ files?
+9. Is there a "code-judo" move — a reframing that *deletes a whole concept, branch, or mode* rather than polishing it? A cleaner version of the same messy idea does NOT count; the bar is dramatic simplification that makes the design feel inevitable in hindsight.
+
+### Vibe-coding specific checks (production-readiness)
+
+Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+
+- External API calls go through a server proxy route, not directly from the client (playbook L2).
+- Business logic is centralized server-side, not scattered into the front-end (playbook L2).
+- The database is the source of truth; third-party API data is copied/owned, not depended on live (playbook L2).
 
 
 ## Mandatory enumeration before verdict
@@ -91,14 +102,14 @@ for premature/shallow abstraction (Q5, Q7) and locality failure (Q8).
 For any wrapper, helper, or thin abstraction layer: ask "if this module
 were deleted and its body inlined into callers, would complexity
 *concentrate* (callers gain duplication / lose locality) or *evaporate*
-(callers stay readable, the module added no leverage)-"
+(callers stay readable, the module added no leverage)?"
 
-- **Concentrates -> earns its keep.** Deep module. Not a finding.
-- **Evaporates -> shallow.** Flag as F-2.x with severity Low/Medium
-  depending on caller blast radius. Cite >=2 caller sites to prove the
+- **Concentrates → earns its keep.** Deep module. Not a finding.
+- **Evaporates → shallow.** Flag as F-2.x with severity Low/Medium
+  depending on caller blast radius. Cite ≥2 caller sites to prove the
   inline would be tractable.
 
-This is the empirical anchor for "premature abstraction" findings -
+This is the empirical anchor for "premature abstraction" findings —
 without it, the call is a matter of taste.
 
 ### The two-adapter rule (for Q5)
@@ -109,27 +120,70 @@ seam*. Two or more concrete implementations of the same interface is a
 adapter "for testability" or "for future flexibility" that never
 materializes.
 
-- 1 adapter behind an interface -> flag as speculative-seam (Low unless
+- 1 adapter behind an interface → flag as speculative-seam (Low unless
   it adds runtime indirection cost, then Medium).
-- 2+ adapters -> legitimate; do not flag.
-- 0 adapters but interface defined -> dead seam, flag as Medium.
+- 2+ adapters → legitimate; do not flag.
+- 0 adapters but interface defined → dead seam, flag as Medium.
 
 ### Friction-point framing (for Q8)
 
 When tracing how one concept (e.g., "how a payment is recorded")
 requires reading 3+ files in different directories before the picture
-closes, that's a locality failure - knowledge is smeared, not
+closes, that's a locality failure — knowledge is smeared, not
 concentrated. Report as a finding even when each individual file is
 fine; the cost is in the aggregate. Cite the bounce path:
 
 ```
 Friction: tracing 'payment recording' requires reading
-  src/api/payments.ts:42  -> enqueues to bus
-  src/jobs/processor.ts:88 -> consumes
-  src/db/payments.ts:15   -> persists
-  src/lib/audit-log.ts:30 -> side-effect
+  src/api/payments.ts:42  → enqueues to bus
+  src/jobs/processor.ts:88 → consumes
+  src/db/payments.ts:15   → persists
+  src/lib/audit-log.ts:30 → side-effect
   (no module owns the lifecycle; no doc names this flow)
 ```
+
+## Presumptive blockers (inverted approval burden, for Q5/Q7/Q9)
+
+Most audit findings put the burden on the auditor: "prove this is wrong."
+For the patterns below, **invert it** — they are flagged BY DEFAULT and
+the *author* must justify why the threshold was crossed. Absence of a
+justification IS the finding. This is the single most useful idea
+imported from aggressive code-quality review: do not argue yourself out
+of flagging structural sprawl just because each line is locally fine.
+
+Run the file-size enumeration first (the user's global standard is files
+under 800 lines):
+
+```bash
+# enumerate every source file over the 800-line decomposition threshold
+# (nested node_modules excluded via */node_modules/*; wc "total" lines filtered)
+find . -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.jsx' \
+  -o -name '*.mjs' -o -name '*.cjs' -o -name '*.py' -o -name '*.go' \
+  -o -name '*.java' -o -name '*.cs' -o -name '*.php' -o -name '*.rb' -o -name '*.rs' \) \
+  -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' \
+  -not -path '*/build/*' -not -path '*/.next/*' -not -path '*/coverage/*' \
+  -not -path '*/vendor/*' -not -path '*/__pycache__/*' \
+  -print0 2>/dev/null | xargs -0 wc -l 2>/dev/null \
+  | awk '$2 != "total" && $1 > 800 {print}' | sort -rn
+```
+
+Presumptive blockers (each is a finding unless the author's structure
+justifies it — say why in the finding, do not silently pass):
+
+| Pattern | Default severity | Justification that clears it |
+|---|---|---|
+| Source file > 800 lines | Medium (High if > 1500) | A single cohesive unit that genuinely doesn't decompose (rare) — name why |
+| Same ad-hoc conditional (feature flag, mode check, `if type ===`) scattered across 3+ unrelated flows | Medium | The check is genuinely local to each site and has no shared owner — prove it |
+| Thin wrapper / single-adapter interface (see two-adapter rule) | Low–Medium | A real second implementation exists or is imminent and named |
+| Cast-heavy or optionality-heavy contract (`as any`, `!`, pervasive `Optional`/nullable with unclear invariants) | Medium | The cast is at a genuine system boundary with validation — cite it |
+| Duplicated helper (same logic in 2+ `utils`/`helpers` files) | Medium | Deliberate, isolated copies with divergent futures — say so |
+| Feature logic living outside its canonical layer/package | Medium | The placement is the canonical home — name the convention |
+
+Anti-nit discipline (R3 already ranks by severity — make it explicit
+here): when a file has BOTH a structural blocker above AND cosmetic
+nits, report the structural blocker and suppress the cosmetic noise in
+the same file. High-conviction structural findings over a flood of
+low-value style comments.
 
 ## Files most likely to have findings
 
@@ -146,8 +200,8 @@ report what you found and note what you didn't read.
 ## Process
 
 1. **Re-read the rules.** R1-R7 apply to every finding. Especially R2
-   (quote before cite) - for a domain skill running as an isolated pass, the
-   audit context is fresh; don't assume you remember a file from
+   (quote before cite) — for a domain skill running in a subagent, the
+   subagent's context is fresh; don't assume you remember a file from
    a previous turn.
 
 2. **Walk the key questions.** For each question, run the relevant
@@ -167,16 +221,16 @@ report what you found and note what you didn't read.
 ## Output format
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   DOMAIN 2: Architecture & Code Quality
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-> FOUNDER VIEW
+▶ FOUNDER VIEW
 
 [2-4 sentences in plain English. Sample tone:]
-How well-organized is the code- Will a new engineer understand it in a week, or never-
+How well-organized is the code? Will a new engineer understand it in a week, or never?
 
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
 Scope of this domain audit:
   Files read:        <count>
@@ -184,7 +238,7 @@ Scope of this domain audit:
 
 Findings:
 
-  F-2.1 - <one-line title>
+  F-2.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable
@@ -218,9 +272,9 @@ Summary:
 If the domain has zero findings:
 
 ```
-> TECHNICAL EVIDENCE
+▶ TECHNICAL EVIDENCE
 
-  PASS: No findings in this domain.
+  ✅ No findings in this domain.
 
   Verification:
     <commands run that produced no signal>
@@ -233,10 +287,10 @@ If the domain has zero findings:
 
 ## Failure modes to refuse
 
-- FAIL: Producing findings without path:line citations (R1)
-- FAIL: Citing a path you didn't read (R2)
-- FAIL: Re-running hard-stops or blind-spots walks (orchestrator did this)
-- FAIL: Including findings outside this domain's scope (route them to the
+- ❌ Producing findings without path:line citations (R1)
+- ❌ Citing a path you didn't read (R2)
+- ❌ Re-running hard-stops or blind-spots walks (orchestrator did this)
+- ❌ Including findings outside this domain's scope (route them to the
   right domain instead)
-- FAIL: Soft-pedaling a Critical to Medium because "it's a small app" (R3)
-- FAIL: Skipping section completion marker (R6)
+- ❌ Soft-pedaling a Critical to Medium because "it's a small app" (R3)
+- ❌ Skipping section completion marker (R6)

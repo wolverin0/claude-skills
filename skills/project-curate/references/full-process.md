@@ -14,7 +14,7 @@ Per-project curation of `.claude/` informed by real codebase intelligence. Compl
 
 ## Required before running
 
-- ECC repo cloned somewhere locally (default: `G:\_OneDrive\OneDrive\Desktop\Py Apps\_____testing\repo`). If absent, first run: `git clone --depth 1 https://github.com/affaan-m/everything-claude-code.git <path>/repo`.
+- ECC repo cloned somewhere locally (default: `<projects-root>\_____testing\repo`). If absent, first run: `git clone --depth 1 https://github.com/affaan-m/everything-claude-code.git <path>/repo`.
 - `npx gitnexus` available on PATH (or auto-installed via npx).
 - `python -m memorymaster` available (for MemoryMaster CLI fallback if MCP unreachable).
 - User's existing `~/.claude/rules/*.md` globals are kept unchanged - this skill only writes to the target project's `.claude/`.
@@ -44,7 +44,7 @@ Per-project curation of `.claude/` informed by real codebase intelligence. Compl
 ### Step 0. Ensure ECC repo is present
 
 ```bash
-ECC_REPO="G:/_OneDrive/OneDrive/Desktop/Py Apps/_____testing/repo"
+ECC_REPO="<projects-root>/_____testing/repo"
 if [ ! -d "$ECC_REPO" ]; then
   git clone --depth 1 https://github.com/affaan-m/everything-claude-code.git "$ECC_REPO"
 fi
@@ -536,9 +536,9 @@ Pilot #3 anti-pattern: coordinator spawned pane 32 for verification while idle p
 
 ## Reference implementations
 
-- Pilot #1: `G:\_OneDrive\OneDrive\Desktop\Py Apps\elbraserito\.claude\` - TS/React/Supabase/MP, 14 rules, 52 noise dirs archived.
-- Pilot #2: `G:\_OneDrive\OneDrive\Desktop\Py Apps\memorymaster\.claude\` - Python/SQLite/MCP, 9 rules, 0 noise, branch workflow (commit-guard).
-- Pilot #3: `G:\_OneDrive\OneDrive\Desktop\Py Apps\gimnasio\gimnasio-next\.claude\` - Next.js/TS/Drizzle/Auth.js, 13 rules, 0 noise, 2-branch workflow (repo-cleanup branch + curation branch), verifier-pane spawn failed -> coordinator-self-verify.
+- Pilot #1: `<projects-root>\elbraserito\.claude\` - TS/React/Supabase/MP, 14 rules, 52 noise dirs archived.
+- Pilot #2: `<projects-root>\memorymaster\.claude\` - Python/SQLite/MCP, 9 rules, 0 noise, branch workflow (commit-guard).
+- Pilot #3: `<projects-root>\gimnasio\gimnasio-next\.claude\` - Next.js/TS/Drizzle/Auth.js, 13 rules, 0 noise, 2-branch workflow (repo-cleanup branch + curation branch), verifier-pane spawn failed -> coordinator-self-verify.
 - All three have `_curation_log_2026-04-18.md` documenting the full flow for reference.
 
 ## When to evolve this skill
