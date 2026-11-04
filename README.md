@@ -37,12 +37,21 @@ Primary entry points:
 - `audit-loop`: audit → roadmap → remediation → rerun → missed-finding patch loop.
 - `audit-fix-generator`: remediation prompts for individual findings.
 
-Install the children of `skills/audit/` into the provider skill root:
+Install the 21 `audit-*` children of `skills/audit/` into the provider skill
+root, and the shared catalogs in `skills/audit/references/` into the context
+directory the skills read from (`@.claude/context/` in the project, or
+`~/.codex/context/` for Codex):
 
 ```bash
-cp -r skills/audit/* ~/.claude/skills/
-cp -r skills/audit/* ~/.codex/skills/
+cp -r skills/audit/audit-* ~/.claude/skills/
+cp -r skills/audit/audit-* ~/.codex/skills/
+mkdir -p .claude/context ~/.codex/context
+cp skills/audit/references/*.md .claude/context/
+cp skills/audit/references/*.md ~/.codex/context/
 ```
+
+`production-readiness-playbook.md`, cited by the domain skills and
+`vibe-to-prod`, is not shipped in this repo; those citations are optional depth.
 
 ### Build — opinionated implementation skills
 
@@ -101,7 +110,7 @@ skills/
   vibe-to-prod/               13-layer production-readiness self-check
   visual-route-sweep/         Visual route sweep with semantic review
 tools/                        Supporting docs and legacy helpers
-tests/                        Tests for repo tooling
+tests/                        Shell tests for the debate helper functions
 ```
 
 Reference docs at `skills/` root: `backend-patterns.md`, `frontend-patterns.md`,
@@ -110,7 +119,10 @@ Reference docs at `skills/` root: `backend-patterns.md`, `frontend-patterns.md`,
 
 ## Quick starts
 
-```bash
+Trigger phrases (the skill picks them up from its description; the skill names
+are `battle-test`, `validation`, `vibe-to-prod`, `audit-orchestrator`, `debate`):
+
+```text
 # full hardening cycle on the current project
 /battle-test
 
@@ -160,8 +172,9 @@ repo into each provider's skill root (`~/.claude/skills/`, `~/.codex/skills/`).
 # ship & verify set
 cp -r skills/battle-test skills/validation skills/visual-route-sweep skills/vibe-to-prod ~/.claude/skills/
 
-# audit bundle (installs as 21 sibling skills)
-cp -r skills/audit/* ~/.claude/skills/
+# audit bundle (installs as 21 sibling skills + shared catalogs)
+cp -r skills/audit/audit-* ~/.claude/skills/
+mkdir -p .claude/context && cp skills/audit/references/*.md .claude/context/
 
 # workflow set
 cp -r skills/handoff skills/skillify skills/project-setup skills/project-curate skills/project-doctor ~/.claude/skills/
@@ -178,12 +191,25 @@ ln -s "$(pwd)/skills/validation" ~/.claude/skills/validation
 
 ## Verification
 
+Requirements: Python 3 with PyYAML (`pip install pyyaml`, used by
+`quick_validate.py`), Node.js 18+ and bash.
+
 Run focused validation after edits:
 
 ```bash
 python skills/skill-creator/scripts/quick_validate.py skills/validation
 git diff --check
 ```
+
+Run the repo tests:
+
+```bash
+for t in tests/*.sh; do bash "$t"; done
+node --test skills/validation/scripts/validation-contract.test.js
+```
+
+As of 2026-11-04 `tests/test-atomic-state-writes.sh` fails 2 of 4 cases
+(leftover `.lock` files, lock-timeout case); the other suites pass.
 
 Compare repo skills against installed provider copies:
 
