@@ -11,6 +11,8 @@ into the active skill root for each provider, or symlink them while iterating.
 `--ux` mode; the audit reference catalogs now cover H1-H11 and B1-B19; the
 `validation` invocation name is `/validation`. Previous sync: 2026-08-24.
 
+Copy-paste prompts for each `battle-test` mode and its sibling skills (in Spanish, derived from the skill text, not yet run end to end): [`prompts/README.md`](prompts/README.md).
+
 ## Catalog
 
 ### Ship & verify — prove it works before calling it done

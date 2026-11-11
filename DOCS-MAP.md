@@ -1,6 +1,6 @@
 # DOCS-MAP
 
-One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync.
+One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync and the run prompts.
 Status: **vigente** (current) · **vigente\*** (current, but cites files/skills
 not shipped in this repo) · **desfasado** (content drifted from what it names) ·
 **legado** (kept for history; superseded). A trailing `*` on any status means it cites files/skills not shipped here.
@@ -52,6 +52,21 @@ not shipped in this repo) · **desfasado** (content drifted from what it names) 
 - `skills/deploy-verify/SKILL.md` — post-deploy verification — vigente
 - `skills/security-review/SKILL.md` — security pass over pending changes — vigente
 - `skills/security-review/references/full-checklist.md` — long security checklist — vigente
+
+## Run prompts (`prompts/`)
+
+- `prompts/README.md` — index: cases table, valid/rejected flag combinations with file:line, flag and verdict map, "No probado" (not yet run end to end) — vigente
+- `prompts/01-todo.md` — prompt for `/battle-test` (full cycle, no integration to main) — vigente
+- `prompts/02-todo-e-integrar.md` — prompt for `/battle-test --push-main` (the only case that integrates to main) — vigente
+- `prompts/03-solo-ux-ui.md` — prompt for `/battle-test --ux` — vigente
+- `prompts/04-solo-auditar.md` — prompt for `/battle-test --audit-only` — vigente
+- `prompts/05-rapido.md` — prompt for `/battle-test --quick` — vigente* (`production-readiness-playbook.md`, via `vibe-to-prod`)
+- `prompts/06-retomar.md` — prompts for `--resume` and `--ux --resume` — vigente
+- `prompts/07-auditar-y-remediar-con-pr.md` — prompts for `/audit-remediate` and `/audit` — vigente* (`audit-remediate.mjs` workflow, `audit-runner` agent)
+- `prompts/08-solo-validar-la-app.md` — prompts for `/validation` and its modes — vigente
+- `prompts/09-auditoria-ux-sin-arreglos.md` — prompt for the `auditar-ux-producto` skill alone — vigente
+- `prompts/10-solo-capturas.md` — prompt for `visual-route-sweep` without `--fix` — vigente
+- `prompts/11-solo-arreglar-desde-lista.md` — prompt for `quality-loop --staged --from-tracks` — vigente
 
 ## Slash commands (`commands/`)
 
