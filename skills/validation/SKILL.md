@@ -98,8 +98,16 @@ Use scripts when their assumptions match the task; they are more repeatable than
 | `scripts/security-probe.js` | Active security/ownership probe (right-sized, not a pentest): service-role-JWT/secret-in-bundle scan, IDOR / object-level auth ("change the id in the URL"), non-destructive input fuzz (reflected XSS / 500s), security headers. Run authenticated per role. Exit 1 on any critical/high. See `references/security-probe.md`. |
 | `scripts/visual-regression.js` | Baseline + pixel-diff screenshots per route × breakpoint (canvas-based, no native deps). `--update` writes baselines; later runs flag layouts that changed beyond a threshold ("the fix broke the page"). Run per role. Exit 1 on any regression. See `references/visual-regression.md`. |
 | `scripts/redact-artifacts.js` | Redact provided secrets from generated text artifacts, including `test-manifest*` folders, and fail if leaks remain. |
-| `scripts/record-visual-review.js` | Append one semantic screenshot review after the agent has actually inspected the image. |
-| `scripts/assert-coverage.js` | Fail closed unless inventory, result accounting, screenshot reviews, and required mode gates are complete. This is the final certification gate. |
+| `scripts/record-visual-review.js` | Record one inspected screenshot with route, breakpoint, role, theme, source/build identity, SHA-256, and concrete design observations. |
+| `scripts/assert-coverage.js` | Check inventory and result accounting. A failed test can be accounted; exit `0` is not product acceptance. |
+| `scripts/certify-validation.js` | Final gate: require complete accounting, existing unchanged screenshot evidence, semantic reviews, and zero failed/runner-failed checks; write the final HTML report. |
+
+For certification, provide the expected source SHA and running build ID in the config or as
+`--target-source-sha`/`--target-build-id` to `certify-validation.js`. The gate compares that target
+with the state and every review. Config-declared routes and elements must also appear in discovery;
+`inventoryComplete:true` alone cannot hide a missing declared item. When a design gate is requested,
+set `designGate:true` and record distinct `implementationBy` and `reviewedBy` identifiers. This is
+an accountability field, not automated proof that the image was actually inspected.
 | `scripts/verify-provider-parity.js` | Verify that `.agents`, `.claude`, and `.codex` ship identical validation content and that both provider battle-test copies match. |
 
 Prefer the script for `playwright-local`:
@@ -108,6 +116,7 @@ Prefer the script for `playwright-local`:
 node path/to/scripts/select-backend.js
 node path/to/scripts/run-smoke-playwright.js --url http://localhost:5173 --mode standard --config validation.config.json
 node path/to/scripts/assert-coverage.js --state test-manifest/validation-state.json --config validation.config.json
+node path/to/scripts/certify-validation.js --state test-manifest/validation-state.json --config validation.config.json
 node path/to/scripts/redact-artifacts.js .
 ```
 
@@ -143,6 +152,10 @@ Read these when needed:
 - Write state after every route, element, flow, and report step.
 - Write a semantic review after actually viewing every required screenshot. Capturing a PNG or
   computing a pixel diff is not screenshot analysis.
+- For each route × breakpoint × role × supported theme, record hierarchy, density, alignment,
+  proportion, and visible states with concrete observations. Bind the review to the captured image's
+  SHA-256 and the run's source SHA/build ID. The script checks evidence identity and presence; a
+  person still judges visual quality. Generic text or an uninspected image cannot establish a pass.
 - Never keep progress only in conversation context.
 - Use append-only evidence where practical: screenshots, snapshots, console logs, and issue records.
 - On context pressure or long runs, pause cleanly after saving state and tell the user to run `/validate --resume`.
@@ -158,7 +171,8 @@ Pass requires evidence and zero failed required checks:
 - Expected UI outcome was observed after interaction.
 - State file contains the result and evidence paths.
 - In `standard`/`exhaustive`, `session.coverageComplete` is `true`, the coverage ledger has zero
-  unaccounted items, and `assert-coverage.js` exits `0`. In `smoke`, require
+  unaccounted items, `assert-coverage.js` exits `0`, and `certify-validation.js` exits `0`.
+  A failed result blocks certification even when accounted. In `smoke`, require
   `session.smokeScopeComplete:true`; never label that result fully validated.
 
 For LAUNCH validations (a release the public will touch), additionally recommend

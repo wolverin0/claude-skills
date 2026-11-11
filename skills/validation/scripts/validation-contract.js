@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+
 const COMPLETE_MODES = new Set(['standard', 'exhaustive']);
 
 function normalizeMode(value) {
@@ -53,15 +57,107 @@ function missingResults(expected, results, prefix) {
   });
 }
 
-function expectedVisualReviews(state) {
-  const routes = state.discovery && state.discovery.routes || [];
-  const breakpoints = state.config && state.config.breakpoints || [];
-  return routes.flatMap((route, routeIndex) => breakpoints.map((breakpoint, bpIndex) => ({
-    id: `${itemId(route, `route-${routeIndex}`)}:${itemId(breakpoint, `bp-${bpIndex}`)}`,
-  })));
+function identity(value) {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
 
-function evaluateCoverage(state, config = {}) {
+function scopeIds(items, fallback) {
+  return (Array.isArray(items) && items.length ? items : [fallback]).map((item, index) =>
+    typeof item === 'string' ? item : itemId(item, `scope-${index}`));
+}
+
+function expectedVisualReviews(state, config = {}) {
+  const routes = state.discovery && state.discovery.routes || [];
+  const breakpoints = state.config && state.config.breakpoints || [];
+  const roles = scopeIds(config.roles || state.config?.roles, state.session?.role);
+  const themes = scopeIds(config.themes || state.config?.themes, state.session?.theme);
+  return roles.flatMap(role => themes.flatMap(theme => routes.flatMap((route, routeIndex) =>
+    breakpoints.map((breakpoint, bpIndex) => {
+      const routeId = itemId(route, `route-${routeIndex}`);
+      const breakpointId = itemId(breakpoint, `bp-${bpIndex}`);
+      return { id: `${role}:${theme}:${routeId}:${breakpointId}`, role, theme, route: routeId, breakpoint: breakpointId };
+    }))));
+}
+
+function imagePath(screenshot, options) {
+  if (!identity(screenshot) || !identity(options.stateFile)) return null;
+  if (path.isAbsolute(screenshot)) return path.resolve(screenshot);
+  if (identity(options.projectRoot)) return path.resolve(options.projectRoot, screenshot);
+  const stateDir = path.dirname(path.resolve(options.stateFile));
+  const root = path.basename(stateDir) === 'test-manifest' ? path.dirname(stateDir) : stateDir;
+  return path.resolve(root, screenshot);
+}
+
+const REVIEW_DIMENSIONS = ['hierarchy', 'density', 'alignment', 'proportion', 'states'];
+function concreteAnalysis(analysis) {
+  if (!analysis || typeof analysis !== 'object' || Array.isArray(analysis)) return false;
+  const values = REVIEW_DIMENSIONS.map(key => analysis[key]);
+  return values.every(value => typeof value === 'string' && value.trim().length >= 20 &&
+    !/^(looks? good|no issues?|fine|okay|ok|pass)(?:[\s.,!]|$)/i.test(value.trim())) &&
+    new Set(values.map(value => value.trim().toLowerCase())).size === values.length;
+}
+
+function validVisualReview(review, cell, state, options) {
+  if (!review || !['pass', 'fail'].includes(review.status) || !concreteAnalysis(review.analysis)) return false;
+  if (!identity(state.session?.sourceSha) || !identity(state.session?.buildId) ||
+      !identity(state.session?.role) || !identity(state.session?.theme)) return false;
+  for (const key of ['role', 'theme', 'route', 'breakpoint']) if (review[key] !== cell[key]) return false;
+  if (review.sourceSha !== state.session.sourceSha || review.buildId !== state.session.buildId) return false;
+  if (options.designGate) {
+    const implementationBy = identity(state.session?.implementationBy);
+    if (!implementationBy || review.implementationBy !== implementationBy ||
+        !identity(review.reviewedBy) || review.reviewedBy === implementationBy) return false;
+  }
+  if (!/^[a-f0-9]{64}$/i.test(String(review.sha256 || ''))) return false;
+  const imageOptions = { ...options, projectRoot: state.session?.projectRoot };
+  const file = imagePath(review.screenshot, imageOptions);
+  if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile()) return false;
+  const routeEvidence = state.results?.routes?.[cell.route]?.evidence?.screenshots || [];
+  if (!routeEvidence.some(item => imagePath(item, imageOptions) === file)) return false;
+  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') === review.sha256.toLowerCase();
+}
+
+function healthFailures(results, state) {
+  const failures = [];
+  for (const name of ['routes', 'elements', 'modals', 'flows', 'crud', 'api', 'visualReviews']) {
+    for (const [id, result] of Object.entries(results[name] || {})) {
+      if (result?.status === 'fail' || result?.status === 'runner-fail') failures.push(`${name}:${id}:${result.status}`);
+    }
+  }
+  if (state.runner?.failures?.length) failures.push(`runner:${state.runner.failures.length}`);
+  if (state.auth?.blocked) failures.push('auth:blocked');
+  return failures;
+}
+
+function declaredInventoryGaps(declared, discovered, kind) {
+  if (!Array.isArray(declared)) return [];
+  return declared.flatMap((item, index) => {
+    const name = typeof item === 'string' ? item : itemId(item, `${kind}-${index}`);
+    const found = (discovered || []).some(actual => {
+      const actualName = typeof actual === 'string' ? actual : itemId(actual, '');
+      return actualName === name || (item?.path && actual?.path === item.path) ||
+        (item?.id && actual?.id === item.id);
+    });
+    return found ? [] : [`inventory:${kind}-not-discovered:${name}`];
+  });
+}
+
+function targetIdentityFailures(state, config, options) {
+  const failures = [];
+  const sourceSha = identity(options.targetSourceSha) || identity(config.sourceSha);
+  const buildId = identity(options.targetBuildId) || identity(config.buildId);
+  if (!sourceSha) failures.push('target:source-sha-missing');
+  else if (state.session?.sourceSha !== sourceSha) failures.push('target:source-sha-mismatch');
+  if (!buildId) failures.push('target:build-id-missing');
+  else if (state.session?.buildId !== buildId) failures.push('target:build-id-mismatch');
+  if (identity(options.targetSourceSha) && identity(config.sourceSha) && options.targetSourceSha !== config.sourceSha)
+    failures.push('target:config-source-conflict');
+  if (identity(options.targetBuildId) && identity(config.buildId) && options.targetBuildId !== config.buildId)
+    failures.push('target:config-build-conflict');
+  return failures;
+}
+
+function evaluateCoverage(state, config = {}, options = {}) {
   const policy = modePolicy(state.session && state.session.mode);
   const discovery = state.discovery || {};
   const results = state.results || {};
@@ -70,6 +166,13 @@ function evaluateCoverage(state, config = {}) {
   const unaccounted = [];
 
   if (!inventoryDeclared) unaccounted.push('inventory:not-declared-complete');
+  unaccounted.push(...declaredInventoryGaps(config.routes, discovery.routes, 'route'));
+  unaccounted.push(...declaredInventoryGaps(config.elements, discovery.elements, 'element'));
+  if (!discovery.routes?.length) unaccounted.push('inventory:no-routes');
+  const breakpointNames = new Set((state.config?.breakpoints || []).map(bp => bp.name));
+  for (const name of (policy.mode === 'smoke' ? ['mobile', 'desktop'] : ['mobile', 'tablet', 'desktop'])) {
+    if (!breakpointNames.has(name)) unaccounted.push(`breakpoint:missing:${name}`);
+  }
   unaccounted.push(...missingResults(discovery.routes, results.routes, 'route'));
   unaccounted.push(...missingResults(discovery.elements, results.elements, 'element'));
   unaccounted.push(...missingResults(config.modals || discovery.modals, results.modals, 'modal'));
@@ -82,10 +185,15 @@ function evaluateCoverage(state, config = {}) {
   }
 
   const reviews = results.visualReviews || {};
-  for (const review of expectedVisualReviews(state)) {
+  const usedScreenshots = new Set();
+  for (const review of expectedVisualReviews(state, config)) {
     const result = reviews[review.id];
-    if (!resultAccounted(result) || String(result.analysis || '').trim().length < 20) {
+    const file = imagePath(result?.screenshot, { ...options, projectRoot: state.session?.projectRoot });
+    if (!validVisualReview(result, review, state, { ...options, designGate: config.designGate || state.config?.designGate }) ||
+        usedScreenshots.has(file)) {
       unaccounted.push(`visual-review:${review.id}`);
+    } else {
+      usedScreenshots.add(file);
     }
   }
 
@@ -99,6 +207,8 @@ function evaluateCoverage(state, config = {}) {
 
   const unique = [...new Set(unaccounted)];
   const requestedScopeComplete = unique.length === 0;
+  const failures = healthFailures(results, state);
+  const identityFailures = targetIdentityFailures(state, config, options);
   return {
     mode: policy.mode,
     requestedScopeComplete,
@@ -107,6 +217,10 @@ function evaluateCoverage(state, config = {}) {
     inventoryDeclared,
     truncated,
     unaccounted: unique,
+    healthPassed: failures.length === 0,
+    healthFailures: failures,
+    identityFailures,
+    certifiable: requestedScopeComplete && failures.length === 0 && identityFailures.length === 0,
     counts: {
       routes: (discovery.routes || []).length,
       elements: (discovery.elements || []).length,
@@ -122,6 +236,9 @@ function evaluateCoverage(state, config = {}) {
 module.exports = {
   applyLimit,
   evaluateCoverage,
+  expectedVisualReviews,
+  imagePath,
+  validVisualReview,
   modePolicy,
   normalizeMode,
   positiveLimit,

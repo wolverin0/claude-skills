@@ -1,6 +1,6 @@
 ---
 name: audit-blind-spots
-description: Walk the B1-B19 AI-to-AI blind-spot catalog systematically. Use during the audit pipeline AFTER hard-stops and Tambon hunt and BEFORE the 13 domain audits. Output: PRESENT / NOT PRESENT for each B-class with evidence. Findings flow into the appropriate domains.
+description: "Walk the B1-B19 AI-to-AI blind-spot catalog systematically. Use during the audit pipeline AFTER hard-stops and Tambon hunt and BEFORE the 13 domain audits. Output: PRESENT / NOT PRESENT for each B-class with evidence. Findings flow into the appropriate domains."
 ---
 
 # Skill: Audit Blind Spots Walk

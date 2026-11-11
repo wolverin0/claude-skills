@@ -20,13 +20,17 @@ function parseArgs(argv) {
     else if (a === '--channel') args.channel = argv[++i];
     else if (a === '--storage-state') args.storageState = argv[++i];
     else if (a === '--role') args.role = argv[++i];
+    else if (a === '--theme') args.theme = argv[++i];
+    else if (a === '--source-sha') args.sourceSha = argv[++i];
+    else if (a === '--build-id') args.buildId = argv[++i];
+    else if (a === '--implementation-by') args.implementationBy = argv[++i];
     else if (a === '--help') args.help = true;
   }
   return args;
 }
 
 function usage() {
-  console.log(`Usage: node run-smoke-playwright.js --url <url> [--mode smoke|standard|exhaustive] [--out test-manifest] [--config validation.config.json] [--max-routes 6] [--max-elements 0] [--headed]\n\nAuth env vars:\n  VALIDATION_EMAIL\n  VALIDATION_PASSWORD\n  VALIDATION_SECRET\n`);
+  console.log(`Usage: node run-smoke-playwright.js --url <url> [--mode smoke|standard|exhaustive] [--out test-manifest] [--config validation.config.json] [--role <id>] [--theme light|dark|default] [--source-sha <sha>] [--build-id <id>] [--max-routes 6] [--max-elements 0] [--headed]\n\nAuth env vars:\n  VALIDATION_EMAIL\n  VALIDATION_PASSWORD\n  VALIDATION_SECRET\n`);
 }
 
 const args = parseArgs(process.argv.slice(2));
@@ -59,6 +63,8 @@ function loadConfig(configArg) {
 
 const loadedConfig = loadConfig(args.config);
 const config = loadedConfig.data || {};
+const activeRole = args.role || config.role || 'public';
+const activeTheme = args.theme || config.theme || 'default';
 
 let chromium;
 let playwrightSource = 'project';
@@ -231,10 +237,16 @@ function makeState() {
     version: '3.0',
     session: {
       id: `val-${stamp}`,
+      projectRoot: root,
       appUrl,
       backend: 'playwright-local',
       backendDetail: `playwright-${playwrightSource}`,
       mode: args.mode,
+      sourceSha: args.sourceSha || config.sourceSha || null,
+      buildId: args.buildId || config.buildId || null,
+      implementationBy: args.implementationBy || config.implementationBy || null,
+      role: activeRole,
+      theme: activeTheme,
       authMode: email && password ? 'env-credentials' : 'none-or-manual',
       configPath: loadedConfig.path ? rel(loadedConfig.path) : null,
       status: 'in_progress',
@@ -248,6 +260,9 @@ function makeState() {
     },
     config: {
       breakpoints: Array.isArray(config.breakpoints) && config.breakpoints.length ? config.breakpoints : defaultBreakpoints,
+      roles: Array.isArray(config.roles) && config.roles.length ? config.roles : [activeRole],
+      themes: Array.isArray(config.themes) && config.themes.length ? config.themes : [activeTheme],
+      designGate: config.designGate === true,
       ignoreConsolePatterns: ignorePatterns.map(String),
       destructiveActions: 'skip',
       maxRoutes: args.maxRoutes,
@@ -388,7 +403,7 @@ async function checkRoute(page, route, consoleStart, errorsStart, networkStart) 
     for (const bp of state.config.breakpoints) {
       await page.setViewportSize({ width: bp.width, height: bp.height });
       await page.waitForTimeout(300);
-      const shot = path.join(dirs.routes, `${routeId}-${bp.name}.png`);
+      const shot = path.join(dirs.routes, `${slug(activeRole)}-${slug(activeTheme)}-${routeId}-${bp.name}.png`);
       await page.screenshot({ path: shot });
       screenshots.push(rel(shot));
       const measurement = await page.evaluate(__validationResponsiveAudit, { mobile: bp.width <= 768 });
@@ -641,7 +656,12 @@ body{font-family:system-ui,Segoe UI,sans-serif;margin:24px;line-height:1.45;colo
 async function launchResilient(channel, headed) {
   // Many dev machines have system Chrome but never ran `playwright install` (no bundled Chromium).
   if (channel) return chromium.launch({ channel, headless: !headed });
-  const attempts = [{}, { channel: 'chrome' }, { channel: 'msedge' }];
+  const attempts = [
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? [{ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }] : []),
+    {},
+    { channel: 'chrome' },
+    { channel: 'msedge' }
+  ];
   let lastErr;
   for (const a of attempts) {
     try { return await chromium.launch(Object.assign({ headless: !headed }, a)); }
@@ -656,6 +676,7 @@ async function launchResilient(channel, headed) {
   // logged in. --storage-state file or VALIDATION_STORAGE_STATE env.
   const storageStatePath = args.storageState || process.env.VALIDATION_STORAGE_STATE;
   const ctxOpts = { viewport: { width: 1440, height: 900 } };
+  if (activeTheme === 'light' || activeTheme === 'dark') ctxOpts.colorScheme = activeTheme;
   if (storageStatePath) {
     if (!fs.existsSync(storageStatePath)) { console.error('storage-state file not found: ' + storageStatePath); process.exit(2); }
     ctxOpts.storageState = storageStatePath;
@@ -797,7 +818,8 @@ async function launchResilient(channel, headed) {
     state.discovery.truncation.elements ||= selection.truncated;
     for (const skipped of selection.skipped) state.results.elements[skipped.id] = skipped;
     state.queues.elements = selection.candidates.map(e => e.id);
-    state.queues.visualReviews = routes.flatMap(route => state.config.breakpoints.map(bp => `${route.id}:${bp.name}`));
+    state.queues.visualReviews = state.config.roles.flatMap(role => state.config.themes.flatMap(theme =>
+      routes.flatMap(route => state.config.breakpoints.map(bp => `${typeof role === 'string' ? role : role.id}:${theme}:${route.id}:${bp.name}`))));
     save();
     for (const element of selection.candidates) {
       const result = await checkElement(page, element, getConsole, getErrors, getNetwork);

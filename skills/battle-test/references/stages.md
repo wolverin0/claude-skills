@@ -14,7 +14,7 @@ subagents and reading back only their result + the artifact path.
    and re-verification all run there. Create `<worktree>/.battle-test/<timestamp>/` for artifacts.
 3. Resolve `VALIDATION_SKILL_ROOT` from the active provider's sibling skill directory; fall back to
    `$HOME/.agents/skills/validation`. Run `verify-provider-parity.js`, then fail preflight unless
-   `assert-coverage.js`, `validate-multirole.js`, `security-probe.js`, and `visual-regression.js`
+    `assert-coverage.js`, `certify-validation.js`, `validate-multirole.js`, `security-probe.js`, and `visual-regression.js`
    exist under that root. Always invoke helpers as
    `node "$VALIDATION_SKILL_ROOT/scripts/<name>.js"`, never as battle-test-relative `scripts/...`.
 4. Detect whether the app gates content behind login (look for an auth provider, a login route,
@@ -42,14 +42,16 @@ subagents and reading back only their result + the artifact path.
 
 Run `vibe-to-prod` plus `validation --mode smoke --fresh` against key/changed routes. Review every
 captured screenshot and require `smokeScopeComplete:true`, but skip the full audit, autonomous
-hardening, security depth, and exhaustive ledger. Report `QUICK CHECK`, never `battle-tested`, and
+hardening, security depth, and exhaustive ledger; run the Stage-2 perf budget once on the home
+route when the app has a web UI. Report `QUICK CHECK`, never `battle-tested`, and
 never push or deploy. Stop after the quick report.
 
 ## Stage 2 — Baseline runtime verification (validation)
 
 1. Run `validation --full --fresh --config validation.config.json <url>`. The deterministic browser
    collector is only the first pass: inspect every queued screenshot, record semantic reviews,
-   exercise modal/flow/`VAL_` CRUD queues, then run `assert-coverage.js`. Require `completed`,
+    exercise modal/flow/`VAL_` CRUD queues, then run `assert-coverage.js` for accounting and
+    `certify-validation.js` for final health/image certification. Require `completed`,
    `coverageComplete:true`, and `coverage.unaccounted:[]` even when app findings are red.
 2. For multi-role apps, also run `validate-multirole.js` (`--url --config --channel chrome`). It is
    supplementary auth/access evidence and cannot substitute for the exhaustive ledger.
@@ -62,7 +64,34 @@ never push or deploy. Stop after the quick report.
    breakpoint keys, and baseline file hashes. A missing key later is a failure, not a new baseline.
 5. Collect runtime findings: failed routes, authorization leaks, responsive high-severity issues,
    IDOR/secret findings. Read signals per `references/gates.md`.
-6. Record the baseline result (the "before" column of the report).
+6. **Perf budget** (measured, not grepped). Run Lighthouse mobile with simulated CPU/network
+   throttling against the app URL (home route; repeat for other key routes if the project lists them):
+
+   ```bash
+   npx lighthouse "$URL" --preset=perf --form-factor=mobile --throttling-method=simulate \
+     --output=json --output-path="$RUN/lh.json" --chrome-flags="--headless=new" --quiet
+   node -e 'const fs=require("fs"),r=JSON.parse(fs.readFileSync(process.argv[1])),a=r.audits;
+   let c={};try{c=JSON.parse(fs.readFileSync("validation.config.json")).perfBudget||{}}catch{}
+   const b={lcpMs:2500,tbtMs:200,cls:0.1,jsKb:300,...c};
+   const js=a["network-requests"].details.items.filter(i=>i.resourceType==="Script").reduce((n,i)=>n+(i.transferSize||0),0)/1024;
+   const m={lcpMs:a["largest-contentful-paint"].numericValue,tbtMs:a["total-blocking-time"].numericValue,cls:a["cumulative-layout-shift"].numericValue,jsKb:js};
+   const f=Object.keys(b).filter(k=>!(m[k]<=b[k]));
+   console.log(JSON.stringify({m,b,fail:f,runtimeError:r.runtimeError||null}));process.exit(f.length||r.runtimeError?1:0)' "$RUN/lh.json"
+   ```
+
+   - Reports LCP, TBT, CLS and total JS bytes. Lab Lighthouse cannot measure INP; TBT is its lab
+     proxy. Real INP comes from RUM (audit-domain-05 Q7).
+   - JS size is the summed `transferSize` of Script requests, i.e. the compressed (gzip/brotli) wire size.
+   - Defaults: LCP 2500 ms, TBT 200 ms, CLS 0.1, JS 300 KB. A project overrides any of them with
+     `"perfBudget": {"lcpMs":..,"tbtMs":..,"cls":..,"jsKb":..}` in `validation.config.json`.
+   - Exit `1` (any metric over budget, a missing metric, or a Lighthouse `runtimeError` such as
+     `NO_FCP`) is a red health signal. Save `lh.json` and the printed line under the run dir.
+   - `lighthouse` is not preinstalled: `npx` fetches it on first use and it needs Chrome. Pin the
+     version in the state file so Stage 4 compares like with like.
+   - **Skip when the project has no web UI** (no URL, API-only/CLI/worker, or `validation.config.json`
+     has no routes): do not run it, and record `perfBudget: skipped(no-web-ui)` in `state.json`
+     and the report. A silent omission is a gate failure; a recorded skip is not.
+7. Record the baseline result (the "before" column of the report), including the perf numbers.
 
 ## Stage 3 — Harden (quality-loop)
 
@@ -81,11 +110,12 @@ never push or deploy. Stop after the quick report.
    the entire Stage-2 exhaustive validation against that exact worktree build, including the
    multi-role, security-probe, and `visual-regression.js` (compare mode) checks vs the
    Stage-2 baseline.
-2. A fix counts as proven only if: validation `session.status: completed`,
+2. A fix counts as proven only if both coverage and certification gates exit `0`, validation `session.status: completed`,
    `coverageComplete:true`, `unaccounted:[]`, every screenshot semantically reviewed, 0 new authorization
    leaks, 0 new responsive-high, no new visual regression on routes it shouldn't have touched, and
-   no new security critical. Re-run the audit on the changed scope if a security/architecture
-   finding was the target.
+   no new security critical, and the Stage-2 perf budget re-run on the candidate build is within
+   budget and no worse than the baseline (skipped only with a recorded `skipped(no-web-ui)`).
+   Re-run the audit on the changed scope if a security/architecture finding was the target.
 3. Intended visual fixes are reviewed as expected diffs. Re-baseline only the approved changed
    routes after their semantic/responsive checks pass; never weaken the global threshold. Missing
    baselines or unexpected changes on untouched routes fail the gate.

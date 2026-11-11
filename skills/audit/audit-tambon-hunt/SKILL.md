@@ -1,6 +1,6 @@
 ---
 name: audit-tambon-hunt
-description: Hunt the three Tambon LLM-failure-mode signatures (Hallucinated Object, Wrong Attribute, Silly Mistake) across an audit scope. Use during the audit pipeline AFTER hard-stops and BEFORE blind-spots. Output: counts per signature, top occurrences, density per 1000 LoC. Findings flow into Domain 13 (Code Integrity).
+description: "Hunt the three Tambon LLM-failure-mode signatures (Hallucinated Object, Wrong Attribute, Silly Mistake) across an audit scope. Use during the audit pipeline AFTER hard-stops and BEFORE blind-spots. Output: counts per signature, top occurrences, density per 1000 LoC. Findings flow into Domain 13 (Code Integrity)."
 ---
 
 # Skill: Audit Tambon Hunt

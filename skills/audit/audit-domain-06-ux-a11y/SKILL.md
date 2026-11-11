@@ -43,6 +43,7 @@ audit's spine — every finding maps back to one of them.
 5. Are interactive elements semantic (button, a, input — not div with onClick)?
 6. Does color contrast meet WCAG AA?
 7. Does the app work on a 320px-wide screen?
+8. Does it have the "feel" details of a polished app (cmd+K, undo toasts, optimistic updates, safe areas, tabular numbers...)? List: `references/feel-20.md`.
 
 ### Vibe-coding specific checks (production-readiness)
 
@@ -55,7 +56,7 @@ Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook
 
 ## Mandatory enumeration before verdict
 
-Before writing a finding or a "no findings" verdict for Q1, Q2, Q3, Q4, Q5, Q6, or Q7, produce the inventories below. Do not answer from memory. For every match, read the surrounding code and classify it in the requested bucket; include inventory counts and representative path:line evidence in the domain report.
+Before writing a finding or a "no findings" verdict for Q1, Q2, Q3, Q4, Q5, Q6, Q7, or Q8, produce the inventories below. Do not answer from memory. For every match, read the surrounding code and classify it in the requested bucket; include inventory counts and representative path:line evidence in the domain report.
 
 ### Q4/Q5 interactive-element accessibility inventory (mandatory)
 
@@ -89,6 +90,40 @@ find . -type f \( -name '*.css' -o -name '*.scss' -o -name 'tailwind.config.*' -
 ```
 
 Classify each visual risk as `wcag-aa-evidence`, `contrast-unclear`, `mobile-safe`, or `mobile-overflow-risk`. Verdict requirement: Q6 and Q7 are not safe until contrast and 320px layout risks have been inventoried.
+### Q8 "feel" inventory (mandatory)
+
+Checklist and per-item owner: `references/feel-20.md` (the operator's 20 details). Run the block
+below; counts are per row. Examples are React/Next; the patterns also match plain HTML/CSS/Vue/Svelte.
+The `r` helper excludes generated output; in PowerShell define the same function with `rg`. A zero count means the detail is absent:
+the finding says **add it**, names the design skill, and does not re-explain the technique.
+
+```bash
+r() { rg -n "$@" -g '*.{tsx,jsx,ts,js,html,vue,svelte,css,scss}' -g '!{node_modules,dist,build,.next,out,backups,archived-reports,fases-completas,artifacts,coverage,.git}/**' .; }
+r -i "cmdk|CommandDialog|CommandMenu|kbar|useHotkeys|<kbd|metaKey.{0,40}['\"]k['\"]"   # cmdk + kbd hints
+r "placeholder=.blur|blurDataURL|blurhash|thumbhash|lqip"                                # blur placeholders
+r "one-time-code"                                                                        # OTP autofill
+r "corner-shape|squircle|superellipse"                                                   # continuous corners
+r "startViewTransition|view-transition-name|@view-transition"                            # view transitions
+r "window\.confirm|[^.\w]confirm\("                                                      # native confirm pop-ups (bad)
+r "AlertDialog"                                                                          # "are you sure" dialogs (bad for reversible actions)
+r -i "undo"                                                                              # undo toasts (good)
+r "tabular-nums|font-variant-numeric"                                                    # tabular numbers
+r "text-wrap:\s*(balance|pretty)|text-balance|text-pretty"                               # balanced headlines
+r "env\(safe-area|safe-area-inset|viewport-fit=cover"                                    # safe areas
+r "min-h-\[?44|min-w-\[?44|h-11|size-11|min-height:\s*44px|min-width:\s*44px"          # 44px tap targets
+r -U "<button[^>]*>\s*<(svg|\w+Icon)"                                                    # icon-only buttons to check against 44px
+r "safePolygon|hoverIntent|safe-triangle|NavigationMenu|DropdownMenuSub|MenubarSub"      # submenu hover intent
+r "useOptimistic|onMutate|optimistic"                                                    # optimistic updates + rollback (playbook B10)
+```
+
+Classify each detail as `present`, `partial` (some screens only), or `absent`. Judge relevance first:
+`otp` only matters with SMS/email code login, `safe-area` only on mobile-web/PWA, `cmdk` only on
+multi-section apps, `safe-triangle` only where nested menus exist. Many `AlertDialog`/`confirm(`
+hits with few `undo` hits means reversible actions are guarded by pop-ups instead of undo toasts
+(keep dialogs only for truly irreversible actions). Verdict requirement: Q8 is
+not safe until every relevant detail is classified. Severity is Low/Medium unless a tap-target or
+OTP gap blocks a core flow (then High).
+
 ## Files most likely to have findings
 
 Don't read everything. Read these files first:
@@ -158,7 +193,9 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-6.1>
+      <one paragraph; for full fix prompt, use /audit-fix F-6.1. For a missing Q8 detail
+       start with "Add <detail>" and name the skill command (impeccable animate/harden/typeset,
+       emil-design-eng, frontendgame); do not only report it as missing>
 
     Verification after fix:
       <command>

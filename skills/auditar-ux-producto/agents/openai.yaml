@@ -1,0 +1,4 @@
+interface:
+  display_name: "Auditoría UX de producto"
+  short_description: "Audita UX y compara propuestas antes y después"
+  default_prompt: "Usá $auditar-ux-producto para auditar esta app, preparar comparaciones antes/después y documentar en DESIGN.md las decisiones incorporadas."
