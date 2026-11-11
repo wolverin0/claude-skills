@@ -34,6 +34,24 @@ does not prove that mutation works and must be disclosed in the report.
 element, and a semantic review for each captured screenshot. Its verdict is `QUICK CHECK PASSED` or
 `QUICK CHECK FAILED`. It never authorizes `BATTLE-TESTED`, integration, release, or deployment.
 
+## UX profile gate (`--ux`)
+
+`--ux` has its own gate. It never uses the full Stage-4 release gate and never authorizes
+`BATTLE-TESTED`, integration, release, or deployment. Every row must hold on the exact candidate build:
+
+| Check | Required |
+| --- | --- |
+| build/test | The quality-loop build/test gate is green, re-run on the candidate SHA |
+| visual compare (ALL routes, full config) | Every regression key is on a touched route and was reviewed as the intended change; none on any other route; `missingBaselines:0`; every route x role x breakpoint key present. Exit `1` is expected when an intended change differs: read the JSON, not only the exit code |
+| smoke (touched routes) | `smokeScopeComplete:true`, no failed selected route or element, a semantic review per captured screenshot, console/network checked |
+| acceptance criteria | Every `ac` replayed in a real browser by the main session (not the executor that fixed it); each item's evidence note cites its `ac`; every `ac` item is `[x]` |
+| `DESIGN.md` | Reflects only what was implemented and verified |
+| evidence identity | SHA/build/config hash match between baseline and candidate manifests |
+
+Verdict: `UX SCOPE VERIFIED` when every row holds, otherwise `UX SCOPE FAILED`; missing, stale or
+blocked evidence is a failure, never a pass. Not reviewed in this mode: security, database,
+dependencies, performance, dead code.
+
 ## Human decision points
 
 Only these conditions pause autonomous work:
@@ -43,6 +61,8 @@ Only these conditions pause autonomous work:
    explicitly partial result.
 3. Main integration, deployment, migrations, secret rotation, or external platform changes: require
    separate explicit authority. `--push-main` authorizes only gated main integration, never deploy.
+4. `--ux` only: choose which `Cnn` changes go (the one pause); the rest is GATED. No question tool:
+   write the decision as GATED and stop. `--ux` has no hard-stop gate and never integrates.
 
 ## Main integration gate
 
@@ -55,4 +75,5 @@ the push. Deployment always remains gated.
 
 Stop when AUTO is drained and Stage 4 is green, or when the declared budget is reached. Report the
 proven SHA/range, GATED queue, skipped safety-sensitive checks, and every unresolved finding. Never
-translate `incomplete`, `blocked`, a quick check, or stale evidence into a green full verdict.
+translate `incomplete`, `blocked`, a quick check, a UX scope check, or stale evidence into a green full
+verdict.

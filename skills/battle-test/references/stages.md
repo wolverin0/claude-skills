@@ -99,13 +99,15 @@ never push or deploy. Stop after the quick report.
 ## Stage 3 — Harden (quality-loop)
 
 1. Seed `TRACKS.md` AUTO with **both** sets of findings:
-   - audit findings from Stage 1 (security → prod-readiness → deps → tests → dead-code → perf →
-     a11y → docs order), and
+   - audit findings from Stage 1, in quality-loop's fixed order (security → prod-readiness → deps →
+     tests → dead-code → perf → a11y → ux → docs), and
    - the Stage-2 runtime findings (broken routes, authz leaks, responsive fails, IDOR, secrets).
    Anything needing a secret/rotation/deploy/design call goes to the GATED section, not AUTO.
 2. "Use the quality-loop skill". It works one AUTO item at a time behind its build/test gate,
    commits to `loop/<project>`. Invoke it with `--staged --from-tracks` (both): `--from-tracks`
    only stops it from re-auditing; without `--staged` its default is to push green batches to main.
+   Hand it the worktree path and the recorded source SHA as its worktree and base: it uses that tree
+   and skips its own setup, so the fixes land on the tree that was audited and baselined.
 3. Do **not** let it push to main yet — Stage 4 is the gate that authorizes the push.
 4. Read what quality-loop produces: `quality-loop-state.json` at the worktree root (`status`, `fixed`,
    `gated`, `commitRange`, `gateStatus`, `pushedToMain`), `gated.json` next to `TRACKS.md`, and the
@@ -139,3 +141,95 @@ only when explicitly authorized, and print the GATED operator queue. Do not clai
 re-validation is red or any critical security/authz finding is unresolved — say exactly what's
 left and where it's queued. Also block the verdict on incomplete coverage, pending screenshot
 reviews, missing baseline keys, or SHA/build/config mismatch.
+
+## UX mode (`--ux`)
+
+Runs the stages in order with the variants below; whatever is not mentioned is as in the full stages.
+Record `mode: ux` in `state.json`. Refuse `--push-main`, `--quick` and `--audit-only`. Without subagents,
+run in line. Without `AskUserQuestion`, write the gate as GATED and stop; `--resume` continues from the
+operator's answer.
+
+### UX Stage 0 — Preflight
+
+Steps 1-6 as in Stage 0, with these differences:
+- Step 3: `verify-provider-parity.js` still runs; among the helpers only `visual-regression.js` and
+  `run-smoke-playwright.js` must exist.
+- Step 5: `validation.config.json` must list EVERY route in `routes[]` (with an empty list
+  `visual-regression.js` covers only `/`), plus `roles[]`. The modal/CRUD/API inventory is not needed.
+- Keep run artifacts out of git (they include live session state). In the worktree:
+
+  ```bash
+  EXCL=$(git rev-parse --git-path info/exclude)   # a linked worktree has no .git/info/exclude file; this file is shared with the main checkout
+  for p in ux-findings.json test-manifest/ .battle-test/ TRACKS.md; do grep -qxF "$p" "$EXCL" || echo "$p" >> "$EXCL"; done
+  ```
+
+  Tracked files are unaffected. `quality-loop-state.json` and `gated.json` also sit at the root but are
+  never staged, because Stage 3 commits only each item's `owns=` paths.
+
+### UX Stage 1 — Diagnose (UX audit)
+
+1. "Use the auditar-ux-producto skill" on the worktree and the running app, in place of
+   `audit-orchestrator`. Do not run `/audit`; there is no `AUDIT VERDICT`, no token and no hard-stop gate.
+   Run its stages 1-7 and stop at the `C01..Cn` table and compatible sets.
+2. **The one human pause** (owned by this stage: when you run its export in step 3, tell it the choice is
+   already made so it does not ask again). Ask the operator to choose a compatible set or a custom `Cnn` list
+   (`AskUserQuestion`: options = the sets, custom, none; recommend one). What is not chosen goes to GATED.
+   No question tool: write the decision as GATED and stop.
+3. Run its stage 9 (export): chosen items become `[ux]` lines in `TRACKS.md` (worktree root) and entries
+   in `ux-findings.json`; unchosen ones go to GATED with `needs` = operator decision. Formats:
+   `auditar-ux-producto/references/plantillas.md`, template 7.
+4. Findings that are not UX/UI: keep them in state for the report; they never enter `TRACKS.md`.
+
+### UX Stage 2 — Baseline
+
+Run `visual-regression.js --update --role <role>` per role (with `--storage-state`) using the full
+`validation.config.json`: a baseline of ALL routes. No `validation --full`, no semantic review, no
+multi-role, security or perf budget. Write the baseline manifest as in Stage 2 step 4.
+
+### UX Stage 3 — Harden
+
+"Use the quality-loop skill" with `--staged --from-tracks`, handing it the worktree path and the recorded
+source SHA (it uses that tree). The queue is the `ux` items only. It commits only each item's `owns=`
+paths; items with `ac=` stay `[~]` awaiting their criterion. Its build/test gate does not prove UX.
+Read its outputs as in Stage 3 step 4.
+
+### UX Stage 4 — Re-verify
+
+Record the candidate SHA/build/config hash and restart the app from the worktree. The **touched set** =
+the `routes=` of committed `ux` items (`[x]`, or `[~]` awaiting `ac`) plus every route their `ac` steps
+visit. Stage 4 steps 1-3 do not apply (no partial re-baseline). Do, in order:
+
+a. Re-run the full build/test gate of quality-loop section 3 on the candidate.
+b. Visual compare of ALL routes: `visual-regression.js` without `--update`, per role with
+   `--storage-state`, with the full config. Exit `1` is expected when an intended change differs, so read
+   the JSON. Pass only if every regression is on a touched route and was reviewed as the intended change
+   (current vs baseline, `bbox`, `sizeChanged`), there is none on any other route, and `missingBaselines:0`.
+   A shared-component change that shows on an unlisted route is reviewed and added to `routes=`, or it
+   fails.
+c. Smoke on the touched routes, per role: copy the full config to `$RUN/ux-smoke.config.json` with only
+   `routes[]` replaced by the touched set (roles, breakpoints and auth settings unchanged). Run
+   `node "$VALIDATION_SKILL_ROOT/scripts/run-smoke-playwright.js" --mode smoke --url <url> --config
+   $RUN/ux-smoke.config.json --role <id> --storage-state <file> --out $RUN/ux-smoke --max-routes <N>`
+   (credentials from env vars instead of `--storage-state` also work). `--out` keeps the Stage-2 state
+   and `test-manifest/baseline` intact. `<N>` = the number of distinct paths in the touched set plus the
+   landing path: smoke selects the landing route first, then the config routes, then crawled links, so
+   this cap cuts the links. A landing route that is not touched is reported as an extra, not hidden.
+   Never pass this config to `visual-regression.js`: it resolves baselines from its config directory.
+   Review every screenshot; require `smokeScopeComplete:true`, no failed selected route or element,
+   console/network checked.
+d. Replay every `ac` in a real browser as its role (steps, observable result, what is preserved), in the
+   main session, never in the quality-loop executor. Record before (the audit's recorded "before", or
+   the Stage-2 baseline image of the route) and after (capture in `$RUN/ux-ac/`). Put an evidence note on
+   the item citing the `ac` id, role, route and capture, then mark it `[x]`; a failed criterion becomes
+   `[!]` plus a GATED entry.
+e. Update `DESIGN.md` only with what is implemented and verified; anything else stays "propuesta pendiente
+   de implementación".
+f. Only if a-e are green and the diff in (b) stayed on touched routes: re-baseline ALL routes with
+   `visual-regression.js --update`, then compare once more and expect `regressions:0`.
+
+Stop on the loop branch. No push, no deploy.
+
+### UX Stage 5 — Report
+
+Write the report per `references/report.md` ("UX mode"). Verdict: `UX SCOPE VERIFIED` or
+`UX SCOPE FAILED`, never `BATTLE-TESTED`.
