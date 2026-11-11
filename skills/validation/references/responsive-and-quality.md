@@ -63,7 +63,7 @@ fresh anonymous context per breakpoint and audits only the login screen. Establi
    ```
 
    Pass `{mobile:true}` for the 375px breakpoint, `{mobile:false}` otherwise.
-4. Save the returned JSON to `test-manifest/evidence/routes/{routeId}-responsive-{breakpoint}.json`.
+4. Save the returned JSON to `test-manifest/evidence/routes/{routeId}-{breakpoint}-responsive.json`.
 
 Run it at **every** breakpoint the mode requires — not just one. The same defect often
 appears only at mobile or only at desktop.

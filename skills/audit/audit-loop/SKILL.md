@@ -1,6 +1,6 @@
 ---
 name: audit-loop
-description: Orchestrate the full audit improvement cycle: audit, roadmap, remediation, rerun, delta comparison, and skill patching for missed findings until convergence or a terminal blocked state.
+description: "Orchestrate the full audit improvement cycle: audit, roadmap, remediation, rerun, delta comparison, and skill patching for missed findings until convergence or a terminal blocked state."
 ---
 
 # Skill: Audit Loop
@@ -51,7 +51,7 @@ fixed" as convergence.
 ## BLOCKED Item Tactics
 
 Use these tactics for items that cannot be remediated directly in the
-current repo. They come from claim `mm-9af7` and are mandatory.
+current repo. They are mandatory.
 
 ### Dirty-tree stash
 

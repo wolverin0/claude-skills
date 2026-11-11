@@ -7,15 +7,16 @@ enough by itself.
 
 | Source | Required green signal | Failure / block |
 | --- | --- | --- |
-| audit | Current `audit-report.md` has an acceptable VERDICT and runner emitted `[AUDIT COMPLETE]` | Hard-stop verdict or `[AUDIT TRUNCATED]` |
-| validation coverage | `assert-coverage.js` exits `0`; state is `completed`, mode `exhaustive`, `coverageComplete:true`, `inventoryDeclared:true`, `truncated:false`, and `unaccounted:[]` | Any missing inventory/result/review, pending queue, explicit cap, or nonzero assertion exit |
-| validation health | Candidate state has zero failed routes, elements, modals, flows, CRUD/API checks, responsive-high findings, and failed semantic reviews | Any app failure; runner failures are reported separately and also block certification |
-| semantic screenshots | One concrete review per expected route x role x breakpoint, all required screenshots exist, and failed review count is zero | Missing image/review, generic or too-short analysis, or visible defect |
+| audit | Current `audit-report.md` has an acceptable `AUDIT VERDICT` block (one of the five exact strings) and the runner emitted the `[AUDIT COMPLETE: ...]` token | Hard-stop verdict or `[AUDIT TRUNCATED: <reason>]` |
+| validation coverage | `assert-coverage.js` exits `0`; mode `exhaustive`, `coverageComplete:true`, `inventoryDeclared:true`, `truncated:false`, and `unaccounted:[]` | Any missing inventory/result/review, pending queue, explicit cap, or nonzero accounting exit; an accounted FAIL is still red health |
+| validation health | `certify-validation.js` exits `0`, state is `completed`, and zero failed routes, elements, modals, flows, CRUD/API checks, responsive-high findings, and failed semantic reviews | Any app/runner failure blocks certification even if coverage accounting passed |
+| semantic screenshots | One inspected image per expected route x role x supported theme x breakpoint, bound to source/build and SHA-256, with hierarchy/density/alignment/proportion/state observations | Missing/stale/conflicting image/review, generic analysis, or visible defect |
 | validate-multirole.js | Exit `0`; `authorizationLeaks:0`, `accessFailures:0`, `responsiveHighIssues:0`, `authFailures:0`, `smokeFailures:0` | Exit `1` or any nonzero failure count; exit `2` means invalid invocation |
 | security-probe.js | Exit `0` per role and no critical/high finding | Exit `1`; exit `2` means missing/invalid config |
 | visual-regression.js | Compare mode exits `0`, `regressions:0`, `missingBaselines:0`; manifest contains every expected route x role x breakpoint key | Unexpected regression, missing baseline/key, or invalid config |
-| evidence identity | Baseline and candidate manifests match the recorded source/candidate SHA, build identifier, config hash, role set, URL, and test-data identity | Stale or cross-build evidence; any identity field missing/mismatched |
-| quality-loop | AUTO queue drained and its build/test gate is green on the recorded candidate SHA | Red gate or unresolved AUTO item |
+| perf budget | Stage-2 Lighthouse mobile step exits `0`: LCP, TBT, CLS and JS wire size within the defaults (2500 ms / 200 ms / 0.1 / 300 KB) or the project's `perfBudget`; Stage 4 is within budget and no worse than baseline; or `perfBudget: skipped(no-web-ui)` is recorded | Any metric over budget or missing, Lighthouse `runtimeError`, regression vs baseline, or a skip with no recorded reason |
+| evidence identity | Validation target source SHA/build ID is supplied independently through config or certification CLI and matches state/reviews; baseline and candidate manifests match config hash, role set, URL, and test-data identity | Stale or cross-build evidence; any identity field missing/mismatched |
+| quality-loop | AUTO queue drained and its build/test gate is green on the recorded candidate SHA; read `quality-loop-state.json` (`gateStatus`, `commitRange`), `gated.json` and the `[QUALITY-LOOP COMPLETE: ...]` token | Red gate or unresolved AUTO item |
 
 `blocked` means a prerequisite such as authentication or a runnable app is unavailable. `incomplete`
 means the requested validation scope was not fully accounted. Neither is an app pass.
@@ -33,6 +34,24 @@ does not prove that mutation works and must be disclosed in the report.
 element, and a semantic review for each captured screenshot. Its verdict is `QUICK CHECK PASSED` or
 `QUICK CHECK FAILED`. It never authorizes `BATTLE-TESTED`, integration, release, or deployment.
 
+## UX profile gate (`--ux`)
+
+`--ux` has its own gate. It never uses the full Stage-4 release gate and never authorizes
+`BATTLE-TESTED`, integration, release, or deployment. Every row must hold on the exact candidate build:
+
+| Check | Required |
+| --- | --- |
+| build/test | The quality-loop build/test gate is green, re-run on the candidate SHA |
+| visual compare (ALL routes, full config) | Every regression key is on a touched route and was reviewed as the intended change; none on any other route; `missingBaselines:0`; every route x role x breakpoint key present. Exit `1` is expected when an intended change differs: read the JSON, not only the exit code |
+| smoke (touched routes) | `smokeScopeComplete:true`, no failed selected route or element, a semantic review per captured screenshot, console/network checked |
+| acceptance criteria | Every `ac` replayed in a real browser by the main session (not the executor that fixed it); each item's evidence note cites its `ac`; every `ac` item is `[x]` |
+| `DESIGN.md` | Reflects only what was implemented and verified |
+| evidence identity | SHA/build/config hash match between baseline and candidate manifests |
+
+Verdict: `UX SCOPE VERIFIED` when every row holds, otherwise `UX SCOPE FAILED`; missing, stale or
+blocked evidence is a failure, never a pass. Not reviewed in this mode: security, database,
+dependencies, performance, dead code.
+
 ## Human decision points
 
 Only these conditions pause autonomous work:
@@ -42,6 +61,8 @@ Only these conditions pause autonomous work:
    explicitly partial result.
 3. Main integration, deployment, migrations, secret rotation, or external platform changes: require
    separate explicit authority. `--push-main` authorizes only gated main integration, never deploy.
+4. `--ux` only: choose which `Cnn` changes go (the one pause); the rest is GATED. No question tool:
+   write the decision as GATED and stop. `--ux` has no hard-stop gate and never integrates.
 
 ## Main integration gate
 
@@ -54,4 +75,5 @@ the push. Deployment always remains gated.
 
 Stop when AUTO is drained and Stage 4 is green, or when the declared budget is reached. Report the
 proven SHA/range, GATED queue, skipped safety-sensitive checks, and every unresolved finding. Never
-translate `incomplete`, `blocked`, a quick check, or stale evidence into a green full verdict.
+translate `incomplete`, `blocked`, a quick check, a UX scope check, or stale evidence into a green full
+verdict.

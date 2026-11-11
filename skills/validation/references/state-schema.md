@@ -13,14 +13,20 @@ test-manifest/validation-state.json
   "version": "3.0",
   "session": {
     "id": "val-YYYYMMDD-HHMMSS",
+    "projectRoot": "absolute checkout path used to resolve relative evidence paths",
     "appUrl": "http://localhost:3000",
     "backend": "agent-browser",
     "mode": "standard",
+    "sourceSha": "exact source revision",
+    "buildId": "exact running build identifier",
+    "implementationBy": "implementer identifier when designGate is requested",
+    "role": "admin|public|...",
+    "theme": "light|dark|default",
     "authMode": "none|manual|saved-state|config",
     "backendDetail": "playwright-project",
     "configPath": "validation.config.json",
     "status": "in_progress|incomplete|completed|failed|blocked",
-    "currentPhase": "discover|test|visual-review|report",
+    "currentPhase": "discover|test|visual-review|certify|report",
     "coverageComplete": false,
     "smokeScopeComplete": false,
     "startedAt": "ISO",
@@ -43,6 +49,9 @@ test-manifest/validation-state.json
       {"name": "laptop", "width": 1024, "height": 768},
       {"name": "desktop", "width": 1440, "height": 900}
     ],
+    "roles": ["admin"],
+    "themes": ["light", "dark"],
+    "designGate": false,
     "ignoreConsolePatterns": ["ResizeObserver loop", "favicon.ico"],
     "destructiveActions": "skip|val-only|allow",
     "maxRoutes": null,
@@ -84,7 +93,21 @@ test-manifest/validation-state.json
     "flows": {},
     "crud": {},
     "api": {},
-    "visualReviews": {}
+    "visualReviews": {
+      "admin:light:customers:mobile": {
+        "status": "pass|fail",
+        "role": "admin", "theme": "light", "route": "customers", "breakpoint": "mobile",
+        "sourceSha": "exact source revision", "buildId": "exact running build identifier",
+        "implementationBy": "implementer identifier", "reviewedBy": "distinct reviewer identifier",
+        "screenshot": "test-manifest/evidence/routes/admin-light-customers-mobile.png",
+        "sha256": "64 hex digits of the inspected image",
+        "analysis": {
+          "hierarchy": "specific observation", "density": "specific observation",
+          "alignment": "specific observation", "proportion": "specific observation",
+          "states": "specific observation"
+        }
+      }
+    }
   },
   "coverage": {
     "mode": "standard",
@@ -94,6 +117,10 @@ test-manifest/validation-state.json
     "inventoryDeclared": false,
     "truncated": false,
     "unaccounted": [],
+    "healthPassed": false,
+    "healthFailures": [],
+    "identityFailures": [],
+    "certifiable": false,
     "counts": {}
   },
   "cleanup": {
@@ -137,6 +164,14 @@ test-manifest/validation-state.json
 ```
 
 ## Atomic Update Pattern
+
+`assert-coverage.js` marks result accounting and may exit `0` while recorded FAIL results remain.
+Only `certify-validation.js` sets `session.status: "completed"`; it also generates the final HTML
+with images, semantic review, and expected/observed element results. A hash mismatch, missing image,
+unreviewed role/theme cell, failed check, or runner failure keeps certification incomplete.
+The expected source/build target comes from `validation.config.json` or explicit certification CLI
+arguments, never only from the state being certified. `designGate:true` requires implementer and
+reviewer identifiers to differ; recording names is not proof of genuine visual inspection.
 
 After every route, element, or flow:
 

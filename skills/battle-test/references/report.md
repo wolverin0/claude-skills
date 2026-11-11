@@ -16,6 +16,7 @@ Use exactly one honest verdict class:
 - `INCOMPLETE`: inventory, auth, runtime, screenshot review, baseline, or evidence identity is
   missing, truncated, blocked, or stale.
 - `QUICK CHECK PASSED` / `QUICK CHECK FAILED`: only for `--quick`; never call it battle-tested.
+- `UX SCOPE VERIFIED` / `UX SCOPE FAILED`: only for `--ux`; never call it battle-tested or ready.
 
 ## Sections
 
@@ -42,3 +43,17 @@ Use standalone HTML5 with embedded CSS and no external CDN. Keep it dense and sc
 rendered artifact, not only the source file. Never show zero for an unexecuted metric; show
 `NOT RUN`, `BLOCKED`, or `INCOMPLETE`. Never list a commit as pushed, released, deployed, or accepted
 without direct evidence of that separate action.
+
+## UX mode (`--ux`)
+
+Same file and rendering rules. The verdict is `UX SCOPE VERIFIED` or `UX SCOPE FAILED` and nothing else:
+never `BATTLE-TESTED`, `READY WITH GATED ITEMS`, or any "ready" wording. Adjust the sections:
+
+- Verdict banner: add a line stating that security, database, dependencies, performance and dead code
+  were not reviewed in this run.
+- 3. Coverage scorecard: show two scopes apart: the visual compare over ALL routes, and the smoke over the
+  touched routes (sampled; never present it as full coverage).
+- 5. Before to after: one row per `ac` (role, route, before, after, evidence note) plus the visual compare
+  result per route.
+- 7. Operator queue: unchosen `Cnn` (needs a decision), failed `ac`, and deploy approval.
+- Final section "Out of scope": what the UX audit found that is not UX/UI, listed and not fixed.

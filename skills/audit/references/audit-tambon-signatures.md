@@ -9,12 +9,12 @@ Each occurrence is itself a finding (LLM provenance signal) **and** a
 correctness defect.
 
 The `audit-tambon-hunt` skill loads this file and runs the detection
-passes systematically. The findings carry double weight in the report -
+passes systematically. The findings carry double weight in the report —
 they're both bugs to fix AND signals about how the codebase was made.
 
 ---
 
-## Signature 1 - Hallucinated Object
+## Signature 1 — Hallucinated Object
 
 **Definition:** Reference to a function, class, method, import, or
 identifier that doesn't exist in any installed dependency or in the
@@ -22,8 +22,8 @@ project itself.
 
 **Why it's LLM-specific:** Humans get import errors at write-time
 (IDE) or test-time (run-time). They notice, they fix it. LLMs generate
-plausible-sounding names confidently - `requests.get_json()`,
-`pydantic.ValidatorMixin`, `numpy.linalg.inverse_matrix` - and if no
+plausible-sounding names confidently — `requests.get_json()`,
+`pydantic.ValidatorMixin`, `numpy.linalg.inverse_matrix` — and if no
 human runs the code, the broken import ships.
 
 **Common shapes:**
@@ -70,13 +70,13 @@ likely Hallucinated Objects.
 
 ---
 
-## Signature 2 - Wrong Attribute
+## Signature 2 — Wrong Attribute
 
 **Definition:** Accessing `.foo` on an object that has no `.foo`. This
 is a subset of Hallucinated Object but specifically the
 "object exists, attribute doesn't" case.
 
-**Why it's LLM-specific:** Same reason as Signature 1 - confidence
+**Why it's LLM-specific:** Same reason as Signature 1 — confidence
 without verification. The model knows the object class. It guesses an
 attribute name. The guess is wrong but plausible.
 
@@ -89,7 +89,7 @@ attribute name. The guess is wrong but plausible.
 - Mixing v1 and v2 API styles (Pydantic `.dict()` on a v2 model that
   uses `.model_dump()`)
 
-**Detection:** Same as Signature 1 - type-checker output. Plus a
+**Detection:** Same as Signature 1 — type-checker output. Plus a
 specific category:
 
 ```bash
@@ -103,7 +103,7 @@ grep -rEn "\.model_dump\(|\.model_validate\(|model_config\s*=" src/ --include="*
 
 ---
 
-## Signature 3 - Silly Mistake
+## Signature 3 — Silly Mistake
 
 **Definition:** Logically incoherent code that compiles and may even
 run. The Tambon paper documents these as nearly absent from
@@ -144,7 +144,7 @@ def name(self):
 @name.setter
 def name(self, val):
     self._name = val
-# (×30 fields, with no transformation logic - just expensive
+# (×30 fields, with no transformation logic — just expensive
 # property syntax for what should be a dataclass)
 ```
 
@@ -197,9 +197,9 @@ Wrong Attribute + Silly Mistake findings per 1000 lines of code.
 
 | Density | Interpretation |
 |---|---|
-| 0-1 per 1000 LoC | Code is reviewed, even if AI-generated |
-| 2-5 per 1000 LoC | Light review; some AI patterns slipped through |
-| 6-15 per 1000 LoC | Most code is unreviewed AI output |
+| 0–1 per 1000 LoC | Code is reviewed, even if AI-generated |
+| 2–5 per 1000 LoC | Light review; some AI patterns slipped through |
+| 6–15 per 1000 LoC | Most code is unreviewed AI output |
 | >15 per 1000 LoC | Codebase is AI-output-as-shipped, near zero human review |
 
 This number is a signal in the audit's Founder View block: "Your
@@ -213,20 +213,20 @@ the code works today, the maintenance cost is going to be substantial."
 
 ```
 TAMBON SIGNATURE HUNT
--------------------------------------
+─────────────────────────────────────
 Total LoC scanned: <N>
 Scan duration: <elapsed>
 
-Signature 1 - Hallucinated Object: <count>
+Signature 1 — Hallucinated Object: <count>
   Top occurrences (severity-sorted):
     <path:line>  <description>  <severity>
     [up to 10]
 
-Signature 2 - Wrong Attribute: <count>
+Signature 2 — Wrong Attribute: <count>
   Top occurrences:
     [up to 10]
 
-Signature 3 - Silly Mistake: <count>
+Signature 3 — Silly Mistake: <count>
   Top occurrences:
     [up to 10]
 
@@ -234,7 +234,7 @@ Tambon Density: <findings per 1000 LoC>
 Density interpretation: <one of the bands above>
 
 Critical-path findings (in auth/payment/delete code):
-  <list - these are the most urgent to fix>
+  <list — these are the most urgent to fix>
 ```
 
 The Tambon hunt's findings flow into Domain 13 (Code Integrity &
@@ -244,14 +244,14 @@ Coherence) and contribute to its rating.
 
 ## Why this hunt is mandatory
 
-In the original v3 prompt, this was §0.5 - flagged as "mandatory hunt."
+In the original v3 prompt, this was §0.5 — flagged as "mandatory hunt."
 The refactored architecture makes it a dedicated skill so it gets a
 clean context window for the analysis. The hunt is mandatory because:
 
 1. The signatures are LLM-specific and absent from human code, so
    finding them is high-signal evidence of generation provenance.
 2. They're correctness defects in their own right.
-3. They cluster - a codebase with one usually has many.
+3. They cluster — a codebase with one usually has many.
 4. Standard linters catch some but not all (Silly Mistakes especially
    slip past most rule sets).
 5. They're the quickest-to-fix findings in the audit, so surfacing them

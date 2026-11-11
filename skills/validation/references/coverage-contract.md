@@ -83,6 +83,11 @@ Do not report completion while the untested count is nonzero without a documente
 
 Every route × breakpoint screenshot also requires a semantic review record written after the image
 was opened. DOM measurements and pixel diffs support that review; they do not replace it.
+For role/theme variants, inventory each route × breakpoint × role × supported theme cell. The
+final gate verifies the screenshot still exists, its SHA-256 matches the reviewed bytes, and source
+SHA/build identity matches the externally declared target in config or certification arguments.
+Any routes/elements declared in config must also appear in discovery before completion. Five distinct observations cover hierarchy, density,
+alignment, proportion, and visible states; human inspection supplies the judgment.
 
 ## Coverage by mode
 

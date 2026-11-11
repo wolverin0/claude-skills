@@ -1,6 +1,6 @@
 ---
 name: audit-domain-13-code-integrity
-description: Audit code integrity and coherence — duplication, hallucinated references, Tambon signatures, spec drift, Frankenstein patterns, mystery code. THIS DOMAIN incorporates findings from the Tambon hunt and most of the blind-spots walk. Run as part of /audit Phase E.
+description: Audit code integrity and coherence — duplication, hallucinated references, Tambon signatures, spec drift, Frankenstein patterns, mystery code. THIS DOMAIN incorporates findings from the Tambon hunt and blind spots B9, B12, B13, B14. Run as part of /audit Phase E.
 ---
 
 # Skill: Audit Domain 13 — Code Integrity & Coherence (LLM-failure-mode domain)
@@ -13,7 +13,7 @@ a ~2K-token findings report.
 ## Pre-flight
 
 ```
-view ~/.codex/context\audit-rules.md
+view ~/.codex/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
@@ -36,7 +36,7 @@ Duplication (Type-1 through Type-4 clones), hallucinated references, Tambon sign
 For each, find the evidence and report it. The questions are the
 audit's spine — every finding maps back to one of them.
 
-1. Tambon density: how many LLM-specific signatures per kLoC?
+1. Tambon density: take the figure from the Phase C hunt (audit-tambon-hunt); do not recount (see the rollup below).
 2. Are there duplicate functions / endpoints / utilities?
 3. Are there imports of packages not in the manifest?
 4. Do comments match the code?
@@ -46,7 +46,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - Vibe-coding hallmark: happy-path-only code (no error/empty branches), AI-written tests that mock the function under test, and comment-code drift after AI refactors — cross-reference the Tambon hunt and blind-spots B13/B14 (playbook PRIN-1).
 - Note: the new production-readiness blind-spots B16-B19 route to Domains 5/6/7/10, not here; this domain still owns duplication, dead code, and hallucinated references.
@@ -139,7 +139,7 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-13.1>
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-13.1>
 
     Verification after fix:
       <command>
@@ -221,7 +221,7 @@ listed in this domain's findings section.
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

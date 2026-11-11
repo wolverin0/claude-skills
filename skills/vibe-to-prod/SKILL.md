@@ -21,7 +21,7 @@ Read the playbook first — it holds the layer definitions, thresholds, failure
 modes, and manual tests this skill checks against:
 
 ```
-view ~/.codex/context\production-readiness-playbook.md
+view ~/.codex/context/production-readiness-playbook.md
 ```
 
 Cite playbook anchors (`L1`-`L13`, `FM-*`, `CHK-*`) in every gap you report so
@@ -87,6 +87,7 @@ Stack: <detected stack>   |   Layers in scope: <N>/13
   L1  Front-end foundations      [PASS | GAP | N/A]   <one line + playbook ref>
   L2  APIs & back-end logic       ...
   ...
+  L5b Email deliverability        [PASS | GAP | N/A]   <only if the app sends email; one line + playbook ref>
   L13 Availability & recovery     ...
 
 TOP GAPS (fix first):
@@ -110,6 +111,6 @@ NEXT STEP:
 - ❌ Reporting the value of any secret you find (name the location, never the value).
 
 ## Codex Port Notes
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find`.
 - Read-only by default; only remediate if the user explicitly asks.

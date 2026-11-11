@@ -45,10 +45,10 @@ For each pending route:
 2. Wait for stable content.
 3. For each configured breakpoint:
    - set viewport
-   - capture screenshot to `test-manifest/evidence/routes/{routeId}-{breakpoint}.png`
+   - capture screenshot to `test-manifest/evidence/routes/{role}-{theme}-{routeId}-{breakpoint}.png`
    - **run the responsive auditor** (`scripts/responsive-audit.js`) at this viewport per
      `references/responsive-and-quality.md`. Do not eyeball the screenshot — measure it.
-   - save the auditor JSON to `test-manifest/evidence/routes/{routeId}-responsive-{breakpoint}.json`
+   - save the auditor JSON to `test-manifest/evidence/routes/{routeId}-{breakpoint}-responsive.json`
    - record each finding (type, severity, selector, measured numbers) as layout evidence
 4. Capture a snapshot to `test-manifest/evidence/routes/{routeId}-snapshot.{txt|json|yml}` when backend supports it.
 5. Run the best-practices / a11y checklist from `references/responsive-and-quality.md` using the
@@ -169,9 +169,13 @@ Open every screenshot in `queues.visualReviews` with an image-capable tool. Insp
 clipping, overlap, hierarchy, legibility, empty/error states, mobile navigation, and obvious visual
 inconsistency. Pixel diff and DOM measurements are supporting evidence, not this review.
 
-After viewing each image, call `record-visual-review.js` with route, breakpoint, pass/fail, the
-screenshot path, concrete analysis, and issue lines. Never bulk-fill generic analysis text. A review
-shorter than 20 characters is rejected, and `assert-coverage.js` requires one record per image.
+After viewing each image, call `record-visual-review.js` with route, breakpoint, role, theme,
+source SHA, build ID, screenshot path, pass/fail, and separate concrete observations for hierarchy,
+density, alignment, proportion, and states. The recorder hashes the existing screenshot and verifies
+that it belongs to the route's evidence. A generic text field or geometry result is not visual review.
+The final gate checks one distinct screenshot per route × breakpoint × role × supported theme.
+When `designGate:true`, identify the implementer in session state and pass that identifier plus a
+different reviewer identifier to the recorder. The reviewer must still inspect each screenshot.
 
 ## 5. Suspicion Checks
 
@@ -192,8 +196,12 @@ When queues are empty or the run is intentionally partial:
 - if any reachable, non-destructive item is neither tested nor skipped-with-reason, set
   `session.coverageComplete: false`; the run is `incomplete`, not `complete`
 - run `scripts/assert-coverage.js --state test-manifest/validation-state.json --config validation.config.json`
-- only exit `0` from that gate authorizes `session.status: "completed"`; otherwise keep
-  `session.status: "incomplete"` and report the exact `unaccounted[]` entries
+- its exit `0` means accounting is complete, including any recorded failures; run
+  `scripts/certify-validation.js --state test-manifest/validation-state.json --config validation.config.json`
+  for final acceptance and the HTML report. Only the certification exit `0` authorizes
+  `session.status: "completed"`; otherwise report `unaccounted[]`, `healthFailures[]`, and
+  `identityFailures[]` separately. Supply the expected source/build identity in config or the
+  certification CLI; state-to-review agreement alone is insufficient.
 - set `session.currentPhase: "report"`
 - save state
 - proceed to `phases/REPORT.md`

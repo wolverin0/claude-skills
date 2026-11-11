@@ -13,7 +13,7 @@ a ~2K-token findings report.
 ## Pre-flight
 
 ```
-view ~/.codex/context\audit-rules.md
+view ~/.codex/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
@@ -42,10 +42,11 @@ audit's spine — every finding maps back to one of them.
 4. Are responses paginated server-side, not just frontend-sliced?
 5. Are payload sizes bounded (max upload, max query result)?
 6. Does anything assume a single user / single instance?
+7. Are the common speed leaks absent: no un-streamed AI replies, serial awaits, duplicate fetches, `select *`, blocking third-party scripts, and is speed measured (OTel/RUM)? List: `references/speed-31.md`.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - N+1 queries: loops that query per-row instead of a JOIN (playbook FM-2).
 - Three-layer caching present where it matters — browser, CDN (even 60s cuts DB calls ~95%), application (semantic cache for AI: 40-60% hit) (playbook L10, FM-21, B17).
@@ -57,7 +58,7 @@ Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook
 
 ## Mandatory enumeration before verdict
 
-Before writing a finding or a "no findings" verdict for Q1, Q2, Q3, Q4, Q5, or Q6, produce the inventories below. Do not answer from memory. For every match, read the surrounding code and classify it in the requested bucket; include inventory counts and representative path:line evidence in the domain report.
+Before writing a finding or a "no findings" verdict for Q1, Q2, Q3, Q4, Q5, Q6, or Q7, produce the inventories below. Do not answer from memory. For every match, read the surrounding code and classify it in the requested bucket; include inventory counts and representative path:line evidence in the domain report.
 
 ### Q1/Q4 DB query and API call inventory (mandatory)
 
@@ -91,6 +92,41 @@ find . -type f \( -name '*worker*' -o -name '*job*' -o -name '*queue*' -o -name 
 ```
 
 Classify each match as `non-blocking`, `blocking-in-async-path`, `single-instance-assumption`, or `benign`. Verdict requirement: Q3 and Q6 need this inventory before a no-finding verdict.
+### Q7 speed-leak inventory (mandatory)
+
+Maps the operator's 31 speed prompts (`references/speed-31.md`) to detection. Heuristic greps:
+read the code around each hit before classifying (the serial-await row is noisy on big repos:
+sort files by hit count and read the hottest paths first). The `r` helper excludes generated output; in
+PowerShell define the same function with `rg`. A finding says **add/replace it** and names the
+fix; UI-side fixes are done with `impeccable optimize`.
+
+```bash
+r() { rg -n "$@" -g '*.{tsx,jsx,ts,js,mjs,html,vue,svelte,astro,py,go,rb,php}' -g '!{node_modules,dist,build,.next,out,backups,archived-reports,fases-completas,artifacts,coverage,.git}/**' .; }
+# streaming: AI call sites vs stream markers (every AI call without a stream marker = not streamed)
+r "chat\.completions\.create|messages\.create|generateText\(|generateContent\(|\.responses\.create"
+r "stream:\s*true|streamText|streamObject|text/event-stream|ReadableStream|stream=True|\.stream\("
+# parallel: back-to-back awaits that may be independent, vs existing Promise.all/gather
+r -U "await [^\n]+\n\s*(const [^\n]+= )?await "
+r "Promise\.all(Settled)?\(|asyncio\.gather|errgroup"
+# dedupe: fetch-in-effect vs a cache layer (and its staleTime/SWR config)
+r -U "useEffect\([^;]*\b(fetch|axios|supabase)\b"
+r "useQuery|useSWR|createApi|unstable_cache|staleTime|dedupe"
+# column-less selects
+r "\.select\(\s*\)|\.select\(['\"]\*['\"]\)|SELECT\s+\*|findMany\(\s*\)"
+# third-party scripts: classify each hit as defer/async/strategy=lazyOnload|afterInteractive vs blocking
+r "<script[^>]+src=[\"']https?://"
+r "googletagmanager|gtag\(|hotjar|clarity\.ms|intercom|connect\.facebook\.net|crisp\.chat"
+# measurement: OTel / RUM / web-vitals present?
+r "@opentelemetry|\bOTEL_|opentelemetry-sdk|web-vitals|reportWebVitals|speed-insights|BrowserTracing|datadogRum|posthog"
+```
+
+Classify: AI calls `streamed` / `not-streamed`; awaits `dependent` / `independent-serial`; fetches
+`deduped` / `duplicated`; selects `scoped` / `star`; scripts `deferred` / `blocking`; measurement
+`present` / `absent` (absence is a finding: Medium, "cannot see a regression before users do").
+Verdict requirement: Q7 is not safe until each of the six rows is classified or marked N/A (no AI
+calls, no web UI, no SQL layer). For a measured number rather than a grep, battle-test Stage 2 runs
+a Lighthouse mobile budget (`battle-test/references/stages.md`, "Perf budget").
+
 ## Files most likely to have findings
 
 Don't read everything. Read these files first:
@@ -161,7 +197,9 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-5.1>
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-5.1. For a missing Q7 item start
+       with "Add/Replace ..." and the concrete change (stream the reply, Promise.all the
+       independent awaits, select named columns, defer the script); do not only report it>
 
     Verification after fix:
       <command>
@@ -207,7 +245,7 @@ If the domain has zero findings:
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

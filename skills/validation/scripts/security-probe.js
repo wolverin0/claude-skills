@@ -63,7 +63,12 @@ function parseArgs(argv) {
 
 async function launchResilient(chromium, channel) {
   if (channel) return chromium.launch({ channel, headless: true });
-  const attempts = [{}, { channel: 'chrome' }, { channel: 'msedge' }];
+  const attempts = [
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? [{ executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }] : []),
+    {},
+    { channel: 'chrome' },
+    { channel: 'msedge' }
+  ];
   let last;
   for (const a of attempts) { try { return await chromium.launch(Object.assign({ headless: true }, a)); } catch (e) { last = e; } }
   throw new Error('Could not launch a browser (install Chrome or run `npx playwright install chromium`, or pass --channel). ' + (last && last.message));

@@ -12,7 +12,9 @@ Validate that summary counts match actual result objects. If they do not match, 
 
 ## 2. Determine Completeness
 
-Complete only when `scripts/assert-coverage.js` exits `0`. At minimum this requires:
+Complete only when `scripts/assert-coverage.js` and `scripts/certify-validation.js` both exit `0`.
+The first checks accounting; the second checks health and image identity and writes the final HTML.
+At minimum this requires:
 
 - `queues.routes`
 - `queues.elements`
@@ -35,10 +37,10 @@ The HTML report must include:
 - completion status and resume command if partial
 - summary cards
 - coverage inventory and ledger, including skips by reason and unaccounted items
-- semantic screenshot-review findings beside the corresponding images
+- semantic screenshot-review findings beside each corresponding existing, hash-matched image
 - top issues sorted by severity
 - route results with screenshot links and analysis
-- element results with expected vs observed outcomes
+- element results with expected vs observed outcomes and before/after screenshots
 - flow results with step evidence
 - console/errors grouped by route/action
 - failed network responses grouped by route/action
@@ -65,10 +67,10 @@ If a backend writes screenshots elsewhere, copy or reference them consistently i
 
 ## 5. Write Report
 
-Write:
+`certify-validation.js` writes:
 
 ```text
-test-manifest/reports/validation-{YYYYMMDD-HHMMSS}.html
+test-manifest/reports/validation-final-{session.id}.html
 ```
 
 Then update state:
@@ -77,7 +79,7 @@ Then update state:
 {
   "session": {
     "currentPhase": "report",
-    "status": "completed|in_progress",
+    "status": "completed|incomplete",
     "completedAt": "ISO if complete"
   },
   "report": {

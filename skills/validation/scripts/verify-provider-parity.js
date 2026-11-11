@@ -14,6 +14,7 @@ const groups = {
     path.join(home, '.codex', 'skills', 'validation'),
   ],
   'battle-test': [
+    path.join(home, '.agents', 'skills', 'battle-test'),
     path.join(home, '.claude', 'skills', 'battle-test'),
     path.join(home, '.codex', 'skills', 'battle-test'),
   ],
@@ -28,7 +29,12 @@ function files(root, dir = root) {
 }
 
 function digest(file) {
-  return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  let content = fs.readFileSync(file);
+  // Providers intentionally use different discovery descriptions; compare the executable contract.
+  if (path.basename(file) === 'SKILL.md') {
+    content = Buffer.from(content.toString('utf8').replace(/^description:[^\r\n]*\r?\n/m, ''));
+  }
+  return crypto.createHash('sha256').update(content).digest('hex');
 }
 
 function compare(name, roots) {

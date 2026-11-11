@@ -37,8 +37,8 @@ For each of H1 through H11:
 ### Pre-flight (load context once)
 
 ```
-view @.claude/context/audit-rules.md       # R1-R7
-view @.claude/context/audit-hard-stops.md  # H1-H11 detection details
+Read @.claude/context/audit-rules.md       # R1-R7
+Read @.claude/context/audit-hard-stops.md  # H1-H11 detection details
 ```
 
 ### Walk H1-H11 in order
@@ -165,7 +165,7 @@ rg -n "(app|router|api|fastify|hono)\.(post|put|patch|delete|all)\(" \
 rg -n "Deno\.serve|export default async function" supabase/functions
 
 # Next.js / Vercel API routes
-rg -lE "export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)" \
+rg -l "export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)" \
    app/api pages/api 2>/dev/null
 
 # Any path containing 'webhook' or 'hook'

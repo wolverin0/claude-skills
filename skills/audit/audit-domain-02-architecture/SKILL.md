@@ -48,7 +48,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - External API calls go through a server proxy route, not directly from the client (playbook L2).
 - Business logic is centralized server-side, not scattered into the front-end (playbook L2).
@@ -254,7 +254,7 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-2.1>
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-2.1>
 
     Verification after fix:
       <command>

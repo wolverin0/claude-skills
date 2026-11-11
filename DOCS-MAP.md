@@ -1,21 +1,32 @@
 # DOCS-MAP
 
-One line per document: path — purpose — status. Audited 2026-11-04.
+One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync.
 Status: **vigente** (current) · **vigente\*** (current, but cites files/skills
 not shipped in this repo) · **desfasado** (content drifted from what it names) ·
 **legado** (kept for history; superseded). A trailing `*` on any status means it cites files/skills not shipped here.
 
 ## Root
 
-- `README.md` — catalog, layout, install, verification commands — vigente
+- `README.md` — catalog, `--ux` mode, optional third-party skills, what is not included, layout, install, verification commands — vigente
 - `DOCS-MAP.md` — this index — vigente
 
 ## Ship & verify
 
-- `skills/battle-test/SKILL.md` — fail-closed e2e hardening cycle — vigente\* (`quality-loop` skill not in repo)
-- `skills/battle-test/references/stages.md` — stage execution detail — vigente\* (`quality-loop`)
-- `skills/battle-test/references/gates.md` — gates and pass signals — vigente\* (`quality-loop`)
-- `skills/battle-test/references/report.md` — unified report format — vigente
+- `skills/battle-test/SKILL.md` — fail-closed e2e hardening cycle, incl. `--ux` mode (not yet run end to end) — vigente\* (optional third-party design skills)
+- `skills/battle-test/references/stages.md` — stage execution detail, incl. "UX mode" — vigente\* (`audit-runner` agent)
+- `skills/battle-test/references/gates.md` — gates and pass signals, incl. "UX profile gate" — vigente
+- `skills/battle-test/references/report.md` — unified report format, incl. UX verdicts — vigente
+- `skills/battle-test/agents/openai.yaml` — Codex display metadata for `battle-test` — vigente
+- `skills/quality-loop/SKILL.md` — hardening loop in an isolated worktree (`--staged` under `battle-test`) — vigente
+- `skills/auditar-ux-producto/SKILL.md` — task-centered UX audit (Spanish), feeds `battle-test --ux` — vigente\* (optional third-party design skills)
+- `skills/auditar-ux-producto/agents/openai.yaml` — Codex display metadata for `auditar-ux-producto` — vigente
+- `skills/auditar-ux-producto/references/metodo-auditoria.md` — audit method — vigente
+- `skills/auditar-ux-producto/references/criterios-interaccion.md` — interaction criteria — vigente
+- `skills/auditar-ux-producto/references/notificaciones-y-feedback.md` — notification and feedback policy — vigente
+- `skills/auditar-ux-producto/references/comparacion-visual.md` — before/after visual comparison — vigente
+- `skills/auditar-ux-producto/references/plantillas.md` — output templates, incl. export to `TRACKS.md` / `ux-findings.json` — vigente
+- `skills/auditar-ux-producto/references/design-md-integraciones.md` — `DESIGN.md` governance and optional third-party tools — vigente\* (third-party skills)
+- `skills/auditar-ux-producto/references/fuentes.md` — sources — vigente
 - `skills/validation/SKILL.md` — evidence-based browser validation entry point — vigente
 - `skills/validation/phases/DISCOVER.md` — discover phase — vigente
 - `skills/validation/phases/TEST.md` — test phase — vigente
@@ -35,16 +46,21 @@ not shipped in this repo) · **desfasado** (content drifted from what it names) 
 - `skills/validation/references/security-probe.md` — security and ownership probe — vigente
 - `skills/validation/references/state-schema.md` — resumable state schema — vigente
 - `skills/validation/references/visual-regression.md` — visual regression — vigente
-- `skills/visual-route-sweep/SKILL.md` — visual route screenshot sweep — vigente (frontmatter `name` is not a slug)
+- `skills/visual-route-sweep/SKILL.md` — visual route screenshot sweep — vigente
 - `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract — vigente
 - `skills/vibe-to-prod/SKILL.md` — 13-layer production-readiness self-check — vigente\* (`production-readiness-playbook.md`)
 - `skills/deploy-verify/SKILL.md` — post-deploy verification — vigente
 - `skills/security-review/SKILL.md` — security pass over pending changes — vigente
 - `skills/security-review/references/full-checklist.md` — long security checklist — vigente
 
+## Slash commands (`commands/`)
+
+- `commands/audit.md` — `/audit` slash command, launches `audit-orchestrator` — vigente\* (`audit-runner` agent, `pre-audit-evidence-check.py` and `post-audit-format-check.py` hooks)
+- `commands/audit-remediate.md` — `/audit-remediate` slash command, audit → fix on a branch → re-audit → PR — vigente\* (`audit-remediate.mjs` workflow)
+
 ## Audit bundle (`skills/audit/`)
 
-- `audit-orchestrator/SKILL.md` — full due-diligence audit entry point (`/audit`) — vigente
+- `audit-orchestrator/SKILL.md` — full due-diligence audit entry point (`/audit`) — vigente\* (`audit-domain-runner` agent)
 - `audit-method/SKILL.md` — stack fingerprint and inventory setup — vigente
 - `audit-hard-stops/SKILL.md` — H1-H11 hard-stop walk — vigente
 - `audit-tambon-hunt/SKILL.md` — Tambon LLM-signature hunt — vigente
@@ -62,12 +78,14 @@ not shipped in this repo) · **desfasado** (content drifted from what it names) 
 - `audit-domain-11-demo-vs-prod/SKILL.md` — domain audit: demo vs production gap — vigente\* (`production-readiness-playbook.md`)
 - `audit-domain-12-missing/SKILL.md` — domain audit: missing production features — vigente\* (`production-readiness-playbook.md`)
 - `audit-domain-13-code-integrity/SKILL.md` — domain audit: code integrity — vigente\* (`production-readiness-playbook.md`)
+- `audit-domain-05-performance/references/speed-31.md` — 31-item app-speed checklist — vigente\* (`production-readiness-playbook.md`, optional `impeccable`)
+- `audit-domain-06-ux-a11y/references/feel-20.md` — 20-item UX "feel" checklist — vigente\* (`production-readiness-playbook.md`, optional `impeccable`, `emil-design-eng`)
 - `audit-decisions/SKILL.md` — remediation decision / baseline-policy templates — vigente
 - `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix`) — vigente
 - `audit-loop/SKILL.md` — audit → remediate → rerun loop — vigente
 - `references/audit-rules.md` — rules R1-R7 — vigente
-- `references/audit-hard-stops.md` — hard-stops catalog — desfasado (lists H1-H9; skill walks H1-H11)
-- `references/audit-blind-spots.md` — blind-spots catalog — desfasado (lists B1-B15; skill walks B1-B19)
+- `references/audit-hard-stops.md` — hard-stops catalog (H1-H11) — vigente
+- `references/audit-blind-spots.md` — blind-spots catalog (B1-B19) — vigente
 - `references/audit-tambon-signatures.md` — Tambon signatures — vigente
 - `references/audit-report-format.md` — report format — vigente
 - `references/audit-triage-rubric.md` — triage rubric — vigente
