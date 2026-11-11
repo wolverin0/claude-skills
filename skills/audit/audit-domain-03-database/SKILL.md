@@ -70,7 +70,7 @@ rg -n "for\s+(select|insert|update|delete|all)\s+to\s+authenticated\s+using\s*\(
 
 # Bypasses:
 rg -n "alter\s+table\s+\w+\s+disable\s+row\s+level\s+security" -g '*.sql'
-rg -n "force\s+row\s+level\s+security" -gV '*.sql'  # NOT having this on sensitive tables is a smell
+rg -n "force\s+row\s+level\s+security" -g '*.sql'  # NOT having this on sensitive tables is a smell
 
 # Service-role abuse (RLS-bypass code path):
 rg -n "service_role|SUPABASE_SERVICE_ROLE_KEY|getSupabaseAdmin\(\)" -g '*.{ts,tsx,js,jsx,mjs,cjs}'
@@ -85,9 +85,12 @@ Required verification for every RLS fix the audit recommends:
 ```sql
 -- Adversarial RLS test: as user A, attempt to read user B's row.
 -- Expected: 0 rows returned, NOT an error.
+-- SET LOCAL only takes effect inside a transaction block; outside one it warns and does nothing.
+begin;
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"<user_a_uuid>","role":"authenticated"}';
 select * from <table> where <ownership_column> = '<user_b_uuid>';
+rollback;
 -- if this returns >0 rows, the RLS policy is permissive.
 ```
 

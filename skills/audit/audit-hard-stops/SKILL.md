@@ -165,7 +165,7 @@ rg -n "(app|router|api|fastify|hono)\.(post|put|patch|delete|all)\(" \
 rg -n "Deno\.serve|export default async function" supabase/functions
 
 # Next.js / Vercel API routes
-rg -lE "export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)" \
+rg -l "export\s+(async\s+)?function\s+(POST|PUT|PATCH|DELETE)" \
    app/api pages/api 2>/dev/null
 
 # Any path containing 'webhook' or 'hook'
