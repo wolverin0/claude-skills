@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product UX audit"
+  short_description: "Audits UX and compares proposals before and after"
+  default_prompt: "Use $product-ux-audit to audit this app, prepare before/after comparisons and document the adopted decisions in DESIGN.md."
