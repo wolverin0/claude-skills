@@ -103,3 +103,43 @@ Usá estas plantillas para estructurar los entregables de `auditar-ux-producto` 
 - **Motivo operativo (por qué existe):** [Qué tarea protege y qué error evita]
 - **Cuándo revisar esta decisión:** [Qué cambio en el trabajo del usuario justificaría replantearla]
 ```
+
+---
+
+## 7. Exportación a `TRACKS.md` y `ux-findings.json` (etapa 9, solo si se pide)
+
+Ítem de `TRACKS.md`, uno por hallazgo resuelto por los `Cnn` elegidos. Los campos finales son opcionales y no rompen a quien los ignore; `owns=` y `routes=` admiten lista separada por coma:
+
+```markdown
+- [ ] T21 | owns=src/pages/Customers.tsx,src/components/CustomerPanel.tsx | [ux] panel lateral al editar cliente | src=UX-H03,UX-C02 | routes=/customers | ac=ux-findings.json#UX-H03
+```
+
+`ux-findings.json`: una lista con un objeto por hallazgo exportado. Estas claves se definen solo acá; las demás skills remiten a esta plantilla.
+
+```json
+[
+  {
+    "id": "UX-H03",
+    "rec": ["UX-C02"],
+    "title": "Panel lateral al editar cliente",
+    "needs": ["UX-C01"],
+    "ac": {
+      "role": "Operador de ventas",
+      "route": "/customers",
+      "steps": ["Filtrar por zona", "Abrir un cliente", "Editar el teléfono y guardar"],
+      "observable": "El listado sigue visible con el filtro de zona; el teléfono nuevo aparece en la fila.",
+      "preserve": "Solo el rol de ventas edita; se pide confirmación al descartar cambios."
+    },
+    "skill": "impeccable"
+  }
+]
+```
+
+| Clave | Contenido |
+|---|---|
+| `id` | Hallazgo con prefijo `UX-`; es el ancla de `ac=ux-findings.json#<id>` y de `src=`. |
+| `rec` | Los `Cnn` elegidos (con prefijo `UX-`) que lo resuelven. |
+| `title` | Título corto del hallazgo. |
+| `needs` | Ids `UX-Cnn` que deben implementarse antes (dependencias de la matriz de recomendaciones). Vacío si ninguno. |
+| `ac` | Criterio de aceptación copiado de la ficha de hallazgo (plantilla 3): `role`, `route`, `steps` (pasos exactos), `observable` (resultado observable) y `preserve` (qué se conserva). |
+| `skill` | Opcional. Skill de diseño sugerida, solo si está instalada. |

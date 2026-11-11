@@ -26,7 +26,7 @@ Separa siempre tres planos distintos:
 
 ---
 
-## Proceso de auditoría en 8 etapas
+## Proceso de auditoría en 8 etapas (más una exportación opcional)
 
 ### 1. Reconstruir el producto desde el trabajo de las personas
 Antes de opinar sobre botones o pantallas, levantá un mapa compacto de:
@@ -107,6 +107,16 @@ Para evitar que futuros cambios con IA vuelvan a degradar el flujo, integrá las
 3. **Separar reglas vigentes de propuestas:** mientras se comparan alternativas, `DESIGN.md` conserva las reglas vigentes. Las recomendaciones en revisión o elegidas pero aún no implementadas se marcan como **propuestas pendientes de implementación**.
 4. **Incorporar con motivo explícito:** una vez implementado y verificado el cambio, actualizá `DESIGN.md` explicando **qué se hace y por qué** (ej. *"Se conserva el listado al editar porque la tarea requiere revisar varios registros seguidos; cuando la edición exige historial y reanudación, se usa página dedicada"*).
 
+### 9. Exportar los cambios elegidos (solo si un orquestador o el usuario lo pide)
+Cuando esta auditoría alimenta a otro proceso (por ejemplo `/battle-test --ux`), cerrala con una exportación; si nadie la pidió, no la hagas. Qué entra lo decide la persona operadora: presentá la tabla `C01..Cn` y los conjuntos compatibles de la etapa 7 y esperá su elección (una sola pausa). Si no hay herramienta para preguntar, escribí la decisión como pendiente en GATED y detenete.
+1. **Ids con prefijo `UX-`** (`H03` → `UX-H03`, `C02` → `UX-C02`) para no chocar con los hard-stops `H1..H11` de otras auditorías ni con los `T##` de `TRACKS.md`. El prefijo se aplica solo al exportar: las plantillas siguen numerando `H01`, `C01`.
+2. **`TRACKS.md`** (raíz del worktree), sección `## AUTO`: un ítem por hallazgo resuelto por los `Cnn` elegidos, con el formato de la [plantilla 7](references/plantillas.md). El `T##` de `TRACKS.md` es propio: no lo mezcles con los `T01` de las tareas auditadas. Orden: respetá las dependencias entre `Cnn`; nunca dos alternativas excluyentes.
+3. **`ux-findings.json`** (raíz del worktree): el criterio de aceptación de cada ítem (rol, ruta, pasos, resultado observable y qué se conserva), con las claves de la plantilla 7.
+4. **Lo no elegido** va a `## GATED` de `TRACKS.md` y a `gated.json` con `needs` = `decisión del operador`.
+5. `TRACKS.md` y `ux-findings.json` son artefactos de trabajo: no se commitean.
+6. Cada ítem puede nombrar en `skill` qué skill de diseño conviene, según [references/design-md-integraciones.md](references/design-md-integraciones.md), siempre como «si está instalada».
+7. `DESIGN.md` no se toca acá: sigue siendo la etapa 8, después de implementar y verificar.
+
 ---
 
 ## Entregables y plantillas
@@ -118,6 +128,7 @@ Usá las estructuras de [references/plantillas.md](references/plantillas.md) par
 - **Tabla de recomendaciones seleccionables (`C01..Cn`) y conjuntos compatibles** para comparación antes/después.
 - **Ficha de política de notificaciones y trabajo pendiente** (cuando aplique a ERP/CRM/operaciones).
 - **Propuesta o actualización de `DESIGN.md`** diferenciando estado vigente vs propuesto.
+- **Exportación a `TRACKS.md` y `ux-findings.json`** de los `Cnn` elegidos (solo si la pide un orquestador o el usuario).
 
 ---
 
