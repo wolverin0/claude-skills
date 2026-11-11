@@ -59,4 +59,4 @@ It is a clearly weaker check than the full cycle: it does not prove the project 
 - Whether `--quick` creates the isolated worktree of stage 0: the quick profile section does not say.
 - `--quick` together with `--push-main`, `--audit-only` or `--resume`: not mentioned; all that is known is that `--quick` never pushes or deploys.
 - Whether smoke creates or deletes test data: smoke mode does not clarify (the text mentions `VAL_` only for standard and exhaustive).
-- `vibe-to-prod` asks for a reference file (the playbook) that this repo does not include: if it is missing, the skill cites it as optional depth.
+- `vibe-to-prod` asks for a reference file (the playbook). The repo ships it at `skills/audit/references/production-readiness-playbook.md`; if it is missing from your installation, the skill cites it as optional depth.
