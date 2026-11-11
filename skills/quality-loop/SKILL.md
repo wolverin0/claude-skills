@@ -97,7 +97,7 @@ Self-pace long runs with `/loop` + `ScheduleWakeup`; push a progress line every 
 
 ## Guardrails (don't relearn today's scars)
 - Always branch from `origin/main` (fetch first); never push a stale local `main` (clobbers prod).
-- `git reset --hard` against main is guardrail-blocked → use `git checkout -B main origin/main`.
+- `git reset --hard` against main is guardrail-blocked → do not rework main; start a new branch from `origin/main`.
 - Cherry-pick of an already-shipped commit returns "empty" (not a conflict) → `git cherry-pick --skip`.
 - Missing `.env*` in the worktree → build/prerender fails on every route. Copy it first.
 - One worktree per loop; remove it when done (`git worktree remove ...`).
