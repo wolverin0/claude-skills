@@ -26,7 +26,7 @@ test-manifest/validation-state.json
     "backendDetail": "playwright-project",
     "configPath": "validation.config.json",
     "status": "in_progress|incomplete|completed|failed|blocked",
-    "currentPhase": "discover|test|visual-review|report",
+    "currentPhase": "discover|test|visual-review|certify|report",
     "coverageComplete": false,
     "smokeScopeComplete": false,
     "startedAt": "ISO",

@@ -45,10 +45,10 @@ For each pending route:
 2. Wait for stable content.
 3. For each configured breakpoint:
    - set viewport
-   - capture screenshot to `test-manifest/evidence/routes/{routeId}-{breakpoint}.png`
+   - capture screenshot to `test-manifest/evidence/routes/{role}-{theme}-{routeId}-{breakpoint}.png`
    - **run the responsive auditor** (`scripts/responsive-audit.js`) at this viewport per
      `references/responsive-and-quality.md`. Do not eyeball the screenshot — measure it.
-   - save the auditor JSON to `test-manifest/evidence/routes/{routeId}-responsive-{breakpoint}.json`
+   - save the auditor JSON to `test-manifest/evidence/routes/{routeId}-{breakpoint}-responsive.json`
    - record each finding (type, severity, selector, measured numbers) as layout evidence
 4. Capture a snapshot to `test-manifest/evidence/routes/{routeId}-snapshot.{txt|json|yml}` when backend supports it.
 5. Run the best-practices / a11y checklist from `references/responsive-and-quality.md` using the

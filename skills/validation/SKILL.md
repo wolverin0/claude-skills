@@ -15,17 +15,17 @@ deep route/element/modal/screenshot workflow while using resumable phases and de
 Invocation examples:
 
 ```bash
-/validate
-/validate http://localhost:3000
-/validate --backend agent-browser --mode standard http://localhost:5173
-/validate --backend playwright-local --config validation.config.json --mode standard http://localhost:5173
-/validate --full http://localhost:5173
-/validate --interactive
-/validate --fresh
-/validate --resume
+/validation
+/validation http://localhost:3000
+/validation --backend agent-browser --mode standard http://localhost:5173
+/validation --backend playwright-local --config validation.config.json --mode standard http://localhost:5173
+/validation --full http://localhost:5173
+/validation --interactive
+/validation --fresh
+/validation --resume
 ```
 
-Plain `/validate` runs the complete `standard` cycle: discover -> test -> screenshot review ->
+Plain `/validation` runs the complete `standard` cycle: discover -> test -> screenshot review ->
 report. If no URL is provided, detect a running local server or start the repo's normal dev command
 when it is unambiguous. If neither is safe, ask for the URL. A completed prior state is archived and
 a fresh run starts; use `--resume` only to continue an incomplete run.
@@ -101,6 +101,7 @@ Use scripts when their assumptions match the task; they are more repeatable than
 | `scripts/record-visual-review.js` | Record one inspected screenshot with route, breakpoint, role, theme, source/build identity, SHA-256, and concrete design observations. |
 | `scripts/assert-coverage.js` | Check inventory and result accounting. A failed test can be accounted; exit `0` is not product acceptance. |
 | `scripts/certify-validation.js` | Final gate: require complete accounting, existing unchanged screenshot evidence, semantic reviews, and zero failed/runner-failed checks; write the final HTML report. |
+| `scripts/verify-provider-parity.js` | Verify that `.agents`, `.claude`, and `.codex` ship identical validation content and that both provider battle-test copies match. |
 
 For certification, provide the expected source SHA and running build ID in the config or as
 `--target-source-sha`/`--target-build-id` to `certify-validation.js`. The gate compares that target
@@ -108,7 +109,6 @@ with the state and every review. Config-declared routes and elements must also a
 `inventoryComplete:true` alone cannot hide a missing declared item. When a design gate is requested,
 set `designGate:true` and record distinct `implementationBy` and `reviewedBy` identifiers. This is
 an accountability field, not automated proof that the image was actually inspected.
-| `scripts/verify-provider-parity.js` | Verify that `.agents`, `.claude`, and `.codex` ship identical validation content and that both provider battle-test copies match. |
 
 Prefer the script for `playwright-local`:
 
@@ -138,13 +138,15 @@ Read these when needed:
 2. If `--fresh`, archive or replace old state and start at discovery.
 3. If `--resume` and state is `in_progress`/`incomplete`, resume from `session.currentPhase`.
 4. Otherwise archive a completed prior state under `test-manifest/history/` and start fresh. Plain
-   `/validate` never silently reuses a green result from an older build.
+   `/validation` never silently reuses a green result from an older build.
 5. Load only the current phase file:
 
 | Phase | File |
 | --- | --- |
 | `discover` | `phases/DISCOVER.md` |
 | `test` | `phases/TEST.md` |
+| `visual-review` | `phases/TEST.md` (semantic screenshot review) |
+| `certify` | `phases/REPORT.md` (`assert-coverage.js` then `certify-validation.js`) |
 | `report` | `phases/REPORT.md` |
 
 ## State Rules
@@ -158,7 +160,7 @@ Read these when needed:
   person still judges visual quality. Generic text or an uninspected image cannot establish a pass.
 - Never keep progress only in conversation context.
 - Use append-only evidence where practical: screenshots, snapshots, console logs, and issue records.
-- On context pressure or long runs, pause cleanly after saving state and tell the user to run `/validate --resume`.
+- On context pressure or long runs, pause cleanly after saving state and tell the user to run `/validation --resume`.
 
 ## Pass/Fail Standard
 
