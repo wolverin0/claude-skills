@@ -168,7 +168,7 @@ Steps 1-6 as in Stage 0, with these differences:
 
 ### UX Stage 1 — Diagnose (UX audit)
 
-1. "Use the auditar-ux-producto skill" on the worktree and the running app, in place of
+1. "Use the product-ux-audit skill" on the worktree and the running app, in place of
    `audit-orchestrator`. Do not run `/audit`; there is no `AUDIT VERDICT`, no token and no hard-stop gate.
    Run its stages 1-7 and stop at the `C01..Cn` table and compatible sets.
 2. **The one human pause** (owned by this stage: when you run its export in step 3, tell it the choice is
@@ -177,7 +177,7 @@ Steps 1-6 as in Stage 0, with these differences:
    No question tool: write the decision as GATED and stop.
 3. Run its stage 9 (export): chosen items become `[ux]` lines in `TRACKS.md` (worktree root) and entries
    in `ux-findings.json`; unchosen ones go to GATED with `needs` = operator decision. Formats:
-   `auditar-ux-producto/references/plantillas.md`, template 7.
+   `product-ux-audit/references/templates.md`, template 7.
 4. Findings that are not UX/UI: keep them in state for the report; they never enter `TRACKS.md`.
 
 ### UX Stage 2 — Baseline
@@ -222,8 +222,8 @@ d. Replay every `ac` in a real browser as its role (steps, observable result, wh
    the Stage-2 baseline image of the route) and after (capture in `$RUN/ux-ac/`). Put an evidence note on
    the item citing the `ac` id, role, route and capture, then mark it `[x]`; a failed criterion becomes
    `[!]` plus a GATED entry.
-e. Update `DESIGN.md` only with what is implemented and verified; anything else stays "propuesta pendiente
-   de implementación".
+e. Update `DESIGN.md` only with what is implemented and verified; anything else stays "proposal pending
+   implementation".
 f. Only if a-e are green and the diff in (b) stayed on touched routes: re-baseline ALL routes with
    `visual-regression.js --update`, then compare once more and expect `regressions:0`.
 

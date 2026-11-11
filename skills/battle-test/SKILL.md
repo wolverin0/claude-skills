@@ -45,7 +45,7 @@ are in `references/stages.md` ("UX mode"), gates in `references/gates.md`, the v
 | Stage | UX variant |
 | --- | --- |
 | 0. Preflight | Same worktree, app and roles; also keep `ux-findings.json`, `test-manifest/`, `.battle-test/` and `TRACKS.md` out of git |
-| 1. Diagnose | `auditar-ux-producto` instead of `audit-orchestrator` (no `/audit`) → `C01..Cn` table → **operator chooses** → export |
+| 1. Diagnose | `product-ux-audit` instead of `audit-orchestrator` (no `/audit`) → `C01..Cn` table → **operator chooses** → export |
 | 2. Baseline | `visual-regression.js --update` over ALL routes; no semantic review |
 | 3. Harden | `quality-loop --staged --from-tracks` in the same worktree, `ux` items only |
 | 4. Re-verify | Full build/test gate, full visual compare, `validation --mode smoke` on touched routes, each `ac` replayed in a browser, `DESIGN.md` |
@@ -81,7 +81,7 @@ missing, stop and ask rather than validating the login screen. Public-only apps 
 1. **Hard stops found** (audit verdict 🛑/🔴) → ask: fix-first / proceed / stop.
 2. **Missing running app or credentials** → ask for the URL + creds, or queue as GATED.
 3. **Push without `--push-main`, deploy, or platform actions** → queue as GATED, never auto-run.
-4. **`--ux` only: choose the changes** (after `auditar-ux-producto`) → ask which compatible set or
+4. **`--ux` only: choose the changes** (after `product-ux-audit`) → ask which compatible set or
    `Cnn` list goes; the rest is GATED. No question tool: write the decision as GATED and stop.
 
 Everything else runs autonomously. A full run is multi-hour; it checkpoints after each stage and

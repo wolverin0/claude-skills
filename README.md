@@ -6,7 +6,7 @@ and related CLI-based development workflows.
 This repo is the canonical source for the maintained skill set. Install copies
 into the active skill root for each provider, or symlink them while iterating.
 
-**Last sync: 2026-11-11** — added `quality-loop`, `auditar-ux-producto` and the
+**Last sync: 2026-11-11** — added `quality-loop`, `product-ux-audit` and the
 `commands/` folder (`/audit`, `/audit-remediate`); `battle-test` gained the
 `--ux` mode; the audit reference catalogs now cover H1-H11 and B1-B19; the
 `validation` invocation name is `/validation`. Previous sync: 2026-08-24.
@@ -18,7 +18,7 @@ audit pieces that had been left out: `agents/`, `hooks/`, `workflows/` and
 `production-readiness-playbook.md`. The third-party copies keep the license and
 author lines they arrived with; see [Third-party skills](#third-party-skills).
 
-Copy-paste prompts for each `battle-test` mode and its sibling skills (in Spanish, derived from the skill text, not yet run end to end): [`prompts/README.md`](prompts/README.md).
+Copy-paste prompts for each `battle-test` mode and its sibling skills (derived from the skill text, not yet run end to end): [`prompts/README.md`](prompts/README.md).
 
 ## Catalog
 
@@ -28,7 +28,7 @@ Copy-paste prompts for each `battle-test` mode and its sibling skills (in Spanis
 |---|---|
 | `battle-test` | Fail-closed end-to-end hardening cycle: static audit → exhaustive real-browser validation → semantic screenshot review → multi-role/security/visual-regression probes → isolated remediation → re-verification. `--quick` exists but can never emit a battle-tested verdict. `--ux` curates only UX/UI with its own verdict (see [battle-test `--ux` mode](#battle-test---ux-mode)). |
 | `quality-loop` | Self-verifying hardening and quality-sweep loop in an isolated git worktree: works an AUTO list in a fixed order (security → prod-readiness → deps/CVEs → tests/coverage → dead-code → perf → a11y → ux → docs), gates every commit on lint/types/tests/build, and queues operator-only items as GATED. Standalone it pushes verified batches to `main`; `--staged` commits only and leaves the push to the parent (this is how `battle-test` uses it). |
-| `auditar-ux-producto` | Task-centered UX audit (Spanish-language skill): user journeys, duplicated actions, avoidable steps, container choice (modal, side panel, dedicated page), forms, error handling and notification policy for operational products (ERP, CRM, dashboards). Prepares before/after visual comparisons with selectable recommendations and keeps interaction decisions in `DESIGN.md`. |
+| `product-ux-audit` | Task-centered UX audit: user journeys, duplicated actions, avoidable steps, container choice (modal, side panel, dedicated page), forms, error handling and notification policy for operational products (ERP, CRM, dashboards). Prepares before/after visual comparisons with selectable recommendations and keeps interaction decisions in `DESIGN.md`. |
 | `validation` | Evidence-based browser validation: route/element/flow/API inventory, screenshots, console+network checks, resumable state, redaction, auditable HTML report. Modes: smoke / standard / exhaustive. |
 | `visual-route-sweep` | Authenticated light/dark × desktop/tablet/mobile screenshots of every safe route, responsive+runtime failure detection, semantic review of every image — the visual slice of battle-test, standalone. |
 | `vibe-to-prod` | Guided 13-layer production-readiness self-check for an AI-generated MVP: per-layer PASS/GAP scorecard (security, errors, logging, deploy, compliance…). Lighter than the audit bundle. |
@@ -148,7 +148,7 @@ and its `references/`:
 - **Scope:** UX/UI only. Findings that are not UX/UI are listed at the end of the
   report, not fixed. Security, database, dependencies, performance and dead code
   are not reviewed in this mode.
-- **UX audit:** `auditar-ux-producto` runs in place of `audit-orchestrator`
+- **UX audit:** `product-ux-audit` runs in place of `audit-orchestrator`
   (no `/audit`), producing a table of changes `C01..Cn`.
 - **One pause:** the operator chooses which changes go; the rest is queued as
   GATED.
@@ -172,10 +172,10 @@ end on a project.**
 These skills were written by other people. They are copied here as they were
 found, with the license and author lines they already carried; this README adds
 no license text of its own, so read each upstream repository for its terms.
-`battle-test`, `auditar-ux-producto` and some audit domain skills name the design
+`battle-test`, `product-ux-audit` and some audit domain skills name the design
 skills below as optional helpers (not stages). "Repo verified" means the
 repository exists on GitHub (checked with `gh repo view`) and is named by the
-skill itself or by `skills/auditar-ux-producto/references/fuentes.md`; the copy
+skill itself or by `skills/product-ux-audit/references/sources.md`; the copy
 was not compared against it.
 
 | Skill | Origin | What it is for |
@@ -210,7 +210,6 @@ unavailable.
 ```text
 skills/
   audit/                      21-skill due diligence bundle + references/ (see above)
-  auditar-ux-producto/        Task-centered UX audit (Spanish)
   autoqa/                     Third-party: self-QA against a running app
   battle-test/                Fail-closed e2e hardening cycle (+ --ux mode)
   checklist-design-app-audit/ Checklist Design evidence audits
@@ -226,6 +225,7 @@ skills/
   improve/                    Third-party: read-only advisor that writes plans
   mcp-builder/                MCP server construction
   mercadopago-integration/    MercadoPago OAuth/payment integration
+  product-ux-audit/           Task-centered UX audit
   project-curate/             .claude/ curation workflow
   project-doctor/             Read-only orchestration health check
   project-setup/              AGENTS.md / CLAUDE.md setup workflow
@@ -312,7 +312,7 @@ repo into each provider's skill root (`~/.claude/skills/`, `~/.codex/skills/`).
 
 ```bash
 # ship & verify set (battle-test conducts audit, validation, visual-route-sweep and quality-loop)
-cp -r skills/battle-test skills/validation skills/visual-route-sweep skills/vibe-to-prod skills/quality-loop skills/auditar-ux-producto ~/.claude/skills/
+cp -r skills/battle-test skills/validation skills/visual-route-sweep skills/vibe-to-prod skills/quality-loop skills/product-ux-audit ~/.claude/skills/
 
 # audit bundle (installs as 21 sibling skills + shared catalogs)
 cp -r skills/audit/audit-* ~/.claude/skills/

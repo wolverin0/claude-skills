@@ -22,8 +22,8 @@ Write a comprehensive, structured handoff document so the NEXT session (or a cle
   of a session demanding this skill run first (it also snapshots the raw transcript to
   `~/.claude/compact-snapshots/`).
 - **If this session already compacted** (you see a "continued from a previous conversation"
-  summary at the top): mark the handoff header with `> DEGRADADO: escrito post-compact, desde
-  resumen — verificar contra el transcript snapshot y el repo antes de confiar en detalles.`
+  summary at the top): mark the handoff header with `> DEGRADED: written post-compact, from
+  summary — verify against the transcript snapshot and the repo before trusting details.`
 
 ## Mandatory Sections
 
