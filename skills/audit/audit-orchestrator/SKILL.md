@@ -318,6 +318,7 @@ A real `/audit` of a typical 50K-LoC codebase takes:
 - Total:                40–70 minutes wall-clock
 
 Tell the user this up front so they don't expect it in 30 seconds.
+
 ---
 
 ## Codex Port Notes

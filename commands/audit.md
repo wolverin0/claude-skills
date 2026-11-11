@@ -1,6 +1,6 @@
 ---
 disable-model-invocation: true
-description: Run the multi-domain technical due-diligence audit on this codebase. Invokes the audit-orchestrator skill which spawns the audit-runner subagent and produces a single dual-layer report (founder view + technical evidence). Allowed args: --scope=<path>, --priority-domains=<csv>.
+description: "Run the multi-domain technical due-diligence audit on this codebase. Invokes the audit-orchestrator skill which spawns the audit-runner subagent and produces a single dual-layer report (founder view + technical evidence). Allowed args: --scope=<path>, --priority-domains=<csv>."
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, Task, Skill
 ---
 

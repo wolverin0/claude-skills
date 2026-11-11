@@ -1,6 +1,6 @@
 ---
 disable-model-invocation: true
-description: End-to-end audit + remediation. Audits the repo, fixes findings on an isolated branch with per-fix verification, re-audits until the verdict is green (or budget/rounds run out), and opens a PR for review. Never merges, never touches main. Runs as a deterministic multi-agent Workflow. Args: --scope=<path>, --max-rounds=<N>.
+description: "End-to-end audit + remediation. Audits the repo, fixes findings on an isolated branch with per-fix verification, re-audits until the verdict is green (or budget/rounds run out), and opens a PR for review. Never merges, never touches main. Runs as a deterministic multi-agent Workflow. Args: --scope=<path>, --max-rounds=<N>."
 allowed-tools: Bash, Read, Grep, Glob, Task, Skill
 ---
 
