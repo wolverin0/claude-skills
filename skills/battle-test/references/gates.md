@@ -7,7 +7,7 @@ enough by itself.
 
 | Source | Required green signal | Failure / block |
 | --- | --- | --- |
-| audit | Current `audit-report.md` has an acceptable VERDICT and runner emitted `[AUDIT COMPLETE]` | Hard-stop verdict or `[AUDIT TRUNCATED]` |
+| audit | Current `audit-report.md` has an acceptable `AUDIT VERDICT` block (one of the five exact strings) and the runner emitted the `[AUDIT COMPLETE: ...]` token | Hard-stop verdict or `[AUDIT TRUNCATED: <reason>]` |
 | validation coverage | `assert-coverage.js` exits `0`; mode `exhaustive`, `coverageComplete:true`, `inventoryDeclared:true`, `truncated:false`, and `unaccounted:[]` | Any missing inventory/result/review, pending queue, explicit cap, or nonzero accounting exit; an accounted FAIL is still red health |
 | validation health | `certify-validation.js` exits `0`, state is `completed`, and zero failed routes, elements, modals, flows, CRUD/API checks, responsive-high findings, and failed semantic reviews | Any app/runner failure blocks certification even if coverage accounting passed |
 | semantic screenshots | One inspected image per expected route x role x supported theme x breakpoint, bound to source/build and SHA-256, with hierarchy/density/alignment/proportion/state observations | Missing/stale/conflicting image/review, generic analysis, or visible defect |
@@ -16,7 +16,7 @@ enough by itself.
 | visual-regression.js | Compare mode exits `0`, `regressions:0`, `missingBaselines:0`; manifest contains every expected route x role x breakpoint key | Unexpected regression, missing baseline/key, or invalid config |
 | perf budget | Stage-2 Lighthouse mobile step exits `0`: LCP, TBT, CLS and JS wire size within the defaults (2500 ms / 200 ms / 0.1 / 300 KB) or the project's `perfBudget`; Stage 4 is within budget and no worse than baseline; or `perfBudget: skipped(no-web-ui)` is recorded | Any metric over budget or missing, Lighthouse `runtimeError`, regression vs baseline, or a skip with no recorded reason |
 | evidence identity | Validation target source SHA/build ID is supplied independently through config or certification CLI and matches state/reviews; baseline and candidate manifests match config hash, role set, URL, and test-data identity | Stale or cross-build evidence; any identity field missing/mismatched |
-| quality-loop | AUTO queue drained and its build/test gate is green on the recorded candidate SHA | Red gate or unresolved AUTO item |
+| quality-loop | AUTO queue drained and its build/test gate is green on the recorded candidate SHA; read `quality-loop-state.json` (`gateStatus`, `commitRange`), `gated.json` and the `[QUALITY-LOOP COMPLETE: ...]` token | Red gate or unresolved AUTO item |
 
 `blocked` means a prerequisite such as authentication or a runnable app is unavailable. `incomplete`
 means the requested validation scope was not fully accounted. Neither is an app pass.

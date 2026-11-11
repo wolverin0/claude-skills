@@ -30,11 +30,12 @@ subagents and reading back only their result + the artifact path.
 ## Stage 1 — Diagnose (audit)
 
 1. "Use the audit-orchestrator skill" with the project scope (it spawns audit-runner; ~40–70 min).
-2. Wait for `[AUDIT COMPLETE]` (or `[AUDIT TRUNCATED]`). Read `<repo>/audit-report.md`.
-3. Parse the VERDICT line. Gate per `references/gates.md`:
+2. Wait for the `[AUDIT COMPLETE: ...]` token (or `[AUDIT TRUNCATED: <reason>]`); match on the text
+   before the colon, the token carries a suffix. Read `<repo>/audit-report.md`.
+3. Parse the `AUDIT VERDICT` block (one of the five exact strings in the audit triage rubric). Gate per `references/gates.md`:
    - 🛑 / 🔴 → AskUserQuestion: fix-first / proceed / stop.
    - 🟠 / 🟡 / 🟢 → proceed.
-4. Extract the finding list (IDs `F-…` with severity + path:line) into the run state — Stage 3
+4. Extract the finding list (IDs of the form `F-…`, e.g. `F-1.3`, `F-H1.1`, `F-T1.1`, with severity + path:line) into the run state — Stage 3
    feeds these to quality-loop so it doesn't re-audit from scratch.
 5. If `--audit-only`, write the report and stop here.
 
@@ -63,7 +64,9 @@ never push or deploy. Stop after the quick report.
 4. Write a baseline manifest containing source SHA/build, config hash, role, expected route ×
    breakpoint keys, and baseline file hashes. A missing key later is a failure, not a new baseline.
 5. Collect runtime findings: failed routes, authorization leaks, responsive high-severity issues,
-   IDOR/secret findings. Read signals per `references/gates.md`.
+   IDOR/secret findings. They come from `test-manifest/validation-state.json` and from the
+   `validate-multirole.js`, `security-probe.js` and `visual-regression.js` output. Read signals per
+   `references/gates.md`.
 6. **Perf budget** (measured, not grepped). Run Lighthouse mobile with simulated CPU/network
    throttling against the app URL (home route; repeat for other key routes if the project lists them):
 
@@ -101,8 +104,13 @@ never push or deploy. Stop after the quick report.
    - the Stage-2 runtime findings (broken routes, authz leaks, responsive fails, IDOR, secrets).
    Anything needing a secret/rotation/deploy/design call goes to the GATED section, not AUTO.
 2. "Use the quality-loop skill". It works one AUTO item at a time behind its build/test gate,
-   commits to `loop/<project>`. Invoke it staged/from-tracks so it cannot push.
+   commits to `loop/<project>`. Invoke it with `--staged --from-tracks` (both): `--from-tracks`
+   only stops it from re-auditing; without `--staged` its default is to push green batches to main.
 3. Do **not** let it push to main yet — Stage 4 is the gate that authorizes the push.
+4. Read what quality-loop produces: `quality-loop-state.json` at the worktree root (`status`, `fixed`,
+   `gated`, `commitRange`, `gateStatus`, `pushedToMain`), `gated.json` next to `TRACKS.md`, and the
+   final `[QUALITY-LOOP COMPLETE: fixed=N gated=M gate=green commits=<base>..<head> pushed=<bool>]`
+   token. Stage 4 takes the candidate range from `commitRange`.
 
 ## Stage 4 — Re-verify (prove the fixes)
 
