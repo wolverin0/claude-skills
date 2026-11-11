@@ -46,10 +46,10 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - Dependency hygiene: lockfile committed; `npm audit` clean; a recurring (monthly) dependency-audit habit; no abandoned/phantom packages (playbook FM-20, L8).
-- Coverage theater check: high coverage % but no adversarial-input tests (already B15) (playbook B15).
+- Coverage theater check: high coverage % but no adversarial-input tests (already B15).
 
 ## Files most likely to have findings
 
@@ -120,7 +120,7 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-9.1>
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-9.1>
 
     Verification after fix:
       <command>

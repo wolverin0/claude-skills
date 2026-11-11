@@ -18,8 +18,8 @@ The full taxonomy and detection guidance is in
 ### Pre-flight
 
 ```
-view @.claude/context/audit-rules.md
-view @.claude/context/audit-tambon-signatures.md
+Read @.claude/context/audit-rules.md
+Read @.claude/context/audit-tambon-signatures.md
 ```
 
 ### Phase 1 — Static type-check (the heavy lifter)
@@ -222,7 +222,7 @@ specific module."
 
 ## What this skill does NOT do
 
-- Fix the findings (that's the dev's job, with /audit-fix)
+- Fix the findings (that's the dev's job, with the audit-fix-generator skill)
 - Run the code (audit is read-only)
 - Speculate about which model generated the code (irrelevant; the
   density band is what matters)

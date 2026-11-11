@@ -52,9 +52,9 @@ AUDIT VERDICT
 [ONE of the five exact strings from the triage rubric]
 
   🛑 DO NOT LAUNCH UNTIL HARD STOPS RESOLVED
-  🔴 BLOCK LAUNCH — fix EXPLOITABLE-NOW findings before production traffic
-  🟠 FIX BEFORE LAUNCH — multiple critical issues; days-to-weeks remediation
-  🟡 SHIPPABLE WITH PLAN — significant tech debt; schedule remediation
+  🔴 BLOCK LAUNCH — fix EXPLOITABLE-NOW findings before any production traffic
+  🟠 FIX BEFORE LAUNCH — multiple critical issues; estimate days-to-weeks
+  🟡 SHIPPABLE WITH PLAN — significant tech debt; schedule remediation sprint
   🟢 ACCEPTABLE — routine cleanup; no launch-blockers
 
 ────────────────────────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ their account."
 
 Findings:
 
-  F<N>.1 — <one-line title>
+  F-<N>.1 — <one-line title>
     Severity:        Critical | High | Medium | Low
     Exploitability:  EXPLOITABLE-NOW | EXPLOITABLE-LOW-EFFORT | BAD-PRACTICE | UNKNOWN
     Hard-stop:       H<N> if applicable, otherwise "—"
@@ -165,7 +165,7 @@ Findings:
     Verification after fix:
       <exact command — pytest, curl, psql, etc.>
 
-  F<N>.2 — <one-line title>
+  F-<N>.2 — <one-line title>
     [same shape]
 
 [If the domain has no findings:]
@@ -248,7 +248,7 @@ HOW TO USE THIS REPORT
 3. Use the REMEDIATION PLAN to schedule sprints. Phase numbers map to
    sprint numbers (Phase 0 = next sprint, Phase 1 = sprint after, etc.).
 4. For each finding, use the AI Fix Prompts (separate file or
-   on-demand from /audit-fix <finding-id>) to ship the fix.
+   on-demand from the audit-fix-generator skill with <finding-id>) to ship the fix.
 5. Re-audit after Phase 0 and Phase 1 are done. The remaining findings'
    severity should not change, but new findings may surface that the
    first audit missed because they were masked by hard stops.

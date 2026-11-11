@@ -13,7 +13,7 @@ a ~2K-token findings report.
 ## Pre-flight
 
 ```
-view ~/.codex/context\audit-rules.md
+view ~/.codex/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
@@ -46,7 +46,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - N+1 queries: loops that query per-row instead of a JOIN (playbook FM-2).
 - Three-layer caching present where it matters — browser, CDN (even 60s cuts DB calls ~95%), application (semantic cache for AI: 40-60% hit) (playbook L10, FM-21, B17).
@@ -197,7 +197,7 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-5.1. For a missing Q7 item start
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-5.1. For a missing Q7 item start
        with "Add/Replace ..." and the concrete change (stream the reply, Promise.all the
        independent awaits, select named columns, defer the script); do not only report it>
 
@@ -245,7 +245,7 @@ If the domain has zero findings:
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

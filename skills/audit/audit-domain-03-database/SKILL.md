@@ -47,7 +47,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - Schema is normalized (related data in separate tables), not one wide table accreted one-column-per-prompt (playbook FM-11, L3).
 - Indexes exist on foreign keys and frequently-queried columns (playbook L3, FM-1).
@@ -176,7 +176,7 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-3.1>
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-3.1>
 
     Verification after fix:
       <command>

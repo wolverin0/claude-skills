@@ -17,7 +17,7 @@ the run.
 ## What this skill produces
 
 A single report following the format in
-`~/.codex/context\audit-report-format.md`. Founder view + technical
+`~/.codex/context/audit-report-format.md`. Founder view + technical
 evidence, with severity census, verdict, and remediation plan at the top
 and 13 domain sections below.
 
@@ -40,17 +40,17 @@ Before invoking any other skill, do this in order:
 
 ### 1. Load the rules
 
-Read `~/.codex/context\audit-rules.md` end-to-end. The seven rules
+Read `~/.codex/context/audit-rules.md` end-to-end. The seven rules
 (R1-R7) apply to the entire audit.
 
 ### 2. Load the report format
 
-Read `~/.codex/context\audit-report-format.md`. You're going to be
+Read `~/.codex/context/audit-report-format.md`. You're going to be
 producing this format; familiarize yourself.
 
 ### 3. Load the triage rubric
 
-Read `~/.codex/context\audit-triage-rubric.md`. The verdict at the top
+Read `~/.codex/context/audit-triage-rubric.md`. The verdict at the top
 of the report is determined by the rules in this file.
 
 ### 4. Create inventory.json preflight
@@ -157,7 +157,7 @@ PHASE E — DOMAIN AUDITS (13 skills, IN ISOLATED SUBAGENT CONTEXTS)
 
 PHASE F — STITCH THE REPORT
   │
-  ├─ If audit-report.md exists, rename it to audit-report.previous-YYYYMMDD.md
+  ├─ If audit-report.md exists, rename it to audit-report.previous-YYYYMMDD-HHMM.md
   │  before writing the fresh report
   ├─ Compute severity census (sum across all phases)
   ├─ Determine verdict from triage rubric (deterministic, not your call)
@@ -189,7 +189,7 @@ PHASE G — SELF-CHECK (mandatory, per R6)
 
 > "Use the audit-hard-stops skill to walk H1-H11 against `<scope>`.
 > For each, run the detection commands from
-> `~/.codex/context\audit-hard-stops.md`. Return: status (FOUND /
+> `~/.codex/context/audit-hard-stops.md`. Return: status (FOUND /
 > NOT FOUND / UNABLE) per H-class with evidence."
 
 **Phase C (audit-tambon-hunt):**
@@ -222,9 +222,9 @@ each other or with you.
 
 This phase happens in your context (the orchestrator). You receive 13
 domain reports + the hard-stops, Tambon, and blind-spots reports. You
-stitch them into the format from `~/.codex/context\audit-report-format.md`.
+stitch them into the format from `~/.codex/context/audit-report-format.md`.
 Before writing the fresh report, if `audit-report.md` already exists,
-rename it to `audit-report.previous-YYYYMMDD.md`.
+rename it to `audit-report.previous-YYYYMMDD-HHMM.md`.
 
 Be a stitcher, not an editor. Do not soften findings the domains
 emitted. Do not re-rank severities. The verdict is determined by the
@@ -238,7 +238,7 @@ resolved or blocked.
 
 **Phase G (self-check):**
 
-Walk the checklist at the bottom of audit-report-format.md. Emit one of:
+Walk the "SEVEN RULES OBSERVED IN THIS AUDIT" self-attestation block in audit-report-format.md. Emit one of:
 
 - `[AUDIT COMPLETE: all 7 rules attested, all 13 domains covered]`
 - `[AUDIT TRUNCATED: <reason>]`
@@ -325,7 +325,7 @@ Tell the user this up front so they don't expect it in 30 seconds.
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

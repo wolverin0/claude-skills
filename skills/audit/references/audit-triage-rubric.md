@@ -45,7 +45,7 @@ and forms their own judgment.
 
 ### Artifact 2 — Verdict Statement
 
-ONE of these four exact strings, no fuzzing, no hedging:
+ONE of these five exact strings, no fuzzing, no hedging:
 
 | Trigger | Verdict |
 |---|---|
@@ -81,7 +81,7 @@ Phase 0 — Hard Stops (do FIRST, before anything else)
 
 Phase 1 — EXPLOITABLE-NOW findings (do BEFORE first production traffic)
   Estimated effort:  <X-Y> developer-days
-  Findings included: F<n>, F<n>, F<n>
+  Findings included: F-<n>, F-<n>, F-<n>
 
   Sequence:
     1. <one sentence>
@@ -90,7 +90,7 @@ Phase 1 — EXPLOITABLE-NOW findings (do BEFORE first production traffic)
 
 Phase 2 — Critical findings (Phase 1.5 — before scaling user count)
   Estimated effort:  <X-Y> developer-days
-  Findings included: F<n>, F<n>, F<n>
+  Findings included: F-<n>, F-<n>, F-<n>
 
 Phase 3 — High findings (next sprint)
   Estimated effort:  <X-Y> developer-days

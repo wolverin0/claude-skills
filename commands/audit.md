@@ -78,5 +78,5 @@ will have already validated R1/R2/R4/R6 deterministically. If the hook
 blocked the write, fix the violations and re-emit (don't try to bypass it —
 there's no override).
 
-For each finding the user wants fixed, they can run `/audit-fix F-X.Y` to
+For each finding the user wants fixed, they can ask for the `audit-fix-generator` skill with the id (`F-X.Y`) to
 generate a fix prompt for a fresh AI session.

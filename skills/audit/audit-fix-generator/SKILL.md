@@ -1,6 +1,6 @@
 ---
 name: audit-fix-generator
-description: Generate a detailed AI fix prompt for a specific audit finding. Use when the user asks "/audit-fix F-X.Y" or "give me the fix prompt for finding N." Produces a complete prompt the user can hand to a fresh AI session (Claude Code, Cursor, ChatGPT) to remediate the finding with verification and rollback steps.
+description: Generate a detailed AI fix prompt for a specific audit finding. Use when the user asks for the audit-fix-generator skill with a finding id (e.g. F-X.Y) or "give me the fix prompt for finding N." Produces a complete prompt the user can hand to a fresh AI session (Claude Code, Cursor, ChatGPT) to remediate the finding with verification and rollback steps.
 ---
 
 # Skill: Audit Fix Generator
@@ -26,9 +26,9 @@ is just a guess; without rollback, it's an unsafe guess.
 
 The user invokes this skill referencing a finding by ID:
 
-> "/audit-fix F-H1.1" → Hard stop H1, finding 1
-> "/audit-fix F-1.3"  → Domain 1, finding 3
-> "/audit-fix F-T1.1" → Tambon Signature 1, finding 1
+> "audit-fix-generator F-H1.1" → Hard stop H1, finding 1
+> "audit-fix-generator F-1.3" → Domain 1, finding 3
+> "audit-fix-generator F-T1.1" → Tambon Signature 1, finding 1
 
 The orchestrator's audit report has all findings tagged with an ID in
 this format. Look up the finding from the report (or ask the user to
@@ -236,7 +236,7 @@ them together is to apply the pattern uniformly.
 
 - Run the fix itself (it generates the prompt; the user runs the fix)
 - Modify any code (read-only for the audit pipeline)
-- Generate fix prompts unprompted (only on `/audit-fix <ID>` request)
+- Generate fix prompts unprompted (only when asked for the audit-fix-generator skill with an `<ID>`)
 - Aggregate fix prompts into a single document by default (each fix is
   a separate prompt for a separate session — that's deliberate, to
   keep each AI session's context clean)

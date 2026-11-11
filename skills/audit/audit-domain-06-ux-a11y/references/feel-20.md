@@ -28,7 +28,7 @@ Design skills referenced (read them, do not copy their text here):
 | 16 | Tabular numbers (prices, counters do not jiggle) | Q8 `tabular-nums` row | `impeccable typeset` |
 | 17 | Balanced headlines, no single word on the last line | Q8 `text-wrap` row | `impeccable typeset` |
 | 18 | Smooth continuous corners | Q8 `squircle` row | `impeccable polish`; progressive enhancement only |
-| 19 | Idempotency keys so a double tap never charges twice | audit-domain-05/payments review: `rg -n "Idempotency-Key|idempotency_key"` on every POST that charges or sends | backend change, not a design skill |
+| 19 | Idempotency keys so a double tap never charges twice | audit-domain-07 Q2/Q3 (idempotency inventory): `rg -n "Idempotency-Key|idempotency_key"` on every POST that charges or sends | backend change, not a design skill |
 | 20 | Safe triangle so submenus do not close when the mouse cuts across | Q8 `safe-triangle` row | `frontendgame` interaction-patterns; Radix/Floating UI `safePolygon` |
 
 Items 1, 6, 7, 10, 11, 12 and 19 are detected outside the Q8 block (column 3); the audit report

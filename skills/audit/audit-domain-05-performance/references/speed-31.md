@@ -21,7 +21,7 @@ the biggest wins; 5 is the one most often skipped.
 | 12 | Search fires a request per keystroke | manual: `rg -n "onChange.*fetch"` | debounce |
 | 13 | Endpoint returns everything | Q1/Q4 pagination | paginate server-side |
 | 14 | Independent requests awaited one after another | Q7 parallel rows | `Promise.all` / `gather` |
-| 15 | External calls with no timeout | Q3 blocking inventory | set timeouts |
+| 15 | External calls with no timeout | audit-domain-07 Q1/Q6 (external call timeout inventory) | set timeouts |
 | 16 | Responses sent uncompressed | manual: response headers | enable Brotli or gzip |
 | 17 | Slow work done inside the request | FM-9/B16 | move to a job queue |
 | 18 | Queries fetch more columns than used | Q7 select row | select named columns |

@@ -48,7 +48,7 @@ output.** It looks credible to the reader, the reader trusts it, the
 reader fixes the wrong thing. This is the failure mode you most want to
 avoid.
 
-When in doubt, run `view path/to/file.ext` and re-confirm the line range
+When in doubt, run `Read path/to/file.ext` and re-confirm the line range
 before citing.
 
 ---

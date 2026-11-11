@@ -13,7 +13,7 @@ a ~2K-token findings report.
 ## Pre-flight
 
 ```
-view ~/.codex/context\audit-rules.md
+view ~/.codex/context/audit-rules.md
 ```
 
 If you have findings from previous audit phases (hard stops, Tambon,
@@ -50,7 +50,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context\production-readiness-playbook.md
+Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
 
 - Secrets in the client bundle: open built JS / search for `sk_`, `sk_live`, `AIza`, OpenAI/Stripe keys, or public-prefixed secret env vars (NEXT_PUBLIC_/VITE_/PUBLIC_). Any paid-API secret reachable in the browser = serious (playbook H11, FM-4, L8).
 - Session expiry: copy the URL/session after logout and reuse it — must fail (playbook CHK-4, L4).
@@ -173,7 +173,7 @@ Findings:
       <one sentence>
 
     Recommended fix:
-      <one paragraph; for full fix prompt, use /audit-fix F-1.1>
+      <one paragraph; for full fix prompt, ask for the audit-fix-generator skill with F-1.1>
 
     Verification after fix:
       <command>
@@ -219,7 +219,7 @@ If the domain has zero findings:
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context\<file>` in Codex.
+- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.
