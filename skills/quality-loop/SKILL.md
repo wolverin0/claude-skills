@@ -1,6 +1,6 @@
 ---
 name: quality-loop
-description: "Drive a project hardening + full quality-sweep loop in an isolated worktree. Use when the user wants to harden/improve a project autonomously — security, prod-readiness, deps/CVEs, tests/coverage, dead-code, perf, a11y, docs — with self-verification before anything merges to main, and clean queueing of anything that needs the operator. Trigger: /quality-loop. Runs standalone (auto-pushes verified batches) or staged under an orchestrator like /battle-test (--staged: commit only, parent controls the push). Claude-only (no codex/auto-harness); runs locally."
+description: "Drive a project hardening + full quality-sweep loop in an isolated worktree. Use when the user wants to harden/improve a project autonomously — security, prod-readiness, deps/CVEs, tests/coverage, dead-code, perf, a11y, ux, docs — with self-verification before anything merges to main, and clean queueing of anything that needs the operator. Trigger: /quality-loop. Runs standalone (auto-pushes verified batches) or staged under an orchestrator like /battle-test (--staged: commit only, parent controls the push). Claude-only (no codex/auto-harness); runs locally."
 ---
 
 # quality-loop
@@ -20,6 +20,11 @@ anything that needs a human. Minimal diffs. No rewrites. No scope creep.
 Optional loop scaffold files: `.loop/DRIVER.md`, `TRACKS.md`, `KICK.md`.
 
 ## 0. Setup (isolated, from deployed main)
+**If the parent orchestrator hands you a worktree and base, use them.** Skip this step except branch
+creation: work in that tree and create `loop/<project>` at the base SHA inside it
+(`git switch -c loop/<project> <base>`; on resume, switch to the existing branch). Do not fetch,
+do not branch from `origin/main`, and do not remove the tree: the parent still needs it for its own
+re-verification and removes it.
 ```bash
 git fetch origin
 git worktree add ../_worktrees/<project>-loop -b loop/<project> origin/main
@@ -37,17 +42,33 @@ Work entirely in that worktree. **Never** edit another pane's tree; **never** pu
 - **Only if `TRACKS.md` is absent** (standalone): run `/audit`, then write it.
 
 **TRACKS.md format** (stable — orchestrators parse it):
+- `TRACKS.md` lives at the worktree root.
 - Two sections: `## AUTO` (you do + verify) and `## GATED` (operator/external only).
-- Item: `- [ ] T## | owns=<path> | <desc>`  ·  status markers: `[ ]` todo · `[~]` in-progress ·
-  `[x]` done · `[!]` blocked→moved to GATED.
+- Item: `- [ ] T## | owns=<path[,path]> | <desc>`  ·  status markers: `[ ]` todo · `[~]` in-progress ·
+  `[x]` done · `[!]` blocked→moved to GATED. Optional trailing fields (backward compatible; a parser that
+  ignores them still works): a `[ux]` tag at the start of `<desc>`, `src=<ids>`, `routes=<paths>`,
+  `ac=ux-findings.json#<id>`. `owns=` and `routes=` take comma-separated lists. Example:
+  `- [ ] T21 | owns=src/pages/Customers.tsx,src/components/CustomerPanel.tsx | [ux] side panel when editing a customer | src=UX-H03,UX-C02 | routes=/customers | ac=ux-findings.json#UX-H03`
 - AUTO worked in this order (do-no-harm-first — **do not reorder**):
-  **security → prod-readiness → deps/CVEs → tests/coverage → dead-code → perf → a11y → docs.**
+  **security → prod-readiness → deps/CVEs → tests/coverage → dead-code → perf → a11y → ux → docs.**
+- `ux` = interaction, flow or visual changes the operator already chose. It enters AUTO only from an
+  orchestrator's `ux-findings.json` export (the one design call that is AUTO because the operator picked
+  it); unchosen ones stay GATED. Inside `ux`, honor each finding's `needs` order and never do both of two
+  mutually exclusive alternatives. A finding may name a third-party design skill in `skill`; use it only if
+  it is installed.
 
 ## 2. Iterate (one track at a time)
 1. Pick the next `[ ]` AUTO track in priority order. Mark it `[~]`. Implement the **smallest diff**.
 2. Run the **gate** (below). It must pass before you commit.
-3. Commit on `loop/<project>` (conventional message + `T##`). Mark the item `[x]` with a one-line
-   evidence note. Checkpoint: "Done: X. Verified: Y. Next: Z."
+3. Commit on `loop/<project>` (conventional message + `T##`), staging only that item's `owns=` paths,
+   never the whole tree. Mark the item `[x]` with a one-line evidence note. Checkpoint: "Done: X.
+   Verified: Y. Next: Z."
+   - **An item with `ac=` is not done on the gate alone** (build/tests do not prove UX). After its commit it
+     stays `[~]` with the note `committed <sha>, awaiting ac`. It becomes `[x]` only with an evidence note
+     that cites that criterion (role and route checked, capture or state observed). The parent verifies it in
+     a real browser, outside this executor: whoever fixed does not approve. A failed criterion becomes `[!]`
+     plus a GATED entry. Items awaiting `ac` count as handled for "AUTO drained", are not counted in
+     `fixed`, and are listed in the last checkpoint.
 4. Repeat.
 
 ## 3. Verification gate (MANDATORY before every commit — the load-bearing safety property)
@@ -96,8 +117,8 @@ End token (final line of output, for parents that read stdout):
 Self-pace long runs with `/loop` + `ScheduleWakeup`; push a progress line every ~3 min during long work.
 
 ## Guardrails (don't relearn today's scars)
-- Always branch from `origin/main` (fetch first); never push a stale local `main` (clobbers prod).
+- Always branch from `origin/main` (fetch first) unless the parent supplied a base (§0); never push a stale local `main` (clobbers prod).
 - `git reset --hard` against main is guardrail-blocked → do not rework main; start a new branch from `origin/main`.
 - Cherry-pick of an already-shipped commit returns "empty" (not a conflict) → `git cherry-pick --skip`.
 - Missing `.env*` in the worktree → build/prerender fails on every route. Copy it first.
-- One worktree per loop; remove it when done (`git worktree remove ...`).
+- One worktree per loop; remove it when done (`git worktree remove ...`) if you created it. A parent-supplied tree stays.
