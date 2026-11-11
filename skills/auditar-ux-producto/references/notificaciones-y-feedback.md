@@ -10,7 +10,7 @@ Antes de elegir un componente visual, clasificá la información en una de estas
 
 | Categoría | Qué es | Ejemplo en ERP / CRM | Dónde vive |
 |---|---|---|---|
-| **1. Actividad** | Registro histórico de algo que ocurrió y puede consultarse cuando haga falta. | *"Juan ajustó el stock de Cruz Alta (+5 u.) a las 14:20"*. | Historial del objeto, bitácora o auditoría. No debe interrumpir a otros usuarios. |
+| **1. Actividad** | Registro histórico de algo que ocurrió y puede consultarse cuando haga falta. | *"Juan ajustó el stock de Sucursal Centro (+5 u.) a las 14:20"*. | Historial del objeto, bitácora o auditoría. No debe interrumpir a otros usuarios. |
 | **2. Feedback** | Respuesta inmediata del sistema a la acción que la persona acaba de ejecutar. | *"Ajuste guardado"*, *"El motivo es obligatorio"*, *"Descuento del 10% aplicado"*. | En el mismo lugar donde actúa el usuario (junto al campo, en el contenedor activo o en un estado local/toast según impacto). |
 | **3. Notificación** | Aviso oportuno dirigido a un rol porque ocurrió un evento que le importa conocer. | *"Terminó la exportación de catálogo solicitada"*, *"Se recibió una nota de crédito del proveedor"*. | Centro de notificaciones / avisos recuperables con enlace directo al recurso. |
 | **4. Trabajo pendiente (Situación / Excepción)** | Algo requiere que un rol tome una decisión o resuelva un problema concreto, con responsable y seguimiento. | *"Pago recibido sin conciliar"*, *"Diferencia de stock en reconciliación diaria"*, *"Devolución pendiente de autorización"*. | Bandeja de pendientes / cola operativa con contexto, acciones directas y estado de resolución (inspirado en **SAP Fiori Situation Handling**). |
@@ -54,7 +54,7 @@ En cualquier bandeja de notificaciones o excepciones de un ERP/CRM, exigí separ
 3. **Resuelto / Cerrado:** la causa de negocio se solucionó (por ejemplo, el pago fue conciliado, el stock fue ajustado o la solicitud fue aprobada/rechazada), quedando registrado quién y cuándo lo resolvió, o cerrándose automáticamente cuando la condición desaparece.
 
 ### Agrupación ante fallos masivos
-Si una sincronización o integración falla sobre 80 registros, **no generes 80 notificaciones individuales**. Creá **un único incidente agrupado** (*"Fallo de sincronización en 80 artículos de Cruz Alta"*) que lleve a una vista filtrada con los registros afectados y las acciones de reintento o revisión.
+Si una sincronización o integración falla sobre 80 registros, **no generes 80 notificaciones individuales**. Creá **un único incidente agrupado** (*"Fallo de sincronización en 80 artículos de Sucursal Centro"*) que lleve a una vista filtrada con los registros afectados y las acciones de reintento o revisión.
 
 ---
 
