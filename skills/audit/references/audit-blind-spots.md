@@ -1,9 +1,14 @@
-# AI-to-AI Blind Spots - B1 through B15
+# AI-to-AI Blind Spots — B1 through B19
 
 These are patterns that look correct to AI reviewers because they share
 training-corpus idioms with the code being reviewed. A naive "review
 this code" prompt will miss them every time, because the reviewing model
 recognizes the *shape* and assumes the *substance*.
+
+(B1-B15 are the original catalog. B16-B19 were added from the
+production-readiness playbook — vibe-coded apps that "work" in the demo but
+fail under real load/use: sync heavy ops, missing cache, non-idempotent user
+actions, and UI missing one of the four required states.)
 
 This file catalogs each blind spot with the specific check that catches
 it. The `audit-blind-spots` skill loads this file and walks through each
@@ -11,7 +16,7 @@ B-class systematically.
 
 ---
 
-## B1 - Auth present but not wired
+## B1 — Auth present but not wired
 
 **The pattern:** Authentication middleware/decorator exists in the
 codebase. It's well-written. It would catch unauthenticated requests
@@ -38,17 +43,17 @@ grep -rEn "@(app|router)\.(get|post|put|patch|delete)" src/ --include="*.py"
 **Evidence shape:**
 
 ```
-B1 finding - Auth middleware not wired
+B1 finding — Auth middleware not wired
 Middleware: src/middleware/auth.py:get_current_user
 Unwired routes (auth missing in handler signature):
-  - app/routes/users.py:42  POST /users/{id}/promote - should require admin
-  - app/routes/billing.py:78  DELETE /invoices/{id} - should require auth
-  - app/routes/admin.py:120  POST /admin/run-job - should require admin
+  - app/routes/users.py:42  POST /users/{id}/promote — should require admin
+  - app/routes/billing.py:78  DELETE /invoices/{id} — should require auth
+  - app/routes/admin.py:120  POST /admin/run-job — should require admin
 ```
 
 ---
 
-## B2 - Error handlers returning success
+## B2 — Error handlers returning success
 
 **The pattern:** A `try/except` block catches an exception, but does
 nothing with it (or just logs to nowhere) and returns a 200/success
@@ -61,7 +66,7 @@ the side effect was lost.
 **Detection:**
 
 ```bash
-# Python - find except clauses with pass/log-only/swallow
+# Python — find except clauses with pass/log-only/swallow
 grep -rEnB1 -A5 "except.*:" src/ --include="*.py" | \
   grep -iE "(pass|return\s+(\{|true|None|HttpResponse|.*ok)|continue)"
 
@@ -86,7 +91,7 @@ actually charged. Found in production after a week of "free" service.
 
 ---
 
-## B3 - Frontend-only pagination
+## B3 — Frontend-only pagination
 
 **The pattern:** UI paginates with "Load more" or page numbers. The
 backend query returns ALL rows; the frontend slices.
@@ -115,7 +120,7 @@ it work today."
 
 ---
 
-## B4 - Soft-delete never filtered
+## B4 — Soft-delete never filtered
 
 **The pattern:** Tables have a `deleted_at` (or `is_deleted`, or
 `archived`) column. Queries don't filter on it. Deleted rows show up
@@ -137,16 +142,16 @@ out anyway. Both directions are findings.
 
 ---
 
-## B5 - Env var existence-only checks
+## B5 — Env var existence-only checks
 
-**The pattern:** `if (process.env.STRIPE_KEY)` - checks the variable is
+**The pattern:** `if (process.env.STRIPE_KEY)` — checks the variable is
 set, but never validates the value is not empty, not a placeholder, not
 the test key in production.
 
 **Detection:**
 
 ```bash
-grep -rEn "if\s*\(-\s*process\.env\.|if\s+os\.environ\.get|if\s+os\.getenv" src/
+grep -rEn "if\s*\(?\s*process\.env\.|if\s+os\.environ\.get|if\s+os\.getenv" src/
 
 # Look for placeholder values that shipped
 grep -rEn "(your_key_here|YOUR_API_KEY|change_me|placeholder|sk_test_|TODO)" \
@@ -158,7 +163,7 @@ caught that the production env file copied the example.
 
 ---
 
-## B6 - Single-user connection assumptions
+## B6 — Single-user connection assumptions
 
 **The pattern:** Code assumes one concurrent user. DB pool size 1.
 In-memory session store. Module-level mutable state. Cache that doesn't
@@ -177,12 +182,12 @@ grep -rEn "pool_size\s*[:=]\s*1\b|max_connections\s*[:=]\s*1\b|maxConnections:\s
 grep -rEn "SESSION\s*=\s*\{|sessions\s*=\s*\{|SESSION_STORE\s*=" src/
 ```
 
-**Why it's a blind spot:** Works fine in dev (one user - you). Falls
+**Why it's a blind spot:** Works fine in dev (one user — you). Falls
 over the first time two users do anything at the same time.
 
 ---
 
-## B7 - Validation asymmetry
+## B7 — Validation asymmetry
 
 **The pattern:** Frontend validates (zod, react-hook-form, formik),
 backend accepts whatever bytes arrive. Or the reverse: backend validates,
@@ -205,10 +210,10 @@ takes the email field as a literal string and inserts it into SQL.
 
 ---
 
-## B8 - Authorization gap (IDOR)
+## B8 — Authorization gap (IDOR)
 
 **The pattern:** User is authenticated. The endpoint checks "is this a
-logged-in user-" but not "does this user own this resource-"
+logged-in user?" but not "does this user own this resource?"
 
 `GET /invoices/{id}` returns the invoice if the user is logged in. Any
 user can change the URL and read any other user's invoices.
@@ -220,19 +225,19 @@ user can change the URL and read any other user's invoices.
 grep -rEn "/{id}|/<int:id>|/:\w+\b" src/
 
 # For each, read the handler. Look for:
-#   - Where does the resource get fetched- (db.get(id))
-#   - Is there a user-ownership check- (resource.owner_id == user.id)
+#   - Where does the resource get fetched? (db.get(id))
+#   - Is there a user-ownership check? (resource.owner_id == user.id)
 # If not, it's B8.
 ```
 
 **The hard finding:** Endpoint takes user_id from request body or query
-string, like `GET /invoices-user_id=42`. That's not authorization at
+string, like `GET /invoices?user_id=42`. That's not authorization at
 all; that's "type any number you want." Should be re-derived from the
 auth token.
 
 ---
 
-## B9 - Dead imports / unreachable utilities
+## B9 — Dead imports / unreachable utilities
 
 **The pattern:** A `utils/` or `helpers/` directory full of functions
 that nothing imports. They were written, copy-pasted, or AI-generated,
@@ -254,7 +259,7 @@ discover it's broken (because nothing exercises it), and lose hours.
 
 ---
 
-## B10 - Optimistic UI without rollback
+## B10 — Optimistic UI without rollback
 
 **The pattern:** UI updates immediately to show success. The server call
 happens in the background. If the server returns an error, there's no
@@ -275,7 +280,7 @@ hours later and is confused.
 
 ---
 
-## B11 - Webhook idempotency missing
+## B11 — Webhook idempotency missing
 
 **The pattern:** Payment / event webhooks process the body without
 checking whether they've seen the event before. Provider retries on
@@ -299,7 +304,7 @@ checked atomically in the same transaction as the side effect.
 
 ---
 
-## B12 - Stack mixing
+## B12 — Stack mixing
 
 **The pattern:** Multiple state libraries (redux + zustand + jotai),
 multiple HTTP clients (axios + fetch + ky), multiple auth patterns
@@ -321,11 +326,11 @@ Together they make the codebase a museum of failed migrations.
 
 ---
 
-## B13 - Test mirrors code (Tambon failure mode)
+## B13 — Test mirrors code (Tambon failure mode)
 
 **The pattern:** AI wrote both the implementation and the tests in the
 same session. The test mocks every dependency. The assertions confirm
-the implementation does what it does - not what the spec requires.
+the implementation does what it does — not what the spec requires.
 
 This is one of the most dangerous patterns because it produces high
 coverage with zero protection against regressions of intended behavior.
@@ -337,17 +342,17 @@ coverage with zero protection against regressions of intended behavior.
 - Tests use `MagicMock(return_value=expected)` followed by an assertion
   that the function returned `expected`
 - Test file was created in the same commit as the source file
-- Test file has no integration test - every test mocks
+- Test file has no integration test — every test mocks
 
 **Action:** Write a real integration test for at least one path through
 the critical flow. Mark the AI-written tests as inadequate but keep them.
 
 ---
 
-## B14 - Comment-code drift
+## B14 — Comment-code drift
 
 **The pattern:** A docstring or comment describes behavior the code
-doesn't have. Common after AI-assisted refactoring - the model updates
+doesn't have. Common after AI-assisted refactoring — the model updates
 the implementation but leaves the comment.
 
 **Detection:** Hard to do mechanically. Best approach:
@@ -355,7 +360,7 @@ the implementation but leaves the comment.
 1. Find every public function in the auth/payment/delete paths
 2. Read the docstring
 3. Read the body
-4. Ask: does the body do what the docstring claims-
+4. Ask: does the body do what the docstring claims?
 
 Spend the most time on functions where the docstring asserts a security
 or correctness property ("validates input," "checks authorization,"
@@ -363,7 +368,7 @@ or correctness property ("validates input," "checks authorization,"
 
 ---
 
-## B15 - Coverage theater
+## B15 — Coverage theater
 
 **The pattern:** Coverage % is high. The tests run lots of lines. But
 adversarial inputs are never tested:
@@ -390,17 +395,129 @@ category:
 | Adversarial input (SQLi, XSS, path traversal) | 1-2 |
 | Idempotency / replay | 1 (for webhooks) |
 
-If you see "1 happy path test, 92% coverage" - that's B15. The 92%
+If you see "1 happy path test, 92% coverage" — that's B15. The 92%
 covers what the test exercised, which was the success path.
+
+---
+
+## B16 — Synchronous heavy operation in the request cycle
+
+**The pattern:** An expensive operation — report/PDF generation, bulk export,
+email blast, image/video processing, a multi-step LLM chain — runs **inline**
+inside the request handler instead of being handed to a background job. The
+request blocks until it finishes.
+
+**Why AI misses it:** The handler reads top-to-bottom like correct procedural
+code; "do the work, return the result" is the dominant training idiom. The
+reviewer doesn't notice it will exceed the platform timeout under real data.
+
+**Detection:**
+
+```bash
+# Heavy work inside request handlers (no job/queue indirection)
+grep -rEn "(generate|export|render|process|send_bulk|sendBulk|createPdf|puppeteer|sharp|ffmpeg)" src/ \
+  --include="*.py" --include="*.ts" --include="*.js" | \
+  grep -iE "route|handler|controller|@app|router\.|app\.(get|post)"
+
+# Confirm absence of a job runner
+grep -rEn "inngest|trigger\.dev|bullmq|celery|sidekiq|rq\b|background_tasks|enqueue|\.delay\(" src/
+```
+
+**Manifestation:** "Export" runs 45s, hits the serverless 10s timeout, user
+re-clicks → two jobs (playbook `FM-9`). Routes to **Domain 5** (Performance),
+secondary **Domain 7** (Reliability).
+
+---
+
+## B17 — Missing cache on a hot or expensive path
+
+**The pattern:** The same query / external API call / AI completion is recomputed
+on every request, with no cache layer anywhere (browser, CDN, or application).
+
+**Why AI misses it:** "Fetch the data, return it" is correct-looking. Caching is
+an optimization the model doesn't add unless asked, so its absence looks normal.
+
+**Detection:**
+
+```bash
+# Hot/expensive calls
+grep -rEn "fetch\(|axios|requests\.get|db\.(query|execute|find)|openai|anthropic" src/
+
+# Any cache layer at all?
+grep -rEn "cache|Cache|redis|Redis|revalidate|stale-while-revalidate|unstable_cache|lru_cache|memoize" src/
+```
+
+For an endpoint hit on every page load that recomputes an expensive result with
+zero caching, that's B17.
+
+**Manifestation:** Same data fetched 10,000×/day; DB slammed; bill skyrockets
+(playbook `FM-21`). Even a 60s CDN cache cuts DB calls ~95% during spikes.
+Routes to **Domain 5** (Performance), secondary **Domain 10** (Cost).
+
+---
+
+## B18 — Non-idempotent user action
+
+**The pattern:** A create / charge / submit action has no idempotency guard. A
+double-click, a retry, or a flaky network produces duplicate records, double
+charges, or duplicate side effects. (This is `B11` generalized beyond webhooks
+to **user-initiated** actions.)
+
+**Why AI misses it:** The happy path runs once in testing. The reviewer never
+simulates the double-submit, so the missing guard is invisible.
+
+**Detection:**
+
+```bash
+# Mutating endpoints / submit handlers
+grep -rEn "@(app|router)\.(post|put)|onSubmit|handleSubmit|\.create\(|INSERT INTO" src/
+
+# Any idempotency / dedup / debounce / disable-on-submit guard?
+grep -rEn "idempotency|idempotent|dedup|debounce|disabled=\{.*submitting|isSubmitting|request_id|client_token" src/
+```
+
+A POST that creates a row or charges a card with no idempotency key and no
+client-side submit lock is B18.
+
+**Manifestation:** User clicks "Pay" twice → charged twice (playbook `FM-9`,
+`FM-23`). Routes to **Domain 7** (Reliability).
+
+---
+
+## B19 — UI missing one of the four required states
+
+**The pattern:** A component renders data but handles only the success path. The
+**loading**, **error**, or (most often) **empty** state is absent — a spinner
+that never resolves on error, a blank screen for a new user with no data, an
+unhandled rejected fetch.
+
+**Why AI misses it:** The generated component renders the data it was prompted
+with (the success case). Loading/error/empty are extra branches the model omits
+unless asked, and their absence looks like clean code.
+
+**Detection:**
+
+```bash
+# Data-rendering components — check each for all four states
+grep -rEn "useQuery|useSWR|fetch\(|\.map\(|loading|isLoading|isError|isEmpty" src/ \
+  --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte"
+```
+
+For each data-driven component, confirm it handles loading **and** error **and**
+empty, not just success. A `.map()` over fetched data with no empty-state branch
+and no error branch is B19.
+
+**Manifestation:** New user sees a blank screen; a failed fetch shows a frozen
+spinner (playbook `FM-6`, `L1`). Routes to **Domain 6** (UX/A11y).
 
 ---
 
 ## How the blind-spots audit produces output
 
-For each B1-B15:
+For each B1-B19:
 
 ```
-BLIND SPOT: B<N> - <n>
+BLIND SPOT: B<N> — <n>
 Status: PRESENT | NOT PRESENT | INCONCLUSIVE
 If PRESENT:
   Evidence:
@@ -414,7 +531,7 @@ After the systematic walk, the blind-spots report includes a summary:
 
 ```
 BLIND SPOT SUMMARY
-Present: <count> of 15
+Present: <count> of 19
 Critical findings: <list>
 High findings: <list>
 Most pervasive (appears in many places): <which one>

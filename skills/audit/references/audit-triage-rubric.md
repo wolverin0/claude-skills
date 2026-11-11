@@ -1,7 +1,7 @@
 # Audit Triage Rubric
 
-This file replaces the Vibe Debt Score from v3. The score (0-100 with
-bands) was theater - it gave the appearance of objectivity to what is
+This file replaces the Vibe Debt Score from v3. The score (0–100 with
+bands) was theater — it gave the appearance of objectivity to what is
 fundamentally a judgment call, and it nudged auditors toward gaming the
 math (one less Critical here, one more Medium there) to land in a
 preferred band.
@@ -15,11 +15,11 @@ about the action**.
 
 Three artifacts. Together they tell the reader exactly where they stand.
 
-### Artifact 1 - Severity Census
+### Artifact 1 — Severity Census
 
 ```
 SEVERITY CENSUS
--------------------------------------
+─────────────────────────────────────
 🛑 Hard Stops:           <count>   (each = launch-blocker)
 🔴 Critical findings:    <count>
 🟠 High findings:        <count>
@@ -33,8 +33,8 @@ By exploitability:
   UNKNOWN:                <count>
 
 By domain (most affected first):
-  Domain N - <name>:      <count> findings
-  Domain M - <name>:      <count> findings
+  Domain N — <name>:      <count> findings
+  Domain M — <name>:      <count> findings
   ...
 ```
 
@@ -43,17 +43,17 @@ and forms their own judgment.
 
 ---
 
-### Artifact 2 - Verdict Statement
+### Artifact 2 — Verdict Statement
 
 ONE of these four exact strings, no fuzzing, no hedging:
 
 | Trigger | Verdict |
 |---|---|
 | ANY hard stop present | `🛑 DO NOT LAUNCH UNTIL HARD STOPS RESOLVED` |
-| ≥1 EXPLOITABLE-NOW finding (no hard stops) | `🔴 BLOCK LAUNCH - fix EXPLOITABLE-NOW findings before any production traffic` |
-| ≥3 Critical findings, OR ≥1 Critical in payments/auth/deletes | `🟠 FIX BEFORE LAUNCH - multiple critical issues; estimate days-to-weeks` |
-| ≥3 High findings, no Criticals | `🟡 SHIPPABLE WITH PLAN - significant tech debt; schedule remediation sprint` |
-| Mostly Medium/Low | `🟢 ACCEPTABLE - routine cleanup; no launch-blockers` |
+| ≥1 EXPLOITABLE-NOW finding (no hard stops) | `🔴 BLOCK LAUNCH — fix EXPLOITABLE-NOW findings before any production traffic` |
+| ≥3 Critical findings, OR ≥1 Critical in payments/auth/deletes | `🟠 FIX BEFORE LAUNCH — multiple critical issues; estimate days-to-weeks` |
+| ≥3 High findings, no Criticals | `🟡 SHIPPABLE WITH PLAN — significant tech debt; schedule remediation sprint` |
+| Mostly Medium/Low | `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` |
 
 The verdict is a function of the findings, not the auditor's mood. Two
 auditors looking at the same findings should arrive at the same
@@ -62,24 +62,24 @@ triggers do it more cleanly than the formula.
 
 ---
 
-### Artifact 3 - Remediation Plan
+### Artifact 3 — Remediation Plan
 
 For each finding bucket, an estimate and a sequence:
 
 ```
 REMEDIATION PLAN
--------------------------------------
+─────────────────────────────────────
 
-Phase 0 - Hard Stops (do FIRST, before anything else)
+Phase 0 — Hard Stops (do FIRST, before anything else)
   Estimated effort:  <X-Y> developer-days
   Findings included: H1, H3 (above)
 
   Sequence:
-    1. <which hard stop> - <approach in one sentence>
+    1. <which hard stop> — <approach in one sentence>
     2. <next hard stop>
     ...
 
-Phase 1 - EXPLOITABLE-NOW findings (do BEFORE first production traffic)
+Phase 1 — EXPLOITABLE-NOW findings (do BEFORE first production traffic)
   Estimated effort:  <X-Y> developer-days
   Findings included: F<n>, F<n>, F<n>
 
@@ -88,14 +88,14 @@ Phase 1 - EXPLOITABLE-NOW findings (do BEFORE first production traffic)
     2. <one sentence>
     ...
 
-Phase 2 - Critical findings (Phase 1.5 - before scaling user count)
+Phase 2 — Critical findings (Phase 1.5 — before scaling user count)
   Estimated effort:  <X-Y> developer-days
   Findings included: F<n>, F<n>, F<n>
 
-Phase 3 - High findings (next sprint)
+Phase 3 — High findings (next sprint)
   Estimated effort:  <X-Y> developer-days
 
-Phase 4 - Medium / Low findings (scheduled cleanup)
+Phase 4 — Medium / Low findings (scheduled cleanup)
   Estimated effort:  <X-Y> developer-days
 
 TOTAL ESTIMATED REMEDIATION: <X-Y> developer-days
@@ -116,21 +116,23 @@ Estimates are coarse but honest. Use these multipliers per finding:
 
 | Severity / class | Estimate per finding |
 |---|---|
-| 🛑 Hard Stop (H1, H4 - secrets/keys exposed) | 0.5-2 days (rotation + scrubbing) |
-| 🛑 Hard Stop (H2, H3, H5 - wiring issues) | 0.5-1 day |
-| 🛑 Hard Stop (H6, H7, H8 - code patterns) | 0.5 day per occurrence |
-| 🛑 Hard Stop (H9 - test rewrites) | 1-3 days per critical flow |
-| 🔴 Critical | 0.5-1 day |
-| 🟠 High | 0.25-0.5 day |
-| 🟡 Medium | 0.1-0.25 day |
-| 🔵 Low | 0.05 day (5-10 in a batch) |
+| 🛑 Hard Stop (H1, H4 — secrets/keys exposed) | 0.5–2 days (rotation + scrubbing) |
+| 🛑 Hard Stop (H2, H3, H5 — wiring issues) | 0.5–1 day |
+| 🛑 Hard Stop (H6, H7, H8 — code patterns) | 0.5 day per occurrence |
+| 🛑 Hard Stop (H9 — test rewrites) | 1–3 days per critical flow |
+| 🛑 Hard Stop (H10 — add rate limit + spend cap) | 0.5–1 day |
+| 🛑 Hard Stop (H11 — rotate key + move server-side + proxy) | 0.5–2 days (rotation + proxy route) |
+| 🔴 Critical | 0.5–1 day |
+| 🟠 High | 0.25–0.5 day |
+| 🟡 Medium | 0.1–0.25 day |
+| 🔵 Low | 0.05 day (5–10 in a batch) |
 
 Add a "duplication tax" if Domain 13 (Code Integrity) found significant
-duplication - every fix has to be applied to N copies. Multiply Phase 2-3
+duplication — every fix has to be applied to N copies. Multiply Phase 2-3
 by 1.5x if Domain 13 rated 1 or 2.
 
 Add a "test-rewrite tax" if H9 was triggered or if Domain 13 noted
-test-mirrors-code patterns. Add 20-30% to Phase 2 effort because every
+test-mirrors-code patterns. Add 20–30% to Phase 2 effort because every
 fix needs a real test added.
 
 State the multipliers used in the report. The reader should be able to
@@ -160,17 +162,17 @@ The triage block goes near the TOP of the report, immediately after the
 hard-stops block (if any). Structure:
 
 ```
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
   AUDIT VERDICT
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 
-[🛑 / 🔴 / 🟠 / 🟡 / 🟢] <VERDICT STATEMENT - exact string from table>
+[🛑 / 🔴 / 🟠 / 🟡 / 🟢] <VERDICT STATEMENT — exact string from table>
 
   Severity census: <one-line summary>
   Estimated remediation: <X-Y developer-days> across <N> phases
   See REMEDIATION PLAN below for sequencing.
 
-=======================================================================
+═══════════════════════════════════════════════════════════════════════
 ```
 
 Then the Severity Census artifact. Then the Remediation Plan. Then
