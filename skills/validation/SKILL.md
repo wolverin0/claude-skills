@@ -146,7 +146,7 @@ Read these when needed:
 | `discover` | `phases/DISCOVER.md` |
 | `test` | `phases/TEST.md` |
 | `visual-review` | `phases/TEST.md` (semantic screenshot review) |
-| `certify` | `phases/REPORT.md` (`assert-coverage.js` then `certify-validation.js`) |
+| `certify` | `phases/TEST.md` (final accounting: `assert-coverage.js` then `certify-validation.js`, which sets the next phase to `report`) |
 | `report` | `phases/REPORT.md` |
 
 ## State Rules
