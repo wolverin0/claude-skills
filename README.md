@@ -11,6 +11,13 @@ into the active skill root for each provider, or symlink them while iterating.
 `--ux` mode; the audit reference catalogs now cover H1-H11 and B1-B19; the
 `validation` invocation name is `/validation`. Previous sync: 2026-08-24.
 
+**Added later the same day:** seven third-party design and QA skills
+(`impeccable`, `improve`, `taste-skill`, `ui-ux-pro-max`, `emil-design-eng`,
+`autoqa`, `desloppify`), `battle-test/references/thermos-rubrics.md`, and the
+audit pieces that had been left out: `agents/`, `hooks/`, `workflows/` and
+`production-readiness-playbook.md`. The third-party copies keep the license and
+author lines they arrived with; see [Third-party skills](#third-party-skills).
+
 Copy-paste prompts for each `battle-test` mode and its sibling skills (in Spanish, derived from the skill text, not yet run end to end): [`prompts/README.md`](prompts/README.md).
 
 ## Catalog
@@ -38,7 +45,9 @@ audit→remediate→rerun loop. Domains follow enumeration-before-verdict. The
 seven shared catalogs in `skills/audit/references/` are `audit-rules.md`,
 `audit-hard-stops.md` (H1-H11), `audit-blind-spots.md` (B1-B19),
 `audit-tambon-signatures.md`, `audit-report-format.md`,
-`audit-triage-rubric.md` and `domain-audit-contract.md`.
+`audit-triage-rubric.md` and `domain-audit-contract.md`; the same folder also
+holds `production-readiness-playbook.md`, the reference the domain skills and
+`vibe-to-prod` cite.
 
 The 21 children of `skills/audit/`:
 
@@ -64,7 +73,7 @@ Slash commands (`commands/`):
 | Command | What it does |
 |---|---|
 | `/audit` | Runs the `audit-orchestrator` skill and writes one `audit-report.md`. Read-only: it never modifies source. Args: `--scope=<path>`, `--priority-domains=<csv of 1-13>`, `--resume-from=<N>`. |
-| `/audit-remediate` | Launches the `audit-remediate` workflow: audit, fix on a dedicated branch with per-fix verification, re-audit until green or out of budget, then open a PR. Never merges and never touches `main`. Args: `--scope=<path>`, `--max-rounds=<N>` (default 4). Needs the workflow script listed under [What this repo does not include](#what-this-repo-does-not-include). |
+| `/audit-remediate` | Launches the `audit-remediate` workflow: audit, fix on a dedicated branch with per-fix verification, re-audit until green or out of budget, then open a PR. Never merges and never touches `main`. Args: `--scope=<path>`, `--max-rounds=<N>` (default 4). Needs `workflows/audit-remediate.mjs` installed (see the install block below). |
 
 Install the 21 `audit-*` children of `skills/audit/` into the provider skill
 root, and the shared catalogs in `skills/audit/references/` into the context
@@ -79,9 +88,26 @@ cp skills/audit/references/*.md .claude/context/
 cp skills/audit/references/*.md ~/.codex/context/
 ```
 
-`production-readiness-playbook.md`, cited by the domain skills and
-`vibe-to-prod`, is not shipped in this repo; those citations are optional depth.
+The `cp skills/audit/references/*.md` lines also install
+`production-readiness-playbook.md`, which the skills cite as
+`~/.codex/context/production-readiness-playbook.md`. The workflow script reads
+the catalogs from `~/.claude/context/`; copy them there too if you run
+`/audit-remediate` (see Installation).
 Install the two commands with `cp commands/*.md ~/.claude/commands/`.
+
+The audit pieces outside `skills/`:
+
+| Path | Role |
+|---|---|
+| `agents/audit-runner.md` | Subagent the orchestrator spawns for the whole audit (copy to `~/.claude/agents/`). |
+| `agents/audit-domain-runner.md` | Subagent spawned once per domain (copy to `~/.claude/agents/`). |
+| `hooks/pre-audit-evidence-check.py` | PreToolUse check on writing `audit-report*.md`: blocks a report whose findings lack `path:line`, cite a missing path, or skip section markers. |
+| `hooks/post-audit-format-check.py` | PostToolUse check: warns when the verdict does not match the severity census, domain sections are missing, or the seven-rules attestation is incomplete. |
+| `workflows/audit-remediate.mjs` | Script `/audit-remediate` launches (the command points to `~/.claude/workflows/audit-remediate.mjs`). A workflow-runtime script, not a standalone Node program: it uses a top-level `return`, so a plain `node --check` rejects it. |
+
+The hooks do nothing until you wire them into the project's Claude Code
+settings; each file's docstring shows the entry it expects, and that entry runs
+them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 
 ### Build — opinionated implementation skills
 
@@ -141,36 +167,43 @@ and its `references/`:
 **Status: written and reviewed as text only. `--ux` has not yet been run end to
 end on a project.**
 
-## Optional third-party skills
+## Third-party skills
 
-`battle-test`, `auditar-ux-producto` and some audit domain skills name these
-design skills as optional helpers. They are not stages, they are not copied into
-this repo, and an item may use one only if it is installed in the environment.
+These skills were written by other people. They are copied here as they were
+found, with the license and author lines they already carried; this README adds
+no license text of its own, so read each upstream repository for its terms.
+`battle-test`, `auditar-ux-producto` and some audit domain skills name the design
+skills below as optional helpers (not stages). "Repo verified" means the
+repository exists on GitHub (checked with `gh repo view`) and is named by the
+skill itself or by `skills/auditar-ux-producto/references/fuentes.md`; the copy
+was not compared against it.
 
-| Skill | Where the tree names it | What the tree says it is for |
+| Skill | Origin | What it is for |
 |---|---|---|
-| `impeccable` ([pbakaus/impeccable](https://github.com/pbakaus/impeccable)) | `battle-test`, `auditar-ux-producto`, `audit-domain-05-performance`, `audit-domain-06-ux-a11y` | Design operations such as `critique`, `distill`, `shape`, `harden`, `typeset`, `adapt`, `optimize`. |
-| `ui-ux-pro-max` ([nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)) | `battle-test`, `auditar-ux-producto` | Lookup library for form, table, accessibility and component-state patterns. |
-| `emil-design-eng` ([emilkowalski/skills](https://github.com/emilkowalski/skills)) | `battle-test`, `auditar-ux-producto`, `audit-domain-06-ux-a11y` | Touch feedback, micro-interactions and transitions. |
-| `taste-skill` ([Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill)) | `battle-test`, `auditar-ux-producto` | Aesthetic direction, typography and composition. |
+| `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (repo verified) | Design operations such as `critique`, `distill`, `shape`, `harden`, `typeset`, `adapt`, `optimize`. The prebuilt Windows engine binary (about 20 MB) is not included: the launchers in `scripts/` download it on first run and check it against `scripts/engine-checksums.txt`. |
+| `improve` | [shadcn/improve](https://github.com/shadcn/improve) (repo exists and its description matches the skill; the skill itself names only the author `shadcn`, so treat the link as a best match) | Read-only advisor: surveys a codebase and writes prioritized implementation plans for other agents to execute. |
+| `taste-skill` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (repo verified) | Strict UI engineering discipline: component architecture, spacing and type scales, CSS performance rules. |
+| `ui-ux-pro-max` | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (repo verified) | Design lookup data (styles, palettes, font pairings, product types, UX guidelines for 10 stacks) plus Python search scripts. |
+| `emil-design-eng` | [emilkowalski/skills](https://github.com/emilkowalski/skills) (repo verified) | Touch feedback, micro-interactions and transitions. |
+| `desloppify` | [peteromallet/desloppify](https://github.com/peteromallet/desloppify) (repo verified; linked from its `SKILL.md`) | Multi-language codebase health scanner: scan, plan, execute, rescan. |
+| `autoqa` | origen no verificado | Self-QA of a repo's running application: feature-by-modality plan, run against a live instance, witnessed pass/fail report. Its `SKILL.md` links `references/discovery.md` and `references/report-template.md`, which were not in the source copy and are therefore not shipped. |
 
-The links point to the repositories cited in
-`skills/auditar-ux-producto/references/fuentes.md`; this README makes no claim
-about their licenses.
+Also included: `skills/battle-test/references/thermos-rubrics.md`, a harsh
+code-quality review rubric; its own header names the Cursor `thermos` plugin as
+its source, and that header is kept as found.
 
 ## What this repo does not include
 
-Pieces that the audit skills and commands name but that live outside this
-repository. Install them from elsewhere, or treat the features that depend on
-them as unavailable.
+Pieces that the shipped skills name but that this repository does not carry.
+Install them from elsewhere, or treat the features that depend on them as
+unavailable.
 
-| Missing piece | Named in | Role according to that file |
+| Missing piece | Named in | Role |
 |---|---|---|
-| Agents `audit-runner` and `audit-domain-runner` | `commands/audit.md`, `skills/audit/audit-orchestrator/SKILL.md`, `skills/battle-test/references/stages.md` | Subagents the orchestrator spawns for the audit and for each domain. |
-| Hook `pre-audit-evidence-check.py` | `commands/audit.md` | PreToolUse check on writing `audit-report*.md`: blocks a report whose findings lack `path:line`, cite a missing path, or skip section markers. |
-| Hook `post-audit-format-check.py` | `commands/audit.md` | PostToolUse check: warns when the verdict does not match the severity census, domain sections are missing, or the seven-rules attestation is incomplete. |
-| Workflow `audit-remediate.mjs` | `commands/audit-remediate.md` | Script the `/audit-remediate` command launches (it points to `~/.claude/workflows/audit-remediate.mjs`). |
-| `production-readiness-playbook.md` | `skills/vibe-to-prod/SKILL.md`, the domain audit skills | Reference playbook; citations to it are optional depth. |
+| `impeccable` engine binary (Windows, about 20 MB; other platforms are downloaded the same way) | `skills/impeccable/scripts/impeccable`, `impeccable.cmd` | Fetched and checksum-verified by the launcher on first use. Not committed: it is a downloadable release artifact and would bloat a public repo permanently. |
+| `autoqa` `references/discovery.md` and `references/report-template.md` | `skills/autoqa/SKILL.md` | Not present in the copy this repo was synced from; the skill's phase 1 and phase 4 point to them. |
+| Hook wiring | `hooks/*.py` | The hook scripts ship; the settings entry that activates them is yours to add. |
+| `skill-test.md`, `learning.md`, `/monitoring-setup`, `skills/architecture-decision-records/` | the legacy docs and two `project-*` skills (see `DOCS-MAP.md`) | Cited, never shipped. |
 
 ## Repository Layout
 
@@ -178,14 +211,19 @@ them as unavailable.
 skills/
   audit/                      21-skill due diligence bundle + references/ (see above)
   auditar-ux-producto/        Task-centered UX audit (Spanish)
+  autoqa/                     Third-party: self-QA against a running app
   battle-test/                Fail-closed e2e hardening cycle (+ --ux mode)
   checklist-design-app-audit/ Checklist Design evidence audits
   debate/                     Multi-provider debate workflow
   debug-resolve/              Systematic debugging
   deploy-verify/              Post-deploy verification
+  desloppify/                 Third-party: codebase health scanner
+  emil-design-eng/            Third-party: animation and micro-interaction craft
   feature-validation/         Feature-vs-spec validation
   frontendgame/               Premium mobile-first UI engineering
   handoff/                    Structured session handoffs (v2)
+  impeccable/                 Third-party: design operations (no engine binary)
+  improve/                    Third-party: read-only advisor that writes plans
   mcp-builder/                MCP server construction
   mercadopago-integration/    MercadoPago OAuth/payment integration
   project-curate/             .claude/ curation workflow
@@ -196,11 +234,16 @@ skills/
   skill-creator/              Skill creation and validation tools
   skillify/                   Workflow → reusable skill
   supabase-debug/             Supabase diagnosis
+  taste-skill/                Third-party: UI engineering discipline
   tdd-workflow/               Red-first TDD flow
+  ui-ux-pro-max/              Third-party: design lookup data and search scripts
   validation/                 Evidence-based browser validation
   vibe-to-prod/               13-layer production-readiness self-check
   visual-route-sweep/         Visual route sweep with semantic review
+agents/                       audit-runner and audit-domain-runner subagents
 commands/                     /audit and /audit-remediate slash commands
+hooks/                        pre/post audit report check hooks (Python)
+workflows/                    audit-remediate.mjs (workflow-runtime script)
 tools/                        Supporting docs and legacy helpers
 tests/                        Shell tests for the debate helper functions
 ```
@@ -233,7 +276,7 @@ are `battle-test`, `validation`, `vibe-to-prod`, `audit-orchestrator`, `debate`;
 # full due diligence audit (read-only report)
 /audit
 
-# audit, fix on a branch, re-audit, open a PR (needs the workflow script)
+# audit, fix on a branch, re-audit, open a PR (needs workflows/audit-remediate.mjs installed)
 /audit-remediate --scope=. --max-rounds=4
 
 # three-way debate
@@ -277,6 +320,16 @@ mkdir -p .claude/context && cp skills/audit/references/*.md .claude/context/
 
 # slash commands (/audit, /audit-remediate)
 mkdir -p ~/.claude/commands && cp commands/*.md ~/.claude/commands/
+
+# audit agents and workflow (user level), hooks (project level, where their docstrings expect them)
+mkdir -p ~/.claude/agents ~/.claude/workflows ~/.claude/context .claude/hooks
+cp agents/*.md ~/.claude/agents/
+cp workflows/*.mjs ~/.claude/workflows/
+cp hooks/*.py .claude/hooks/   # still needs a settings entry, see the audit section
+cp skills/audit/references/*.md ~/.claude/context/
+
+# third-party design and QA skills
+cp -r skills/impeccable skills/improve skills/taste-skill skills/ui-ux-pro-max skills/emil-design-eng skills/autoqa skills/desloppify ~/.claude/skills/
 
 # workflow set
 cp -r skills/handoff skills/skillify skills/project-setup skills/project-curate skills/project-doctor ~/.claude/skills/
