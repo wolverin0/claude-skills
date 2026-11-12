@@ -203,7 +203,9 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 ## Session & project workflow
 
-- `skills/handoff/SKILL.md` — structured session handoff v2 — current
+- `skills/handoff/SKILL.md` — verified, identity-bound session checkpoint v3 — current
+- `skills/handoff/scripts/handoff-contract.cjs` — handoff validation and publication library (required by the publisher) — current
+- `skills/handoff/scripts/publish-handoff.cjs` — handoff publisher CLI (validate and publish exclusively) — current
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
 - `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current

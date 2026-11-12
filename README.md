@@ -126,7 +126,7 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 
 | Skill | What it does |
 |---|---|
-| `handoff` | Structured session handoff (v2: pre-degradation contract — write BEFORE compaction, greppable header, corr id). The next session starts from the file, not from vibes. |
+| `handoff` | Verified, identity-bound session checkpoint (v3: required sections, session/generation/corr identity, checksummed exclusive publication via the bundled `publish-handoff.cjs`; Node.js required). The next session starts from the file, not from vibes. |
 | `skillify` | Turn a proven repeated workflow into a reusable skill. |
 | `skill-creator` | Create and validate skills locally (progressive disclosure). |
 | `project-setup` | Generate/refresh AGENTS.md / CLAUDE.md from the real codebase. |
@@ -220,7 +220,7 @@ skills/
   emil-design-eng/            Third-party: animation and micro-interaction craft
   feature-validation/         Feature-vs-spec validation
   frontendgame/               Premium mobile-first UI engineering
-  handoff/                    Structured session handoffs (v2)
+  handoff/                    Verified session checkpoints (v3) + publisher scripts
   impeccable/                 Third-party: design operations (no engine binary)
   improve/                    Third-party: read-only advisor that writes plans
   mcp-builder/                MCP server construction
