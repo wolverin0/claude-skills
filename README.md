@@ -121,6 +121,7 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 | `feature-validation` | Validate a feature against its spec. |
 | `mercadopago-integration` | MercadoPago OAuth/checkout/webhooks for Supabase/React SaaS, with production pitfalls from 7+ real Argentine projects. Assets: edge function, hook, migration SQL. |
 | `checklist-design-app-audit` | Audits against a validated Checklist Design snapshot: 703 auditable items, evidence-aware scoring, deterministic search scripts. |
+| `designmotion-ui` | 89 canonical UI/UX rules distilled strictly from 147 `@designmotionhq` posts across layout, type, color, motion, micro-interactions, forms, navigation, a11y, data-viz, onboarding, pricing, and anti-dark-patterns. |
 
 ### Session & project workflow
 
@@ -216,6 +217,7 @@ skills/
   debate/                     Multi-provider debate workflow
   debug-resolve/              Systematic debugging
   deploy-verify/              Post-deploy verification
+  designmotion-ui/            89 UI/UX rules distilled from @designmotionhq
   desloppify/                 Third-party: codebase health scanner
   emil-design-eng/            Third-party: animation and micro-interaction craft
   feature-validation/         Feature-vs-spec validation

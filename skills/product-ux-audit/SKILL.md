@@ -47,6 +47,8 @@ For each priority task, document the real journey end to end:
 - How they recognize that the task is finished.
 - **Exception paths:** empty state, loading, validation error, network/server failure, insufficient permissions, unsaved changes, asynchronous background operation and partial result.
 
+For concrete component, table, form, text-overflow and mobile/touch (`375px`) failure modes during stages 2–3, check [references/ux-edge-checks.md](references/ux-edge-checks.md).
+
 ### 3. Run two passes: comprehension and everyday operation
 Evaluate each journey at two complementary levels (details in [references/audit-method.md](references/audit-method.md)):
 - **Comprehension pass (cognitive walkthrough):**
@@ -73,7 +75,7 @@ Do not merge or remove buttons just because they have similar names. Compare eac
 - **Low-frequency functions:** do not recommend removing periodic closings, regulatory exports or audit tools without evidence of their usage and whether they are mandatory.
 
 ### 5. Decide where actions, containers and steps go
-Apply the operating rules in [references/interaction-criteria.md](references/interaction-criteria.md):
+Apply the operating rules in [references/interaction-criteria.md](references/interaction-criteria.md) (and the control/table/breadcrumb/shortcut checks in [references/ux-edge-checks.md](references/ux-edge-checks.md)):
 - **Placement by scope:** header/bar for the whole collection; row or detail view for one object; floating/top contextual bar when there is a multiple selection; form footer or bar for the task in progress.
 - **Primary action per decision context:** avoid both filling the screen with competing primary buttons and artificially imposing "a single primary button per page" when legitimate contexts coexist. Do not hide high-frequency actions under a three-dot menu (`...`) just to tidy the table if that slows down daily work.
 - **Container choice:**
@@ -85,7 +87,7 @@ Apply the operating rules in [references/interaction-criteria.md](references/int
 - **When to merge or split steps:** merge steps that share a decision and information; keep them separate when the responsible person changes (e.g. entry vs approval), when there are irreversible consequences or when it helps to distinguish between **saving a draft** and **confirming/issuing an active entity**.
 
 ### 6. Audit feedback, errors, notifications and pending work
-Apply the detailed policy in [references/notifications-and-feedback.md](references/notifications-and-feedback.md):
+Apply the detailed policy in [references/notifications-and-feedback.md](references/notifications-and-feedback.md) (plus loading thresholds, `onBlur`/idempotency and Optimistic UI boundaries in [references/ux-edge-checks.md](references/ux-edge-checks.md)):
 - Always distinguish four mechanisms: **Activity** (searchable history), **Feedback** (immediate response to the action), **Notification** (timely notice to a role) and **Pending work** (a task or exception with an owner, context, direct action and resolution state).
 - **Truthful state:** never announce as successful a payment, sync or background process that can still fail; report *"Processing"* / *"Pending confirmation"* and turn the later failure into recoverable pending work.
 - **Persistence proportional to the consequence:** do not use a fleeting toast as the only channel for an error that needs correction or recovery.
@@ -138,6 +140,7 @@ Load only the reference files needed for the current assignment:
 
 - [references/audit-method.md](references/audit-method.md) — Task analysis, cognitive walkthrough, heuristics, the CASTLE framework, semantic detection of redundancies and the order of minimal intervention.
 - [references/interaction-criteria.md](references/interaction-criteria.md) — Rules for placing actions by scope, choosing between inline/side panel/modal/page/steps, handling drafts and evaluating new features.
+- [references/ux-edge-checks.md](references/ux-edge-checks.md) — Concrete edge-case checks for forms, controls, loading/optimistic thresholds, tables, bulk selection, real-data overflow, touch targets, breadcrumbs, shortcuts and operational KPIs.
 - [references/notifications-and-feedback.md](references/notifications-and-feedback.md) — Separation between activity, feedback, notification and pending work; interruption matrix; approval sheet and accessibility of status messages.
 - [references/visual-comparison.md](references/visual-comparison.md) — Before/after comparison protocol under equivalent conditions, selectable recommendations, conflict handling and honest previews.
 - [references/design-md-integrations.md](references/design-md-integrations.md) — Governance with `DESIGN.md` (Google/Stitch format) and selective use of optional add-ons (Design with Intent, Impeccable, UI UX Pro Max, Emil Design Eng, Taste, Playwright, axe-core).
