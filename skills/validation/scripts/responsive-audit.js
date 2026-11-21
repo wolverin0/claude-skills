@@ -6,22 +6,27 @@
  *
  * It does NOT just take a screenshot. It injects DOM measurements at a given
  * viewport and returns STRUCTURED findings for:
- *   - horizontal-scroll      page wider than the viewport (content overbloats screen)
+ *   - horizontal-scroll       page wider than the viewport (content overbloats screen)
  *   - mobile-scroll-container a visible nested horizontal scroller on mobile
- *   - overflow-x             a specific element extends past the right viewport edge
- *   - offscreen-left         an element is pushed off the left edge
- *   - text-clipped           text is cut off by its container (words not within margins)
- *   - element-overlap        two text/interactive elements visually collide
- *   - touch-target-small     interactive element below the mobile tap-target minimum
- *   - font-too-small         body text below a legible size on mobile
- *   - no-viewport-meta       responsive meta tag missing
+ *   - overflow-x              a specific element extends past the right viewport edge
+ *   - offscreen-left          an element is pushed off the left edge
+ *   - text-clipped            text is cut off by its container (words not within margins)
+ *   - element-overlap         two text/interactive elements visually collide
+ *   - touch-target-small      interactive element below the mobile tap-target minimum
+ *   - font-too-small          body text below a legible size on mobile
+ *   - no-viewport-meta        responsive meta tag missing
+ *   - sidebar-clipped         desktop/laptop sidebar clips navigation items vertically
+ *   - narrow-column-waste     desktop/laptop screen scrolls vertically while leaving >52% width empty
+ *   - above-the-fold-cta      compact form's primary submit/action CTA falls below viewport fold
+ *   - wcag-contrast-fail      computed text-vs-background contrast ratio fails WCAG AA floor
  *
  * TWO WAYS TO USE IT:
  *
  * 1. playwright-local backend (deterministic, preferred when Playwright exists):
  *      node scripts/responsive-audit.js --url http://localhost:5173/customers \
  *        --out test-manifest/evidence/routes/customers-responsive.json
- *    Runs all standard breakpoints and writes one JSON file with per-breakpoint findings.
+ *    Runs all standard breakpoints (mobile 375x812, tablet 768x1024, hd-laptop 1366x650,
+ *    desktop 1440x900, fhd 1920x1080) and writes one JSON file with per-breakpoint findings.
  *
  * 2. Any other backend (agent-browser, playwright-mcp, chrome-mcp, browser-harness):
  *    Read this file, take the exported AUDIT_SOURCE string, and inject it through the
@@ -76,7 +81,7 @@ function __validationResponsiveAudit(opts) {
     if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) return false;
     var r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) return false;
-    if (r.bottom < 0 || r.top > vh) return false; // below/above fold is fine, only need in-view-ish
+    if (r.bottom < 0 || r.top > vh) return false;
     return true;
   }
 
@@ -101,8 +106,71 @@ function __validationResponsiveAudit(opts) {
     return /hidden|clip/.test(cs.overflowX) || /hidden|clip/.test(cs.overflow);
   }
 
+  // Color & WCAG 2.1 contrast helpers (walk opaque backgrounds safely)
+  function parseRgba(str) {
+    if (!str || str === 'transparent') return null;
+    var m = str.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s\/]+([\d.]+))?\s*\)/i);
+    if (!m) return null;
+    var a = m[4] !== undefined ? parseFloat(m[4]) : 1;
+    return { r: parseFloat(m[1]), g: parseFloat(m[2]), b: parseFloat(m[3]), a: a };
+  }
+
+  function blend(fg, bg) {
+    var a = fg.a;
+    return {
+      r: fg.r * a + bg.r * (1 - a),
+      g: fg.g * a + bg.g * (1 - a),
+      b: fg.b * a + bg.b * (1 - a),
+      a: 1
+    };
+  }
+
+  function effectiveBg(el) {
+    var layers = [];
+    var cur = el;
+    for (var depth = 0; cur && cur.nodeType === 1 && depth < 12; depth++) {
+      var c = parseRgba(getComputedStyle(cur).backgroundColor);
+      if (c && c.a > 0) {
+        layers.push(c);
+        if (c.a >= 0.99) break;
+      }
+      cur = cur.parentElement;
+    }
+    var base = { r: 255, g: 255, b: 255, a: 1 };
+    for (var k = layers.length - 1; k >= 0; k--) {
+      base = blend(layers[k], base);
+    }
+    return base;
+  }
+
+  function relLum(c) {
+    var vals = [c.r / 255, c.g / 255, c.b / 255].map(function (v) {
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * vals[0] + 0.7152 * vals[1] + 0.0722 * vals[2];
+  }
+
+  function contrastRatio(fg, bg) {
+    var l1 = relLum(fg);
+    var l2 = relLum(bg);
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+  }
+
+  function isDisabledEl(el) {
+    if (el.disabled) return true;
+    var cur = el;
+    for (var d = 0; cur && d < 4; d++) {
+      if (cur.getAttribute && (cur.getAttribute('aria-disabled') === 'true' || cur.hasAttribute('disabled'))) return true;
+      var op = parseFloat(getComputedStyle(cur).opacity);
+      if (op < 0.75) return true;
+      cur = cur.parentElement;
+    }
+    return false;
+  }
+
   // 1) Page-level horizontal overflow (content overbloats / unexpected horizontal scrollbar)
   var docW = document.documentElement.scrollWidth;
+  var docH = document.documentElement.scrollHeight;
   if (docW - vw > EDGE_TOL) {
     push('horizontal-scroll', 'high', document.documentElement,
       'page scrollWidth ' + docW + 'px exceeds viewport ' + vw + 'px by ' + (docW - vw) + 'px');
@@ -113,9 +181,77 @@ function __validationResponsiveAudit(opts) {
     push('no-viewport-meta', 'high', null, 'no <meta name="viewport"> tag; mobile layout will not scale');
   }
 
+  // 2b) Desktop/laptop sidebar vertical clipping check (critical on 1366x650)
+  if (vw >= 1024) {
+    var asides = document.querySelectorAll('aside');
+    for (var si = 0; si < asides.length; si++) {
+      var aside = asides[si];
+      if (!visible(aside)) continue;
+      var nav = aside.querySelector('nav') || aside;
+      var ncs = getComputedStyle(nav);
+      if (nav.scrollHeight > nav.clientHeight + 4 && /hidden|clip/.test(ncs.overflowY)) {
+        push('sidebar-clipped', 'high', nav,
+          'sidebar navigation scrollHeight ' + nav.scrollHeight + 'px exceeds clientHeight ' + nav.clientHeight + 'px with overflow hidden');
+      }
+    }
+  }
+
+  // 2c) Narrow-column waste on desktop/laptop: vertical scrolling while leaving >52% of width empty
+  if (vw >= 1200 && docH > vh + 40) {
+    var mainEl = document.querySelector('main') || document.body;
+    var mainRect = mainEl.getBoundingClientRect();
+    if (mainRect.width >= 900) {
+      var cards = mainEl.querySelectorAll('form, [class*="max-w-md"], [class*="max-w-sm"], [class*="max-w-lg"]');
+      var widest = 0;
+      var tallestNarrow = null;
+      var directKids = mainEl.children;
+      for (var dk = 0; dk < directKids.length; dk++) {
+        var kr = directKids[dk].getBoundingClientRect();
+        if (kr.width > widest && kr.height > 80) widest = kr.width;
+      }
+      for (var ci = 0; ci < cards.length; ci++) {
+        var cr = cards[ci].getBoundingClientRect();
+        if (cr.height > vh * 0.75 && cr.width > 200 && cr.width < mainRect.width * 0.48) {
+          tallestNarrow = { el: cards[ci], w: Math.round(cr.width), h: Math.round(cr.height) };
+          break;
+        }
+      }
+      if (tallestNarrow && widest < mainRect.width * 0.55) {
+        push('narrow-column-waste', 'high', tallestNarrow.el,
+          'content is ' + tallestNarrow.w + 'px wide (' + Math.round((tallestNarrow.w / mainRect.width) * 100) +
+          '% of ' + Math.round(mainRect.width) + 'px container) while forcing ' + docH + 'px vertical scroll on ' + vw + 'x' + vh);
+      }
+    }
+  }
+
+  // 2d) Above-the-fold primary CTA & login-screen vertical fit on 1366x650 / 1920x1080
+  if (vw >= 1200) {
+    var forms = document.querySelectorAll('form');
+    if (forms.length === 1) {
+      var formEl = forms[0];
+      var inputsCount = formEl.querySelectorAll('input:not([type="hidden"]), select, textarea').length;
+      var submitBtn = formEl.querySelector('button[type="submit"], input[type="submit"]');
+      if (inputsCount > 0 && inputsCount <= 8 && submitBtn) {
+        var sbr = submitBtn.getBoundingClientRect();
+        if (sbr.width > 0 && sbr.height > 0 && sbr.bottom > vh + 12) {
+          push('above-the-fold-cta', 'high', submitBtn,
+            'compact form (' + inputsCount + ' fields) primary submit CTA bottom ' + Math.round(sbr.bottom) +
+            'px falls below viewport height ' + vh + 'px');
+        }
+      }
+      var hasPwdInput = !!formEl.querySelector('input[type="password"]');
+      var hasNavShell = document.querySelectorAll('aside a, nav a').length >= 3;
+      if (hasPwdInput && !hasNavShell && docH > vh + 32) {
+        push('login-screen-scroll', 'high', formEl,
+          'standalone login screen height ' + docH + 'px exceeds ' + vw + 'x' + vh + ' viewport; must fit without scrolling');
+      }
+    }
+  }
+
   var all = document.body ? document.body.getElementsByTagName('*') : [];
   var n = Math.min(all.length, MAX_ELEMENTS);
   var candidates = []; // for overlap pass
+  var contrastFindings = 0;
 
   for (var i = 0; i < n; i++) {
     var el = all[i];
@@ -135,7 +271,6 @@ function __validationResponsiveAudit(opts) {
 
     // 3) Element extends past the right edge of the viewport (out of margin)
     if (r.right > vw + EDGE_TOL && r.left >= -EDGE_TOL && r.left < vw && (r.right - r.left) <= vw) {
-      // only flag elements that themselves overflow, not huge wrappers clipped by ancestor scroll
       if (!clipsContentAncestor(el)) {
         push('overflow-x', 'high', el, 'element right edge ' + Math.round(r.right) + 'px past viewport ' + vw + 'px');
       }
@@ -166,6 +301,31 @@ function __validationResponsiveAudit(opts) {
       }
     }
 
+    // 7b) WCAG AA real contrast check on visible direct-text controls/labels/pills (skip disabled/gradients/images)
+    if (contrastFindings < 20 && hasDirectText(el) && !isDisabledEl(el) && cs.backgroundImage === 'none') {
+      var fg = parseRgba(cs.color);
+      if (fg && fg.a >= 0.85) {
+        var bg = effectiveBg(el);
+        var effectiveFg = fg.a < 0.99 ? blend(fg, bg) : fg;
+        var ratio = contrastRatio(effectiveFg, bg);
+        var fSize = parseFloat(cs.fontSize) || 14;
+        var fWeight = parseInt(cs.fontWeight, 10) || 400;
+        var isLarge = fSize >= 18.66 || (fSize >= 14 && fWeight >= 700);
+        var minReq = isLarge ? 3.0 : 4.5;
+        if (ratio < 2.6) {
+          contrastFindings++;
+          push('wcag-contrast-fail', 'high', el,
+            'severe low contrast ' + ratio.toFixed(2) + ':1 (min ' + minReq + ':1; color ' + cs.color + ' on rgb(' +
+            Math.round(bg.r) + ',' + Math.round(bg.g) + ',' + Math.round(bg.b) + '))');
+        } else if (ratio < minReq) {
+          contrastFindings++;
+          push('wcag-contrast-fail', 'medium', el,
+            'contrast ' + ratio.toFixed(2) + ':1 below WCAG AA ' + minReq + ':1 (color ' + cs.color + ' on rgb(' +
+            Math.round(bg.r) + ',' + Math.round(bg.g) + ',' + Math.round(bg.b) + '))');
+        }
+      }
+    }
+
     if ((hasDirectText(el) || isInteractive(el)) && cs.position !== 'fixed' && cs.position !== 'absolute') {
       candidates.push({ el: el, r: r });
     }
@@ -183,8 +343,6 @@ function __validationResponsiveAudit(opts) {
   }
 
   // 8) Overlap detection — conservative to avoid false positives.
-  // Bucket by row so this stays near-linear; only flag leaf-ish, non-positioned,
-  // non-ancestor pairs whose intersection covers >55% of the smaller box.
   if (findings.length < MAX_FINDINGS) {
     var buckets = {};
     for (var c = 0; c < candidates.length; c++) {
@@ -229,6 +387,8 @@ function __validationResponsiveAudit(opts) {
     viewport: { w: vw, h: vh },
     mobile: isMobile,
     docScrollWidth: docW,
+    docScrollHeight: docH,
+    verticalRatio: +(docH / Math.max(1, vh)).toFixed(2),
     findingCount: findings.length,
     bySeverity: bySeverity,
     findings: findings
@@ -264,8 +424,9 @@ if (require.main === module) {
     var breakpoints = [
       { name: 'mobile', w: 375, h: 812, mobile: true },
       { name: 'tablet', w: 768, h: 1024, mobile: false },
-      { name: 'laptop', w: 1024, h: 768, mobile: false },
-      { name: 'desktop', w: 1440, h: 900, mobile: false }
+      { name: 'hd-laptop', w: 1366, h: 650, mobile: false },
+      { name: 'desktop', w: 1440, h: 900, mobile: false },
+      { name: 'fhd', w: 1920, h: 1080, mobile: false }
     ];
     if (args['mobile-only']) breakpoints = breakpoints.filter(function (b) { return b.mobile; });
 
@@ -292,10 +453,15 @@ if (require.main === module) {
         var page = await ctx.newPage();
         await page.goto(args.url, { waitUntil: 'networkidle', timeout: 30000 }).catch(function () {});
         await page.waitForTimeout(600);
-        // Login-masquerade guard: if a storage-state was supplied (i.e. we expect to be
-        // authenticated) but the page still shows a login form, the audit is meaningless.
+        // Login-masquerade guard: avoid false-positives on authenticated settings/shift pages
+        // that legitimately render a password input inside the authenticated app shell.
         if (args['storage-state']) {
           var onLogin = await page.evaluate(function () {
+            var p = (location.pathname || '').toLowerCase();
+            var isLoginPath = /(^|\/)(login|signin|sign-in)\/?$/.test(p);
+            var hasAuthShell = !!document.querySelector('aside nav a, nav a[href*="logout"], [data-auth-shell]') ||
+              document.querySelectorAll('aside a, nav a').length >= 3;
+            if (hasAuthShell && !isLoginPath) return false;
             var t = (document.body && document.body.innerText || '').toLowerCase();
             var hasPwd = !!document.querySelector('input[type="password"]');
             return hasPwd && /log\s?in|sign\s?in|iniciar sesi|contrase|password/.test(t);
@@ -337,8 +503,6 @@ if (require.main === module) {
 
 /**
  * Launch resilient to environments without Playwright's bundled Chromium.
- * Order: explicit --channel, then bundled Chromium, then system Chrome/Edge channels.
- * Many machines (e.g. dev Windows boxes) have Chrome but never ran `playwright install`.
  */
 async function launchChromium(chromium, channel) {
   if (channel) return chromium.launch({ channel: channel, headless: true });
@@ -369,7 +533,7 @@ function parseArgs(argv) {
 function printSummary(out) {
   console.log('Responsive audit: ' + out.url);
   out.breakpoints.forEach(function (b) {
-    console.log('  [' + b.breakpoint + ' ' + b.viewport.w + 'x' + b.viewport.h + '] ' +
+    console.log('  [' + b.breakpoint + ' ' + b.viewport.w + 'x' + b.viewport.h + ' h=' + b.docScrollHeight + 'px] ' +
       b.findingCount + ' findings (high:' + b.bySeverity.high + ' med:' + b.bySeverity.medium + ' low:' + b.bySeverity.low + ')');
     b.findings.slice(0, 8).forEach(function (f) {
       console.log('     - ' + f.severity + ' ' + f.type + ' ' + (f.selector || '') + ' :: ' + f.detail);
