@@ -30,6 +30,10 @@ Before diving into implementation, understand how to design tools for AI agents 
 - Focus on tools that enable complete tasks, not just individual API calls
 - Consider what workflows agents actually need to accomplish
 
+**Choose the Transport:**
+- stdio for local tools; Streamable HTTP (one `/mcp` endpoint) for anything remote
+- The two-endpoint HTTP+SSE transport is deprecated since the 2025-03-26 spec: never pick it for a new server
+
 **Optimize for Limited Context:**
 - Agents have constrained context windows - make every token count
 - Return high-signal information, not exhaustive data dumps
@@ -165,10 +169,11 @@ For each tool in the plan:
 - Follow async/await patterns for all I/O
 - Implement proper error handling
 - Support multiple response formats (JSON and Markdown)
-- Respect pagination parameters
-- Check character limits and truncate appropriately
+- Respect pagination parameters: every list tool takes `limit` (small default, e.g. 20) and `offset`/`cursor`, and returns `total`, `has_more` and the next offset/cursor
+- Check character limits (`CHARACTER_LIMIT`) and truncate with an explicit note on how to narrow the query; never return a raw API JSON dump
+- Default to the concise response format; return the detailed one only on request
 
-**Add Tool Annotations:**
+**Add Tool Annotations (required on every tool, all four set explicitly):**
 - `readOnlyHint`: true (for read-only operations)
 - `destructiveHint`: false (for non-destructive operations)
 - `idempotentHint`: true (if repeated calls have same effect)
@@ -212,7 +217,7 @@ To ensure quality, review the code for:
 
 #### 3.2 Test and Build
 
-**Important:** MCP servers are long-running processes that wait for requests over stdio/stdin or sse/http. Running them directly in your main process (e.g., `python server.py` or `node dist/index.js`) will cause your process to hang indefinitely.
+**Important:** MCP servers are long-running processes that wait for requests over stdio or Streamable HTTP. Running them directly in your main process (e.g., `python server.py` or `node dist/index.js`) will cause your process to hang indefinitely.
 
 **Safe ways to test the server:**
 - Use the evaluation harness (see Phase 4) - recommended approach
