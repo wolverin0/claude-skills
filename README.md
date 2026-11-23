@@ -246,13 +246,15 @@ agents/                       audit-runner and audit-domain-runner subagents
 commands/                     /audit and /audit-remediate slash commands
 hooks/                        pre/post audit report check hooks (Python)
 workflows/                    audit-remediate.mjs (workflow-runtime script)
-tools/                        Supporting docs and legacy helpers
+tools/                        Supporting docs, legacy helpers, references/ (backend, ClickHouse)
 tests/                        Shell tests for the debate helper functions
 ```
 
-Reference docs at `skills/` root: `backend-patterns.md`, `frontend-patterns.md`,
-`coding-standards.md`, `clickhouse-io.md`, `project-guidelines-example.md`,
-`AUTO-HEALING-INTEGRATION-GUIDE.md`.
+`skills/` holds only skill folders. The former root reference docs now live with
+the skill that loads them (`frontendgame/references/frontend-patterns.md`,
+`project-setup/references/coding-standards.md`,
+`project-setup/assets/project-guidelines-example.md`) or, when no shipped skill
+fits, in `tools/references/` (`backend-patterns.md`, `clickhouse-io.md`).
 
 ## Quick starts
 

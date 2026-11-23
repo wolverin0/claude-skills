@@ -80,6 +80,8 @@ Read `references/motion-engineering.md` for detailed implementation guidance.
 ## Stack selection
 
 When the stack is known, use the relevant recipe in `references/stack-recipes.md`.
+For React/Next.js component, state, data-fetching and performance patterns, read
+`references/frontend-patterns.md`.
 
 | Stack | Preferred approach |
 |---|---|

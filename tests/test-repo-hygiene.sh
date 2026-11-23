@@ -36,6 +36,14 @@ test_no_hardcoded_playbook_path() {
     [[ -z "$hits" ]] && pass || fail "$hits"
 }
 
+# Test 3: skills/ root holds only skill folders (loose files are never installed)
+test_no_loose_files_in_skills_root() {
+    echo -n "Test 3: No loose files at skills/ root... "
+    local hits
+    hits=$(find skills -mindepth 1 -maxdepth 1 -type f | sort)
+    [[ -z "$hits" ]] && pass || fail "move into a skill's references/ or tools/references/:" $hits
+}
+
 run_all_tests() {
     echo ""
     echo "Running Repo Hygiene Tests"
@@ -59,6 +67,7 @@ run_all_tests() {
 TESTS=(
     test_playbook_copies_identical
     test_no_hardcoded_playbook_path
+    test_no_loose_files_in_skills_root
 )
 
 run_all_tests

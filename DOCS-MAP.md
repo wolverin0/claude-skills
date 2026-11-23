@@ -183,6 +183,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/frontendgame/references/motion-engineering.md` — motion — current
 - `skills/frontendgame/references/reverse-engineering.md` — screenshot-to-code — current
 - `skills/frontendgame/references/stack-recipes.md` — stack recipes — current
+- `skills/frontendgame/references/frontend-patterns.md` — React/Next.js component, state and performance patterns (moved from `skills/` root) — current
 - `skills/mcp-builder/SKILL.md` — build MCP servers — current
 - `skills/mcp-builder/references/mcp_best_practices.md` — MCP best practices — current
 - `skills/mcp-builder/references/node_mcp_server.md` — Node/TS server guide — current
@@ -211,6 +212,8 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
 - `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current
 - `skills/project-setup/references/full-process.md` — long setup process — current\* (`/monitoring-setup` not in repo)
+- `skills/project-setup/references/coding-standards.md` — TS/JS coding standards offered when a project has none (moved from `skills/` root) — current
+- `skills/project-setup/assets/project-guidelines-example.md` — example project-guidelines skill (moved from `skills/` root) — current (example)
 - `skills/project-curate/SKILL.md` — curate a project's `.claude/` — current
 - `skills/project-curate/references/full-process.md` — long curation process — current\* (`skills/architecture-decision-records/` not in repo)
 - `skills/project-doctor/SKILL.md` — read-only orchestration health check — current\* (`/monitoring-setup`)
@@ -223,17 +226,10 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/debate/tools/state-lock.sh` — sourceable mkdir-lock state/index writers with stale-lock recovery (tested by `tests/test-atomic-state-writes.sh`, `tests/test-state-lock-recovery.sh`) — current
 - `skills/debate/tools/atomic-json.mjs` — Node alternative sharing the same `<file>.lock` directory — current
 
-## Loose references (`skills/` root)
-
-- `skills/backend-patterns.md` — backend/API patterns — current
-- `skills/frontend-patterns.md` — React/Next.js patterns — current
-- `skills/coding-standards.md` — TS/JS coding standards — current
-- `skills/clickhouse-io.md` — ClickHouse patterns — current
-- `skills/project-guidelines-example.md` — example project-guidelines skill — current (example)
-- `skills/AUTO-HEALING-INTEGRATION-GUIDE.md` — older copy of the auto-healing guide — legacy\* (`skill-test.md`)
-
 ## Tools
 
+- `tools/references/backend-patterns.md` — backend/API patterns; not installed with any skill, read on demand (moved from `skills/` root) — current
+- `tools/references/clickhouse-io.md` — ClickHouse patterns; not installed with any skill, read on demand (moved from `skills/` root) — current
 - `tools/retrospective-learning.md` — skill retrospective learning module — legacy\* (`skill-test.md`, `learning.md`)
 - `tools/RETROSPECTIVE-LEARNING-INTEGRATION-GUIDE.md` — retrospective learning integration — legacy\* (`skill-test.md`, `learning.md`)
 - `tools/sample/feature-validation-SKILL.md` — sample of the old feature-validation skill — legacy

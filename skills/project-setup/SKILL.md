@@ -61,6 +61,12 @@ instructions.
 Load `references/full-process.md` when you need the full legacy template,
 section mapping table, example generated blocks, or intelligence-layer details.
 
+When the project has no coding conventions yet, offer
+`references/coding-standards.md` (TS/JS) as a starting point, and use
+`assets/project-guidelines-example.md` as the shape of a project-specific
+guidelines skill. Adapt both to the repository evidence; never paste them
+unchanged.
+
 ## Output
 
 ```text
