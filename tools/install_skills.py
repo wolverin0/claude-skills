@@ -3,6 +3,7 @@
 
   python tools/install_skills.py --profile audit --target all --dry-run
   python tools/install_skills.py --profile ship --target claude
+  python tools/install_skills.py --profile all --target all --exclude debate,impeccable
   python tools/install_skills.py --prune-orphans --dry-run
 
 Profiles and Claude-only extras live in tools/skill-profiles.json; retired
@@ -130,6 +131,10 @@ def cmd_install(args, home: Path) -> int:
     profiles = load_profiles()
     repo_skills = discover_repo_skills(REPO)
     names = resolve_profile(args.profile, profiles, repo_skills)
+    unknown = [n for n in args.exclude if n not in repo_skills]
+    if unknown:
+        raise SystemExit(f"--exclude names skills not in the repo: {', '.join(unknown)}")
+    names = [n for n in names if n not in args.exclude]
     targets = list(PROVIDERS) if args.target == "all" else [args.target]
     ts = stamp()
     mode = "symlink" if args.symlink else "copy"
@@ -203,6 +208,8 @@ def parse_args(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--profile", help="ship | audit | build | workflow | all (see tools/skill-profiles.json)")
     p.add_argument("--target", choices=[*PROVIDERS, "all"], default="all")
+    p.add_argument("--exclude", type=lambda v: [n for n in v.split(",") if n], default=[],
+                   help="comma-separated skill names to leave untouched (installed copy stays as is)")
     p.add_argument("--symlink", action="store_true", help="link installed folders to the repo instead of copying")
     p.add_argument("--prune-orphans", action="store_true", help="find retired or nested-backup skills in provider roots")
     p.add_argument("--dry-run", action="store_true", help="report what would change; write nothing")

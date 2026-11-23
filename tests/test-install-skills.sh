@@ -127,13 +127,29 @@ test_profiles_valid() {
     pass
 }
 
+# Test 7: --exclude skips named skills (dry-run and real) and rejects unknown names
+test_exclude() {
+    echo -n "Test 7: --exclude skips named skills and rejects unknown ones... "
+    reset_home
+    local out rc=0
+    out=$("${INSTALL[@]}" --profile all --target all --exclude debate,impeccable --dry-run)
+    echo "$out" | grep -qE "^(debate|impeccable) " && { fail "excluded skill listed in dry-run" "$out"; return 1; }
+    echo "$out" | grep -q "audit-orchestrator .*claude" || { fail "exclude dropped other skills" "$out"; return 1; }
+    "${INSTALL[@]}" --profile all --target all --exclude debate,impeccable >/dev/null
+    [[ ! -e "$H/.claude/skills/debate" && ! -e "$H/.codex/skills/impeccable" ]] || { fail "excluded skill was installed"; return 1; }
+    [[ -f "$H/.claude/skills/audit-loop/SKILL.md" ]] || { fail "exclude blocked a normal install"; return 1; }
+    "${INSTALL[@]}" --profile all --exclude no-such-skill --dry-run >/dev/null 2>&1 && rc=0 || rc=$?
+    [[ $rc -ne 0 ]] || { fail "unknown --exclude name accepted"; return 1; }
+    pass
+}
+
 echo ""
 echo "Running Installer Tests"
 echo "=================================="
 echo ""
 total=0; passed=0
 for t in test_dry_run_writes_nothing test_install_then_same test_update_backs_up_outside_root \
-         test_prune_dry_run test_prune_needs_yes_and_moves test_profiles_valid; do
+         test_prune_dry_run test_prune_needs_yes_and_moves test_profiles_valid test_exclude; do
     total=$((total + 1))
     if $t; then passed=$((passed + 1)); fi
 done
