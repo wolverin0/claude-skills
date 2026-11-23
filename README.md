@@ -343,7 +343,7 @@ python tools/install_skills.py --profile audit --target claude --symlink  # link
 | `--profile` | `ship` (battle-test family incl. the audit entry points), `audit` (the three audit entry points), `build`, `workflow`, `all` (every skill, third-party included). Lists live in `tools/skill-profiles.json`. |
 | `--target` | `claude` (`~/.claude/skills/`), `codex` (`~/.codex/skills/`), `all` (default). |
 | `--symlink` | link the installed folder to the repo instead of copying (Windows needs Developer Mode). |
-| `--dry-run` | report `install` / `update (backup)` / `same` per item; write nothing. |
+| `--dry-run` | report `install` / `update (backup)` / `same` per item and name files that exist only in the installed copy (an update moves them to backup with the old folder); write nothing. |
 | `--prune-orphans` | find retired skills (`tools/retired-skills.txt`, e.g. the 18 old `audit-*` folders) and `_backup_sync/` or `_archive/` folders hiding `SKILL.md` files inside `~/.claude/skills`, `~/.codex/skills` or `~/.agents/skills`. Codex loads such nested copies as live skills. |
 | `--yes` | required to move orphans; without `--dry-run` and `--yes` the prune refuses. |
 

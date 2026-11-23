@@ -76,6 +76,15 @@ def tree_digest(path: Path) -> str | None:
     return skill_digest(path) if path.is_dir() else hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def installed_only(src: Path, dest: Path) -> list[str]:
+    """Files present in the installed folder but not in the repo copy (lost from the live skill on update)."""
+    if not (src.is_dir() and dest.is_dir()) or dest.is_symlink():
+        return []
+    rel = lambda root: {p.relative_to(root).as_posix() for p in root.rglob("*")
+                        if p.is_file() and "__pycache__" not in p.parts}
+    return sorted(rel(dest) - rel(src))
+
+
 def install_item(src: Path, dest: Path, backup_root: Path, mode: str, dry: bool) -> str:
     """Install one skill folder or extra file. Returns the action taken (or planned)."""
     if mode == "symlink":
@@ -91,6 +100,11 @@ def install_item(src: Path, dest: Path, backup_root: Path, mode: str, dry: bool)
             return "same"
         else:
             action = "update (backup)"
+    extra = installed_only(src, dest)
+    if extra:
+        # The whole installed folder moves to backup, so these leave the live skill.
+        shown = ", ".join(extra[:3]) + (" ..." if len(extra) > 3 else "")
+        action += f"; {len(extra)} installed-only file(s) move to backup: {shown}"
     if dry:
         return action
     dest.parent.mkdir(parents=True, exist_ok=True)

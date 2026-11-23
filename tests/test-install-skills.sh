@@ -54,10 +54,16 @@ test_install_then_same() {
     pass
 }
 
-# Test 3: a changed installed copy is backed up outside the skill root
+# Test 3: a changed installed copy is backed up outside the skill root, and the
+# plan names files that exist only in the installed copy
 test_update_backs_up_outside_root() {
-    echo -n "Test 3: Update backs up outside the skill root... "
+    echo -n "Test 3: Update names installed-only files and backs up outside the root... "
     echo "local edit" >> "$H/.codex/skills/audit-loop/SKILL.md"
+    echo "local tool" > "$H/.codex/skills/audit-loop/local-tool.mjs"
+    local plan
+    plan=$("${INSTALL[@]}" --profile audit --target codex --dry-run)
+    echo "$plan" | grep -q "audit-loop .*update (backup); 1 installed-only file(s) move to backup: local-tool.mjs" \
+        || { fail "plan does not name the installed-only file" "$plan"; return 1; }
     "${INSTALL[@]}" --profile audit --target codex >/dev/null
     local backup
     backup=$(find "$H/.codex/_backup_sync" -path "*/skills/audit-loop/SKILL.md" | head -1)
