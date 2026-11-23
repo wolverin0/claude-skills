@@ -5,7 +5,8 @@
 // x-signature header: "ts=<timestamp>,v1=<hex hmac>". The signed manifest is
 //   id:<data.id>;request-id:<x-request-id>;ts:<ts>;
 // where data.id comes from the notification URL query (?data.id=...) and is
-// lowercased when alphanumeric. A part whose value is missing is left out.
+// used exactly as received (trimmed; case preserved, as in the official
+// mercadopago SDK validator). A part whose value is missing is left out.
 // v1 = hex(HMAC-SHA256(secret, manifest)), secret = the webhook "secret
 // signature" from the MercadoPago application settings.
 
@@ -24,12 +25,14 @@ export function parseXSignature(header) {
 
 /** Build the signed manifest; parts with a missing value are omitted. */
 export function buildManifest({ dataId, requestId, ts }) {
-  let id = dataId == null ? '' : String(dataId);
-  if (/^[a-z0-9]+$/i.test(id)) id = id.toLowerCase();
+  const clean = (v) => (v == null ? '' : String(v).trim());
+  const id = clean(dataId);
+  const rid = clean(requestId);
+  const t = clean(ts);
   let manifest = '';
   if (id) manifest += `id:${id};`;
-  if (requestId) manifest += `request-id:${requestId};`;
-  if (ts) manifest += `ts:${ts};`;
+  if (rid) manifest += `request-id:${rid};`;
+  if (t) manifest += `ts:${t};`;
   return manifest;
 }
 
@@ -59,7 +62,7 @@ export async function verifyMpSignature({ xSignature, xRequestId, dataId, secret
   if (!ts || !v1) return { valid: false, reason: 'missing ts or v1 in x-signature' };
   if (toleranceSec > 0) {
     const n = Number(ts);
-    const tsMs = n > 1e12 ? n : n * 1000;          // MercadoPago has sent both seconds and milliseconds
+    const tsMs = n > 1e12 ? n : n * 1000;          // the SDK treats ts as seconds; accept milliseconds too
     if (!Number.isFinite(n) || Math.abs(nowMs - tsMs) > toleranceSec * 1000) {
       return { valid: false, reason: 'timestamp outside tolerance' };
     }

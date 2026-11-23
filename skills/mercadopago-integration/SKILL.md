@@ -130,7 +130,7 @@ It covers the four production pitfalls:
 
 | Pitfall | What the asset does |
 |---|---|
-| Forged notifications | Verifies `x-signature` (`ts=…,v1=…`): HMAC-SHA256 with the webhook secret over `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` (`data.id` from the URL query, lowercased if alphanumeric; missing parts left out), constant-time compare, 10-minute replay window. Invalid → 401. |
+| Forged notifications | Verifies `x-signature` (`ts=…,v1=…`): HMAC-SHA256 with the webhook secret over `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` (`data.id` from the URL query exactly as received, case preserved; missing parts left out; same rules as the official SDK validators), constant-time compare, 10-minute replay window. Invalid → 401. |
 | Legacy IPN (`?topic=payment&id=…`) arriving next to the webhook | IPN is unsigned: only its id is used and the payment is re-read from `GET /v1/payments/{id}`; status and amount never come from a notification body. |
 | Duplicates (webhook + IPN, retries, out-of-order) | Order updates are guarded transitions (never leave `paid`); `mp_webhook_events` has a unique `payment:<id>:<status>` key, a duplicate insert (23505) returns 200 and skips non-idempotent side effects. |
 | Supabase answers 401 before your code runs | MercadoPago sends no Supabase JWT, so the function needs `verify_jwt = false` in `supabase/config.toml`. |

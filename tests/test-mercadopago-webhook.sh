@@ -31,13 +31,14 @@ js() {
 
 header_from_sign() { "$PY" -B "$TOOL" sign "$@" | sed -n 's/^x-signature: //p'; }
 
-# Test 1: Python, Web Crypto and openssl compute the same v1; id is lowercased
+# Test 1: Python, Web Crypto and openssl compute the same v1; data.id case is preserved
+# (official SDK test: test_uppercase_dataid_is_preserved)
 test_three_implementations_agree() {
-    echo -n "Test 1: Python, Web Crypto and openssl agree (id lowercased)... "
+    echo -n "Test 1: Python, Web Crypto and openssl agree (data.id case preserved)... "
     local hdr py_v1 ossl_v1 out
     hdr=$(header_from_sign --data-id ABC123 --request-id req-1 --ts 1742505638683)
     py_v1=${hdr##*v1=}
-    ossl_v1=$(printf '%s' "id:abc123;request-id:req-1;ts:1742505638683;" \
+    ossl_v1=$(printf '%s' "id:ABC123;request-id:req-1;ts:1742505638683;" \
         | openssl dgst -sha256 -hmac "$MP_WEBHOOK_SECRET" | sed 's/^.*= //')
     [[ "$py_v1" == "$ossl_v1" ]] || { fail "python $py_v1 != openssl $ossl_v1"; return 1; }
     out=$(HDR="$hdr" js 'const m = await import(process.env.MOD);

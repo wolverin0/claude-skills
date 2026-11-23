@@ -7,8 +7,9 @@ that the receiving Supabase Edge Function is deployed with verify_jwt = false.
   check-config  fail unless supabase/config.toml sets verify_jwt = false for the function
 
 Manifest (same rules as assets/mp-webhook-signature.mjs):
-  id:<data.id>;request-id:<x-request-id>;ts:<ts>;   (data.id lowercased if
-  alphanumeric; a part with no value is left out). v1 = hex HMAC-SHA256.
+  id:<data.id>;request-id:<x-request-id>;ts:<ts>;   (values trimmed, data.id
+  case preserved as in the official SDK; a part with no value is left out).
+  v1 = hex HMAC-SHA256.
 Pass the secret with --secret-env NAME (read from the environment) so it never
 lands in shell history.
 """
@@ -19,7 +20,6 @@ import argparse
 import hashlib
 import hmac
 import os
-import re
 import sys
 import time
 import uuid
@@ -27,9 +27,9 @@ from pathlib import Path
 
 
 def build_manifest(data_id: str | None, request_id: str | None, ts: str | None) -> str:
-    data_id = data_id or ""
-    if re.fullmatch(r"[A-Za-z0-9]+", data_id):
-        data_id = data_id.lower()
+    data_id = (data_id or "").strip()
+    request_id = (request_id or "").strip()
+    ts = (ts or "").strip()
     parts = []
     if data_id:
         parts.append(f"id:{data_id};")
@@ -93,7 +93,7 @@ def main(argv=None) -> int:
     s = sub.add_parser("sign")
     s.add_argument("--data-id", required=True)
     s.add_argument("--request-id", default=None, help="default: random UUID; \"\" sends none")
-    s.add_argument("--ts", default=None, help="default: now, in milliseconds")
+    s.add_argument("--ts", default=None, help="default: now, in seconds")
     s.add_argument("--secret-env", default="MP_WEBHOOK_SECRET")
     s.add_argument("--url", default="http://localhost:54321/functions/v1/mercadopago-webhook")
     v = sub.add_parser("verify")
@@ -108,7 +108,7 @@ def main(argv=None) -> int:
 
     if args.cmd == "sign":
         request_id = str(uuid.uuid4()) if args.request_id is None else args.request_id
-        ts = args.ts or str(int(time.time() * 1000))
+        ts = args.ts or str(int(time.time()))
         v1 = sign(secret_from(args), args.data_id, request_id, ts)
         header = f"ts={ts},v1={v1}"
         print(f"x-signature: {header}")
