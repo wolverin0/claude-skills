@@ -75,11 +75,14 @@ test_update_backs_up_outside_root() {
 
 plant_orphans() {
     mkdir -p "$H/.claude/skills/audit-method" "$H/.codex/skills/_backup_sync/20260101/validation" \
-             "$H/.agents/skills/_archive/old-validation" "$H/.claude/skills/my-own-skill"
+             "$H/.agents/skills/_archive/old-validation" "$H/.claude/skills/my-own-skill"              "$H/.codex/skills/audit/audit-method" "$H/.codex/skills/audit/audit-loop" "$H/.codex/skills/ns-keep/other"
     echo "---" > "$H/.claude/skills/audit-method/SKILL.md"
     echo "---" > "$H/.codex/skills/_backup_sync/20260101/validation/SKILL.md"
     echo "---" > "$H/.agents/skills/_archive/old-validation/SKILL.md"
     echo "---" > "$H/.claude/skills/my-own-skill/SKILL.md"
+    echo "---" > "$H/.codex/skills/audit/audit-method/SKILL.md"
+    echo "---" > "$H/.codex/skills/audit/audit-loop/SKILL.md"
+    echo "---" > "$H/.codex/skills/ns-keep/other/SKILL.md"
 }
 
 # Test 4: prune --dry-run finds retired and nested-backup skills, touches nothing
@@ -90,10 +93,12 @@ test_prune_dry_run() {
     before=$(snapshot)
     out=$("${INSTALL[@]}" --prune-orphans --dry-run)
     [[ "$(snapshot)" == "$before" ]] || { fail "dry-run changed $H"; return 1; }
-    echo "$out" | grep -q "orphans found: 3" || { fail "expected 3 orphans" "$out"; return 1; }
+    echo "$out" | grep -q "orphans found: 4" || { fail "expected 4 orphans" "$out"; return 1; }
     echo "$out" | grep -q "~/.claude/skills/audit-method .*retired" || { fail "retired skill not reported" "$out"; return 1; }
     echo "$out" | grep -q "~/.codex/skills/_backup_sync .*nested" || { fail "nested backup not reported" "$out"; return 1; }
     echo "$out" | grep -q "~/.agents/skills/_archive" || { fail "~/.agents root not scanned" "$out"; return 1; }
+    echo "$out" | grep -q "~/.codex/skills/audit .*legacy bundle" || { fail "nested legacy bundle not reported" "$out"; return 1; }
+    echo "$out" | grep -q "ns-keep" && { fail "flagged a namespace folder with no retired skill"; return 1; }
     echo "$out" | grep -q "my-own-skill" && { fail "flagged a skill it does not own"; return 1; }
     pass
 }
@@ -105,7 +110,7 @@ test_prune_needs_yes_and_moves() {
     "${INSTALL[@]}" --prune-orphans >/dev/null || rc=$?
     [[ $rc -eq 2 && -d "$H/.claude/skills/audit-method" ]] || { fail "pruned without --yes (rc=$rc)"; return 1; }
     "${INSTALL[@]}" --prune-orphans --yes >/dev/null
-    [[ ! -e "$H/.claude/skills/audit-method" && ! -e "$H/.codex/skills/_backup_sync" && ! -e "$H/.agents/skills/_archive" ]] \
+    [[ ! -e "$H/.claude/skills/audit-method" && ! -e "$H/.codex/skills/audit" && ! -e "$H/.codex/skills/_backup_sync" && ! -e "$H/.agents/skills/_archive" ]] \
         || { fail "orphans still in the skill roots"; return 1; }
     [[ -f $(find "$H/.claude/_backup_sync" -path "*/pruned/audit-method/SKILL.md" | head -1) ]] \
         || { fail "pruned skill not kept under ~/.claude/_backup_sync"; return 1; }

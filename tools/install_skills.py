@@ -14,8 +14,9 @@ Codex also loads SKILL.md files nested under a skill root. --symlink links the
 installed folder to the repo instead of copying.
 
 --prune-orphans scans ~/.claude/skills, ~/.codex/skills and ~/.agents/skills
-for retired skill folders and for backup/archive folders that hide SKILL.md
-files inside a skill root. With --dry-run it only reports; otherwise it needs
+for retired skill folders, for backup/archive folders and for legacy bundle
+folders (no SKILL.md, retired skills nested inside) that hide SKILL.md files
+inside a skill root. With --dry-run it only reports; otherwise it needs
 --yes and moves each orphan to <provider-home>/_backup_sync/<timestamp>/pruned/
 (nothing is deleted).
 """
@@ -174,6 +175,12 @@ def find_orphans(home: Path) -> list[tuple[Path, str]]:
                 if nested:
                     sample = ", ".join(nested[:3]) + (" ..." if len(nested) > 3 else "")
                     found.append((entry, f"{len(nested)} SKILL.md nested inside a skill root ({sample})"))
+            elif not (entry / "SKILL.md").exists():
+                # Legacy bundle folder (e.g. a Codex skills/audit/ holding the old 21 audit skills):
+                # no SKILL.md of its own, but a retired skill name nested inside it.
+                hit = sorted(p.parent.name for p in entry.rglob("SKILL.md") if p.parent.name in retired)
+                if hit:
+                    found.append((entry, f"legacy bundle with retired skills nested inside ({', '.join(hit[:3])}{' ...' if len(hit) > 3 else ''})"))
     return found
 
 
