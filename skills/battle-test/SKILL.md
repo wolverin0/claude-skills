@@ -25,10 +25,10 @@ capabilities — it conducts four existing skills (`audit-orchestrator`, `valida
 
 | Stage | Skill | Produces / signal to read |
 | --- | --- | --- |
-| 1. Diagnose | `audit-orchestrator` (the `/audit` pipeline) | `<repo>/audit-report.md` + `AUDIT VERDICT` block + `[AUDIT COMPLETE: ...]` token |
-| 2. Baseline verify | `validation --full` (runs its own route/theme/viewport matrix, not that of `$visual-route-sweep`, then adds multi-role, element/modal/CRUD, security, and visual baseline checks) | `assert-coverage.js` and `certify-validation.js` both exit `0`; state has `completed`, `coverageComplete:true`, zero unaccounted, and clean health/multi-role/security/visual signals |
+| 1. Diagnose | `audit-orchestrator` (the `/audit` pipeline) + targeted `product-ux-audit` check on core workflows (home/dashboard utility, approval/auth controls, cross-page consistency & Anti-Slop) | `<repo>/audit-report.md` + `AUDIT VERDICT` block + `[AUDIT COMPLETE: ...]` token |
+| 2. Baseline verify | `validation --full` (5 viewports: `375x812`, `768x1024`, `1366x650` HD laptop, `1440x900`, `1920x1080` + WCAG contrast, sidebar clipping, above-the-fold CTA, narrow-column waste, multi-role RBAC, stateful/modal capture, security, and visual baselines) | `assert-coverage.js` and `certify-validation.js` both exit `0`; state has `completed`, `coverageComplete:true`, zero unaccounted, and clean health/multi-role/security/visual signals |
 | 3. Harden | `quality-loop` | commits on `loop/<project>`; `TRACKS.md` AUTO/GATED |
-| 4. Re-verify | `$visual-route-sweep` on the candidate build + `validation` compare + targeted `audit` re-check | current-build route matrix, re-run state, and visual-regression diff vs Stage-2 baseline |
+| 4. Re-verify | `$visual-route-sweep` on the candidate build (100% screenshot inspection for `<= 30` routes across `1366x650`, `768x1024`, `375x812` + cross-page consistency) + `validation` compare + targeted `audit` re-check | current-build route matrix, re-run state, and visual-regression diff vs Stage-2 baseline |
 | 5. Report | this skill | one HTML artifact under `<repo>/artifacts/` |
 
 Load `references/stages.md` for the step-by-step of each stage, `references/gates.md` for how to
