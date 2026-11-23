@@ -2,134 +2,36 @@
 
 Reference documentation for bash helper functions used in debate orchestration.
 
-> **Cross-platform note:** If `flock` or `jq` are unavailable (Windows, some macOS), use `tools/atomic-json.mjs` instead. See the Node.js Alternative section at the bottom.
+> **Cross-platform note:** The state helpers below need only bash (`jq` is optional for JSON validation; `update_debate_index` needs it). Without bash, use `tools/atomic-json.mjs`; see the Node.js Alternative section at the bottom. Both use the same `<file>.lock` directory, so they exclude each other.
 
 ---
 
-## Atomic State Updates
+## Atomic State and Index Updates
 
-Use this helper to update state.json safely. Direct writes risk corruption.
+Source the shipped implementation instead of copying functions from this file
+(the source repo tests it in `tests/test-atomic-state-writes.sh` and `tests/test-state-lock-recovery.sh`):
 
 ```bash
-update_debate_state() {
-    local state_file="$1"
-    local new_data="$2"
-
-    # Check if flock is available
-    if ! command -v flock &>/dev/null; then
-        echo "WARN: flock not available, skipping file locking" >&2
-        echo "$new_data" > "${state_file}.tmp" || return 1
-        if command -v jq &>/dev/null && ! jq empty "${state_file}.tmp" 2>/dev/null; then
-            rm "${state_file}.tmp" 2>/dev/null
-            return 1
-        fi
-        mv "${state_file}.tmp" "$state_file" || return 1
-        return 0
-    fi
-
-    (
-        flock -x -w 5 200 || {
-            echo "ERROR: Could not acquire lock on $state_file after 5s" >&2
-            return 1
-        }
-
-        if [[ -f "$state_file" ]]; then
-            cp "$state_file" "${state_file}.backup" 2>/dev/null
-        fi
-
-        echo "$new_data" > "${state_file}.tmp" || {
-            echo "ERROR: Failed to write to ${state_file}.tmp" >&2
-            return 1
-        }
-
-        if command -v jq &>/dev/null; then
-            if ! jq empty "${state_file}.tmp" 2>/dev/null; then
-                echo "ERROR: Invalid JSON in new state" >&2
-                rm "${state_file}.tmp" 2>/dev/null
-                return 1
-            fi
-        fi
-
-        mv "${state_file}.tmp" "$state_file" || {
-            echo "ERROR: Failed to atomically update $state_file" >&2
-            if [[ -f "${state_file}.backup" ]]; then
-                mv "${state_file}.backup" "$state_file" 2>/dev/null
-            fi
-            return 1
-        }
-
-        rm "${state_file}.backup" 2>/dev/null
-        rm "${state_file}.tmp" 2>/dev/null
-
-    ) 200>"${state_file}.lock"
-}
+source "<debate-skill-dir>/tools/state-lock.sh"
 ```
+
+It provides:
+
+- `update_debate_state <state-file> <json>`: validates the JSON (when `jq` is installed), writes `<file>.tmp` and renames it over the state file. Returns 0 on success, 1 on lock timeout, invalid JSON or a failed write; the old state is kept on failure.
+- `update_debate_index <index-file> <debate-id>`: appends the id to `.debates` once (parallel-safe; needs `jq`).
+- `debate_lock_acquire <file>` / `debate_lock_release <file>`: the lock itself, for callers that need a critical section.
+
+Locking: `mkdir "<file>.lock"` (atomic, no `flock`), with an `owner` file holding
+`<pid> <epoch-seconds>`. A waiter retries every 0.1s for `DEBATE_LOCK_TIMEOUT`
+seconds (default 5) and removes a stale lock (owner PID gone, or older than
+`DEBATE_LOCK_STALE` seconds, default 30). Each write runs in a subshell whose
+`EXIT`/`INT`/`TERM` trap releases the lock, so no `.lock` is left behind.
 
 **Usage:**
 ```bash
 current_state=$(cat "$STATE_FILE")
 new_state=$(echo "$current_state" | jq '.current_round = 2')
 update_debate_state "$STATE_FILE" "$new_state"
-```
-
----
-
-## Atomic Index Updates
-
-Use this helper to safely append to index.json. Protects against corruption when running parallel debates.
-
-```bash
-update_debate_index() {
-    local index_file="$1"
-    local debate_id="$2"
-
-    _atomic_index_write() {
-        # Initialize if missing
-        if [[ ! -f "$index_file" ]]; then
-            echo '{"debates":[]}' > "$index_file"
-        fi
-
-        local current
-        current=$(cat "$index_file")
-
-        # Check if already present
-        if echo "$current" | jq -e --arg id "$debate_id" '.debates | index($id)' &>/dev/null; then
-            return 0  # Already in index
-        fi
-
-        # Append and write atomically
-        local updated
-        updated=$(echo "$current" | jq --arg id "$debate_id" '.debates += [$id]')
-
-        echo "$updated" > "${index_file}.tmp" || return 1
-
-        if command -v jq &>/dev/null && ! jq empty "${index_file}.tmp" 2>/dev/null; then
-            rm "${index_file}.tmp" 2>/dev/null
-            echo "ERROR: Invalid JSON when updating index" >&2
-            return 1
-        fi
-
-        mv "${index_file}.tmp" "$index_file" || return 1
-    }
-
-    # Use flock if available
-    if command -v flock &>/dev/null; then
-        (
-            flock -x -w 5 200 || {
-                echo "ERROR: Could not acquire lock on $index_file after 5s" >&2
-                return 1
-            }
-            _atomic_index_write
-        ) 200>"${index_file}.lock"
-    else
-        echo "WARN: flock not available, writing index without lock" >&2
-        _atomic_index_write
-    fi
-}
-```
-
-**Usage:**
-```bash
 update_debate_index "$DEBATES_DIR/index.json" "003-redis-vs-memcached"
 ```
 
@@ -369,7 +271,7 @@ log_advisor_success "gemini" 1 287 12
 
 ## Node.js Alternative
 
-For environments without `flock` or `jq` (Windows, some macOS), use the cross-platform Node.js helper:
+For environments without bash or `jq`, use the cross-platform Node.js helper:
 
 ```bash
 # Atomic state write

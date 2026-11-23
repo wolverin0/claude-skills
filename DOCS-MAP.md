@@ -219,6 +219,8 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/debate/SKILL.md` — three-way Claude/Gemini/Codex debate — current
 - `skills/debate/README.md` — debate hub user guide — current
 - `skills/debate/helpers.md` — debate helper functions (tested by `tests/`) — current
+- `skills/debate/tools/state-lock.sh` — sourceable mkdir-lock state/index writers with stale-lock recovery (tested by `tests/test-atomic-state-writes.sh`, `tests/test-state-lock-recovery.sh`) — current
+- `skills/debate/tools/atomic-json.mjs` — Node alternative sharing the same `<file>.lock` directory — current
 
 ## Loose references (`skills/` root)
 

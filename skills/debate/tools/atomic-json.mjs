@@ -4,7 +4,8 @@
  * atomic-json.mjs — Cross-platform atomic JSON file operations
  *
  * Zero external dependencies. Works on Linux, macOS, and Windows.
- * Replaces bash helpers (flock + jq) for environments that lack them.
+ * Alternative to tools/state-lock.sh for environments without bash or jq;
+ * both share the mkdir-based `<file>.lock` directory.
  *
  * Usage:
  *   node atomic-json.mjs write <file> <json-string>
@@ -13,13 +14,14 @@
  *   node atomic-json.mjs merge <file> <partial-json>
  */
 
-import { readFileSync, writeFileSync, renameSync, unlinkSync, existsSync, mkdirSync, openSync, closeSync, ftruncateSync, writeSync, readSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, unlinkSync, existsSync, mkdirSync, rmdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 // --- Lock Implementation (mkdir-based, cross-platform) ---
 
 const LOCK_TIMEOUT_MS = 5000;
 const LOCK_RETRY_MS = 50;
+const LOCK_STALE_MS = 30000;
 
 function acquireLock(filePath) {
   const lockDir = filePath + '.lock';
@@ -31,12 +33,13 @@ function acquireLock(filePath) {
       return lockDir;
     } catch (err) {
       if (err.code === 'EEXIST') {
-        // Check for stale lock (older than 30s)
+        // Stale lock (older than 30s): remove it, including the `owner` file
+        // that tools/state-lock.sh writes. Age only: a PID recorded by Git
+        // Bash is not a Windows PID, so process.kill(pid, 0) would misjudge it.
         try {
           const stat = statSync(lockDir);
-          if (Date.now() - stat.mtimeMs > 30000) {
-            try { unlinkSync(lockDir); } catch { /* ignore */ }
-            try { require('fs').rmdirSync(lockDir); } catch { /* ignore */ }
+          if (Date.now() - stat.mtimeMs > LOCK_STALE_MS) {
+            rmSync(lockDir, { recursive: true, force: true });
             continue;
           }
         } catch { /* stat failed, lock may have been released */ }
@@ -52,18 +55,6 @@ function acquireLock(filePath) {
 
   throw new Error(`Could not acquire lock on ${filePath} after ${LOCK_TIMEOUT_MS}ms`);
 }
-
-function releaseLock(lockDir) {
-  try {
-    // rmdir only works on empty directories — that's our lock
-    require('fs').rmdirSync(lockDir);
-  } catch {
-    // Already released or doesn't exist
-  }
-}
-
-// Use dynamic import for fs.rmdirSync since we're in ESM
-import { rmdirSync } from 'node:fs';
 
 function releaseLockESM(lockDir) {
   try {

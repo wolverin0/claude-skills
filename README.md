@@ -365,8 +365,10 @@ for t in tests/*.sh; do bash "$t"; done
 node --test skills/validation/scripts/validation-contract.test.js
 ```
 
-As of 2026-11-04 `tests/test-atomic-state-writes.sh` fails 2 of 4 cases
-(leftover `.lock` files, lock-timeout case); the other suites pass.
+The debate lock tests (`tests/test-atomic-state-writes.sh`,
+`tests/test-state-lock-recovery.sh`) exercise the shipped
+`skills/debate/tools/state-lock.sh`; run them on Linux or macOS with `jq`
+installed, or the JSON-validation case is skipped.
 
 Compare repo skills against installed provider copies:
 

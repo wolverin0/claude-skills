@@ -47,8 +47,7 @@ AI Debate Hub creates a three-way discussion where all three AI systems analyze 
 | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | Yes | `npm install -g @google/gemini-cli` |
 | [Codex CLI](https://github.com/openai/codex) | Yes | OpenAI's coding assistant |
 | `bash` | Yes | Shell for helper scripts (or WSL on Windows) |
-| `jq` | Recommended | JSON validation in atomic writes |
-| `flock` | Optional | File locking (Linux). Fallback exists without it |
+| `jq` | Recommended | JSON validation in `tools/state-lock.sh`; required by `update_debate_index` |
 | Node.js 18+ | Optional | Cross-platform alternative to bash helpers |
 
 ### Windows Users
@@ -56,7 +55,7 @@ AI Debate Hub creates a three-way discussion where all three AI systems analyze 
 Two options:
 
 1. **WSL (recommended)** - Run everything inside WSL. All bash helpers work natively.
-2. **Node.js alternative** - Use `tools/atomic-json.mjs` instead of bash helpers for state/index management. No `flock` or `jq` needed.
+2. **Node.js alternative** - Use `tools/atomic-json.mjs` instead of bash helpers for state/index management. No `jq` needed.
 
 ## Installation
 
