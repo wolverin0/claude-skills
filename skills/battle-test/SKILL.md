@@ -33,7 +33,9 @@ capabilities — it conducts four existing skills (`audit-orchestrator`, `valida
 
 Load `references/stages.md` for the step-by-step of each stage, `references/gates.md` for how to
 read every signal and where the human decisions are, and `references/report.md` for the unified
-report. Run heavy stages as subagents (the audit pipeline already does) to keep this context lean.
+report. Run heavy stages as subagents (the audit pipeline already does) to keep this context lean;
+screenshots are reviewed in subagent batches that return one JSON line per image
+(`references/stages.md`, "Screenshot review budget").
 
 ## UX mode (`--ux`)
 

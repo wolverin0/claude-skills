@@ -19,7 +19,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 ## Ship & verify
 
 - `skills/battle-test/SKILL.md` — fail-closed e2e hardening cycle, incl. `--ux` mode (not yet run end to end) — current
-- `skills/battle-test/references/stages.md` — stage execution detail, incl. "UX mode" — current
+- `skills/battle-test/references/stages.md` — stage execution detail, incl. "UX mode" and the screenshot review budget (subagent batches, one JSON line per image) — current
 - `skills/battle-test/references/gates.md` — gates and pass signals, incl. "UX profile gate" — current
 - `skills/battle-test/references/report.md` — unified report format, incl. UX verdicts — current
 - `skills/battle-test/references/thermos-rubrics.md` — harsh code-quality review rubric layered on battle-test reviews (Cursor `thermos` plugin text, header kept) — current
@@ -54,7 +54,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/validation/references/state-schema.md` — resumable state schema — current
 - `skills/validation/references/visual-regression.md` — visual regression — current
 - `skills/visual-route-sweep/SKILL.md` — visual route screenshot sweep — current
-- `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract — current
+- `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract, incl. batched subagent review of screenshots — current
 - `skills/vibe-to-prod/SKILL.md` — 13-layer production-readiness self-check — current
 - `skills/vibe-to-prod/references/production-readiness-playbook.md` — copy of `skills/audit/audit-orchestrator/references/production-readiness-playbook.md` shipped with the skill (kept identical by `tests/test-repo-hygiene.sh`) — current
 - `skills/deploy-verify/SKILL.md` — post-deploy verification — current

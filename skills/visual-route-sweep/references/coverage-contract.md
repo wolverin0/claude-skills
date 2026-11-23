@@ -32,3 +32,29 @@ third-party telemetry noise rather than hiding it.
 Inspect every screenshot or every screenshot in a documented repeated-layout family. Review text
 contrast, hierarchy, clipped controls, empty/error/loading states, fixed overlays, tables/cards,
 pagination, destructive actions, and whether the page remains understandable without sideways scroll.
+
+### Review budget: batch through subagents
+
+Light/dark x desktop/tablet/mobile is six images per route, so the orchestrating
+thread must not open them itself:
+
+1. Split the screenshot queue into batches: one route family, or at most about
+   24 images, per batch. Never split one route's six cells across batches.
+2. Give each batch to a review subagent with the image paths, the expected
+   route/role/theme/viewport of each image, and the checklist above. The
+   subagent opens every image in its batch.
+3. The subagent returns only JSON lines, one per image, and nothing else:
+
+   ```json
+   {"route": "/orders", "viewport": "mobile", "theme": "dark", "role": "admin",
+    "image": "<path>", "sha256": "<hash>", "verdict": "pass|fail|blocked",
+    "issues": [{"severity": "high|medium|low", "kind": "clipped-control|contrast|overflow|empty-state|error-state|overlay|other",
+                "detail": "<one sentence>", "where": "<region or selector>"}]}
+   ```
+
+4. The orchestrator merges the lines into the ledger, checks that every
+   expected route x role x theme x viewport cell has exactly one line, and
+   reopens a single image only to confirm a disputed `fail`.
+5. Without subagents, review the batches one after another and keep only the
+   JSON lines between batches. A batch that was not reviewed counts as
+   `blocked`, never as `pass`.

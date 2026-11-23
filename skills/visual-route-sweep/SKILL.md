@@ -32,8 +32,10 @@ variables or an existing saved browser state.
 6. Use `../validation/scripts/responsive-audit.js`. On mobile, nested horizontal scrolling is a high
    finding unless a semantically reviewed carousel explicitly has
    `data-validation-horizontal-scroll="allow"`. Tables and forms may not opt out.
-7. Actually inspect every required screenshot. Generate a contact sheet, but do not equate capture
-   with review. Record semantic findings per route family.
+7. Actually inspect every required screenshot, in batches handed to review subagents that return
+   one JSON line per image (`route`, `viewport`, `theme`, `verdict`, `issues[]`); the main thread
+   keeps only those lines (protocol: coverage contract, "Review budget"). Generate a contact sheet,
+   but do not equate capture with review. Record semantic findings per route family.
 8. With `--fix`, work in an isolated worktree, remediate findings, test, deploy only when authorized,
    and rerun against the exact candidate build until green or honestly blocked.
 9. Write an append-only route ledger and JSON/HTML report with exact evidence paths and unresolved
