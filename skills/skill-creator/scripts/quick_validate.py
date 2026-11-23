@@ -8,8 +8,25 @@ import re
 import yaml
 from pathlib import Path
 
-def validate_skill(skill_path):
-    """Basic validation of a skill"""
+# Agent Skills spec (agentskills.io): the only keys claude.ai uploads, the
+# Skills API and package_skill.py accept.
+SPEC_PROPERTIES = {'name', 'description', 'license', 'compatibility', 'allowed-tools', 'metadata'}
+
+# Claude Code frontmatter reference (code.claude.com/docs/en/skills). Claude Code
+# acts on them; Codex 0.171 loads a skill carrying them and ignores them.
+CLAUDE_CODE_PROPERTIES = {
+    'when_to_use', 'argument-hint', 'arguments', 'disable-model-invocation',
+    'user-invocable', 'disallowed-tools', 'model', 'effort', 'context', 'agent',
+    'background', 'hooks', 'paths', 'shell',
+}
+
+
+def validate_skill(skill_path, portable=False):
+    """Basic validation of a skill.
+
+    portable=True accepts only the Agent Skills spec keys (packaging/upload);
+    the default also accepts Claude Code extension keys and names them.
+    """
     skill_path = Path(skill_path)
 
     # Check SKILL.md exists
@@ -18,7 +35,7 @@ def validate_skill(skill_path):
         return False, "SKILL.md not found"
 
     # Read and validate frontmatter
-    content = skill_md.read_text()
+    content = skill_md.read_text(encoding='utf-8')
     if not content.startswith('---'):
         return False, "No YAML frontmatter found"
 
@@ -37,15 +54,14 @@ def validate_skill(skill_path):
     except yaml.YAMLError as e:
         return False, f"Invalid YAML in frontmatter: {e}"
 
-    # Define allowed properties
-    ALLOWED_PROPERTIES = {'name', 'description', 'license', 'allowed-tools', 'metadata'}
+    allowed_properties = SPEC_PROPERTIES if portable else SPEC_PROPERTIES | CLAUDE_CODE_PROPERTIES
 
     # Check for unexpected properties
-    unexpected_keys = set(frontmatter.keys()) - ALLOWED_PROPERTIES
+    unexpected_keys = set(frontmatter.keys()) - allowed_properties
     if unexpected_keys:
         return False, (
             f"Unexpected key(s) in SKILL.md frontmatter: {', '.join(sorted(unexpected_keys))}. "
-            f"Allowed properties are: {', '.join(sorted(ALLOWED_PROPERTIES))}"
+            f"Allowed properties are: {', '.join(sorted(allowed_properties))}"
         )
 
     # Check required fields
@@ -79,6 +95,13 @@ def validate_skill(skill_path):
         if len(description) > 1024:
             return False, f"Description is too long ({len(description)} characters). Maximum is 1024 characters."
 
+    claude_code_keys = sorted(set(frontmatter.keys()) & CLAUDE_CODE_PROPERTIES)
+    if claude_code_keys:
+        return True, (
+            "Skill is valid! Note: Claude Code-only key(s) "
+            f"{', '.join(claude_code_keys)}; Codex ignores them and "
+            "claude.ai upload / package_skill.py reject them."
+        )
     return True, "Skill is valid!"
 
 if __name__ == "__main__":

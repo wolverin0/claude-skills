@@ -51,7 +51,7 @@ def package_skill(skill_path, output_dir=None):
 
     # Run validation before packaging
     print("Validating skill...")
-    valid, message = validate_skill(skill_path)
+    valid, message = validate_skill(skill_path, portable=True)
     if not valid:
         print(f"Validation failed: {message}")
         print("Please fix the validation errors before packaging.")
