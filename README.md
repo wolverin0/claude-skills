@@ -37,30 +37,35 @@ Copy-paste prompts for each `battle-test` mode and its sibling skills (derived f
 
 ### Audit bundle — technical due diligence
 
-Location: `skills/audit/` (21 skills) plus two slash commands in `commands/`.
-Full-repository due diligence: the orchestrator, method setup, hard-stop
-checks (H1-H11), Tambon LLM-signature hunt, blind-spot walk (B1-B19), 13 domain
-audits, decision handling, fix-prompt generation, and the
-audit→remediate→rerun loop. Domains follow enumeration-before-verdict. The
-seven shared catalogs in `skills/audit/references/` are `audit-rules.md`,
-`audit-hard-stops.md` (H1-H11), `audit-blind-spots.md` (B1-B19),
-`audit-tambon-signatures.md`, `audit-report-format.md`,
-`audit-triage-rubric.md` and `domain-audit-contract.md`; the same folder also
-holds `production-readiness-playbook.md`, the reference the domain skills cite;
-`vibe-to-prod` ships an identical copy in its own `references/`.
+Location: `skills/audit/` (3 installable skills) plus two slash commands in
+`commands/`. Full-repository due diligence: the orchestrator, method setup,
+hard-stop checks (H1-H11), Tambon LLM-signature hunt, blind-spot walk (B1-B19),
+13 domain audits, decision handling, fix-prompt generation, and the
+audit→remediate→rerun loop. Domains follow enumeration-before-verdict.
 
-The 21 children of `skills/audit/`:
+Only the three entry points install as skills, so a provider carries three
+metadata blocks instead of 21:
 
-- Pipeline: `audit-orchestrator`, `audit-method`, `audit-hard-stops`,
-  `audit-tambon-hunt`, `audit-blind-spots`, `audit-decisions`,
-  `audit-fix-generator`, `audit-loop`.
-- Domains: `audit-domain-01-security`, `audit-domain-02-architecture`,
-  `audit-domain-03-database`, `audit-domain-04-devops`,
-  `audit-domain-05-performance`, `audit-domain-06-ux-a11y`,
-  `audit-domain-07-reliability`, `audit-domain-08-compliance`,
-  `audit-domain-09-maintainability`, `audit-domain-10-cost`,
-  `audit-domain-11-demo-vs-prod`, `audit-domain-12-missing`,
-  `audit-domain-13-code-integrity`.
+```text
+skills/audit/
+  audit-orchestrator/   SKILL.md + modules/ + references/
+  audit-loop/           SKILL.md + modules/audit-decisions.md + references/
+  audit-fix-generator/  SKILL.md + references/
+```
+
+- `audit-orchestrator/modules/`: the phase modules it reads or hands to
+  subagents on demand (`audit-method`, `audit-hard-stops`, `audit-tambon-hunt`,
+  `audit-blind-spots`, `audit-domain-01-security` … `audit-domain-13-code-integrity`,
+  plus the `speed-31.md` and `feel-20.md` checklists). They have no `SKILL.md`,
+  so no provider lists them.
+- `references/`: the seven shared catalogs (`audit-rules.md`,
+  `audit-hard-stops.md` H1-H11, `audit-blind-spots.md` B1-B19,
+  `audit-tambon-signatures.md`, `audit-report-format.md`,
+  `audit-triage-rubric.md`, `domain-audit-contract.md`) and
+  `production-readiness-playbook.md`. Each entry point ships an identical copy
+  (canonical: `audit-orchestrator/references/`), so every skill works from its
+  own folder; `tests/test-repo-hygiene.sh` fails if a copy drifts.
+  `vibe-to-prod` ships the same playbook.
 
 Primary entry points:
 
@@ -75,24 +80,19 @@ Slash commands (`commands/`):
 | `/audit` | Runs the `audit-orchestrator` skill and writes one `audit-report.md`. Read-only: it never modifies source. Args: `--scope=<path>`, `--priority-domains=<csv of 1-13>`, `--resume-from=<N>`. |
 | `/audit-remediate` | Launches the `audit-remediate` workflow: audit, fix on a dedicated branch with per-fix verification, re-audit until green or out of budget, then open a PR. Never merges and never touches `main`. Args: `--scope=<path>`, `--max-rounds=<N>` (default 4). Needs `workflows/audit-remediate.mjs` installed (see the install block below). |
 
-Install the 21 `audit-*` children of `skills/audit/` into the provider skill
-root, and the shared catalogs in `skills/audit/references/` into the context
-directory the skills read from (`@.claude/context/` in the project, or
-`~/.codex/context/` for Codex):
+Install the three entry points into the provider skill root; the catalogs
+travel inside them, so there is no separate context directory to fill:
 
 ```bash
-cp -r skills/audit/audit-* ~/.claude/skills/
-cp -r skills/audit/audit-* ~/.codex/skills/
-mkdir -p .claude/context ~/.codex/context
-cp skills/audit/references/*.md .claude/context/
-cp skills/audit/references/*.md ~/.codex/context/
+cp -r skills/audit/audit-orchestrator skills/audit/audit-loop skills/audit/audit-fix-generator ~/.claude/skills/
+cp -r skills/audit/audit-orchestrator skills/audit/audit-loop skills/audit/audit-fix-generator ~/.codex/skills/
 ```
 
-The `cp skills/audit/references/*.md` lines also install
-`production-readiness-playbook.md`, which the domain skills read from the same
-context directory (a missing copy is reported, not fatal). The workflow script reads
-the catalogs from `~/.claude/context/`; copy them there too if you run
-`/audit-remediate` (see Installation).
+An older install left 18 retired `audit-*` skill folders (`audit-method`,
+`audit-hard-stops`, `audit-domain-01-security` …) in the provider roots; see
+Installation for how to find them. The `/audit-remediate` workflow reads the
+modules from `~/.claude/skills/audit-orchestrator/` (override with the
+`auditSkillDir` argument).
 Install the two commands with `cp commands/*.md ~/.claude/commands/`.
 
 The audit pieces outside `skills/`:
@@ -210,7 +210,7 @@ unavailable.
 
 ```text
 skills/
-  audit/                      21-skill due diligence bundle + references/ (see above)
+  audit/                      due diligence bundle: 3 entry-point skills (see above)
   autoqa/                     Third-party: self-QA against a running app
   battle-test/                Fail-closed e2e hardening cycle (+ --ux mode)
   checklist-design-app-audit/ Checklist Design evidence audits
@@ -326,19 +326,17 @@ repo into each provider's skill root (`~/.claude/skills/`, `~/.codex/skills/`).
 # ship & verify set (battle-test conducts audit, validation, visual-route-sweep and quality-loop)
 cp -r skills/battle-test skills/validation skills/visual-route-sweep skills/vibe-to-prod skills/quality-loop skills/product-ux-audit ~/.claude/skills/
 
-# audit bundle (installs as 21 sibling skills + shared catalogs)
-cp -r skills/audit/audit-* ~/.claude/skills/
-mkdir -p .claude/context && cp skills/audit/references/*.md .claude/context/
+# audit bundle (three entry points; catalogs and modules ship inside them)
+cp -r skills/audit/audit-orchestrator skills/audit/audit-loop skills/audit/audit-fix-generator ~/.claude/skills/
 
 # slash commands (/audit, /audit-remediate)
 mkdir -p ~/.claude/commands && cp commands/*.md ~/.claude/commands/
 
 # audit agents and workflow (user level), hooks (project level, where their docstrings expect them)
-mkdir -p ~/.claude/agents ~/.claude/workflows ~/.claude/context .claude/hooks
+mkdir -p ~/.claude/agents ~/.claude/workflows .claude/hooks
 cp agents/*.md ~/.claude/agents/
 cp workflows/*.mjs ~/.claude/workflows/
 cp hooks/*.py .claude/hooks/   # still needs a settings entry, see the audit section
-cp skills/audit/references/*.md ~/.claude/context/
 
 # third-party design and QA skills
 cp -r skills/impeccable skills/improve skills/taste-skill skills/ui-ux-pro-max skills/emil-design-eng skills/autoqa skills/desloppify ~/.claude/skills/

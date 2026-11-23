@@ -37,11 +37,11 @@ It does not touch the project's code: there is no fix stage.
 
 | Token | File:line | When |
 | --- | --- | --- |
-| `🛑 DO NOT LAUNCH UNTIL HARD STOPS RESOLVED` | `skills/audit/references/audit-triage-rubric.md:52` | There is any hard stop |
-| `🔴 BLOCK LAUNCH — fix EXPLOITABLE-NOW findings before any production traffic` | `skills/audit/references/audit-triage-rubric.md:53` | At least one EXPLOITABLE-NOW finding, no hard stops |
-| `🟠 FIX BEFORE LAUNCH — multiple critical issues; estimate days-to-weeks` | `skills/audit/references/audit-triage-rubric.md:54` | 3 or more critical, or 1 critical in payments/auth/deletes |
-| `🟡 SHIPPABLE WITH PLAN — significant tech debt; schedule remediation sprint` | `skills/audit/references/audit-triage-rubric.md:55` | 3 or more high, no critical |
-| `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` | `skills/audit/references/audit-triage-rubric.md:56` | Mostly medium and low |
+| `🛑 DO NOT LAUNCH UNTIL HARD STOPS RESOLVED` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:52` | There is any hard stop |
+| `🔴 BLOCK LAUNCH — fix EXPLOITABLE-NOW findings before any production traffic` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:53` | At least one EXPLOITABLE-NOW finding, no hard stops |
+| `🟠 FIX BEFORE LAUNCH — multiple critical issues; estimate days-to-weeks` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:54` | 3 or more critical, or 1 critical in payments/auth/deletes |
+| `🟡 SHIPPABLE WITH PLAN — significant tech debt; schedule remediation sprint` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:55` | 3 or more high, no critical |
+| `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:56` | Mostly medium and low |
 
 ## Backing in the published text
 

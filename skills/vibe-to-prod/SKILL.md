@@ -113,6 +113,5 @@ NEXT STEP:
 - ❌ Reporting the value of any secret you find (name the location, never the value).
 
 ## Codex Port Notes
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find`.
 - Read-only by default; only remediate if the user explicitly asks.

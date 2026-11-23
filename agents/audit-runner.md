@@ -23,18 +23,20 @@ the report.
 
 ## Your job
 
-Run the seven phases from the `audit-orchestrator` skill, in order:
+Run the seven phases from the `audit-orchestrator` skill, in order. Its
+folder (`AUDIT_SKILL_DIR`, the installed `audit-orchestrator` skill) holds
+`modules/` and `references/`; pass that path to every subagent.
 
-1. **Phase A — Method.** Use the `audit-method` skill to fingerprint
+1. **Phase A — Method.** Follow `modules/audit-method.md` to fingerprint
    the stack, inventory the repo, and produce a system map.
 
-2. **Phase B — Hard Stops.** Use the `audit-hard-stops` skill to walk
+2. **Phase B — Hard Stops.** Follow `modules/audit-hard-stops.md` to walk
    H1-H11. If any are FOUND, the verdict locks to 🛑.
 
-3. **Phase C — Tambon Hunt.** Use the `audit-tambon-hunt` skill to scan
+3. **Phase C — Tambon Hunt.** Follow `modules/audit-tambon-hunt.md` to scan
    for LLM signatures and compute density.
 
-4. **Phase D — Blind Spots.** Use the `audit-blind-spots` skill to
+4. **Phase D — Blind Spots.** Follow `modules/audit-blind-spots.md` to
    walk B1-B19. Findings get routed to specific domains.
 
 5. **Phase E — Domain Audits.** Spawn 13 `audit-domain-runner`
@@ -42,7 +44,7 @@ Run the seven phases from the `audit-orchestrator` skill, in order:
    in its own further-isolated context.
 
 6. **Phase F — Stitch.** Combine all phase outputs into the final
-   report per `@.claude/context/audit-report-format.md`.
+   report per `<AUDIT_SKILL_DIR>/references/audit-report-format.md`.
 
 7. **Phase G — Self-Check.** Verify R1-R7 attestation. Emit
    `[AUDIT COMPLETE]` or `[AUDIT TRUNCATED]`.
@@ -82,10 +84,10 @@ The user sees the report. Period.
 
 ## Failure modes to refuse
 
-- ❌ Producing a report without running the actual skills (writing
+- ❌ Producing a report without running the actual modules (writing
   from imagination)
 - ❌ Skipping the hard-stops phase
-- ❌ Stitching findings the domain skills didn't produce
+- ❌ Stitching findings the domain modules didn't produce
 - ❌ Soft-pedaling the verdict to seem balanced
 - ❌ Citing paths you didn't see in this audit run
 - ❌ Marking [AUDIT COMPLETE] if any domain truncated

@@ -14,25 +14,31 @@ cd "$ROOT"
 pass() { echo -e "${GREEN}✓ PASS${NC}"; }
 fail() { echo -e "${RED}✗ FAIL${NC}"; printf '  %s\n' "$@"; return 1; }
 
-# Test 1: vibe-to-prod's playbook copy matches the audit bundle's
-test_playbook_copies_identical() {
-    echo -n "Test 1: Playbook copies are identical... "
-    local a=skills/audit/references/production-readiness-playbook.md
-    local b=skills/vibe-to-prod/references/production-readiness-playbook.md
-    [[ -f "$a" && -f "$b" ]] || { fail "missing $a or $b"; return 1; }
-    # Compare ignoring CR so a Windows checkout with autocrlf compares equal.
-    if diff -q <(tr -d '\r' < "$a") <(tr -d '\r' < "$b") >/dev/null; then
-        pass
-    else
-        fail "$b drifted from $a; copy it again"
-    fi
+# Test 1: the audit catalogs and playbook are identical in every copy
+# Canonical: skills/audit/audit-orchestrator/references/. audit-loop and
+# audit-fix-generator ship identical copies (each skill must work from its own
+# folder); vibe-to-prod ships the playbook.
+same_file() { diff -q <(tr -d '\r' < "$1") <(tr -d '\r' < "$2") >/dev/null; }
+test_catalog_copies_identical() {
+    echo -n "Test 1: Audit catalog and playbook copies are identical... "
+    local canon=skills/audit/audit-orchestrator/references bad="" copy f
+    [[ -d "$canon" ]] || { fail "missing $canon"; return 1; }
+    for copy in skills/audit/audit-loop/references skills/audit/audit-fix-generator/references; do
+        [[ "$(cd "$canon" && ls)" == "$(cd "$copy" 2>/dev/null && ls)" ]] || bad+=" $copy(file set differs)"
+        for f in "$canon"/*.md; do
+            [[ -f "$copy/$(basename "$f")" ]] && ! same_file "$f" "$copy/$(basename "$f")" && bad+=" $copy/$(basename "$f")"
+        done
+    done
+    same_file "$canon/production-readiness-playbook.md" skills/vibe-to-prod/references/production-readiness-playbook.md \
+        || bad+=" skills/vibe-to-prod/references/production-readiness-playbook.md"
+    [[ -z "$bad" ]] && pass || fail "drifted from $canon (copy it again):$bad"
 }
 
-# Test 2: no SKILL.md cites the playbook at a machine-specific context path only
-test_no_hardcoded_playbook_path() {
-    echo -n "Test 2: No hard-coded ~/.codex playbook path... "
+# Test 2: no file cites a provider context directory (catalogs ship inside the skill)
+test_no_context_dir_citations() {
+    echo -n "Test 2: No .claude/context or ~/.codex/context citations... "
     local hits
-    hits=$(grep -rn "view ~/.codex/context/production-readiness-playbook.md" skills --include=SKILL.md || true)
+    hits=$(git grep -nE '(@\.claude|~/\.claude|~/\.codex|\.claude)/context/' -- . ':!tests/test-repo-hygiene.sh' || true)
     [[ -z "$hits" ]] && pass || fail "$hits"
 }
 
@@ -97,6 +103,27 @@ test_explicit_only_consistent() {
     [[ -z "$bad" ]] && pass || fail "inconsistent:$bad"
 }
 
+# Test 8: the audit bundle installs three entry points; every cited module exists
+test_audit_bundle_layout() {
+    echo -n "Test 8: Audit bundle = 3 entry points, cited modules exist... "
+    local bad="" skills ref owner n
+    skills=$(find skills/audit -name SKILL.md | sort | tr '\n' ' ')
+    [[ "$skills" == "skills/audit/audit-fix-generator/SKILL.md skills/audit/audit-loop/SKILL.md skills/audit/audit-orchestrator/SKILL.md " ]] \
+        || bad+=" unexpected SKILL.md set: $skills"
+    for owner in audit-orchestrator audit-loop audit-fix-generator; do
+        for ref in $(grep -rhoE 'modules/[A-Za-z0-9._-]+\.md' "skills/audit/$owner" | sort -u); do
+            [[ -f "skills/audit/$owner/$ref" ]] || bad+=" $owner:$ref"
+        done
+    done
+    for ref in $(grep -hoE 'modules/[A-Za-z0-9._-]+\.md' agents/*.md workflows/*.mjs commands/*.md | sort -u); do
+        [[ -f "skills/audit/audit-orchestrator/$ref" ]] || bad+=" outside:$ref"
+    done
+    for n in 01 02 03 04 05 06 07 08 09 10 11 12 13; do
+        [[ $(ls skills/audit/audit-orchestrator/modules/audit-domain-$n-*.md 2>/dev/null | wc -l) -eq 1 ]] || bad+=" domain-$n"
+    done
+    [[ -z "$bad" ]] && pass || fail "$bad"
+}
+
 run_all_tests() {
     echo ""
     echo "Running Repo Hygiene Tests"
@@ -118,13 +145,14 @@ run_all_tests() {
 }
 
 TESTS=(
-    test_playbook_copies_identical
-    test_no_hardcoded_playbook_path
+    test_catalog_copies_identical
+    test_no_context_dir_citations
     test_no_loose_files_in_skills_root
     test_no_tracked_junk
     test_no_personal_paths
     test_slash_commands_resolve
     test_explicit_only_consistent
+    test_audit_bundle_layout
 )
 
 run_all_tests

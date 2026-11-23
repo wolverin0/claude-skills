@@ -55,7 +55,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/visual-route-sweep/SKILL.md` — visual route screenshot sweep — current
 - `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract — current
 - `skills/vibe-to-prod/SKILL.md` — 13-layer production-readiness self-check — current
-- `skills/vibe-to-prod/references/production-readiness-playbook.md` — copy of `skills/audit/references/production-readiness-playbook.md` shipped with the skill (kept identical by `tests/test-repo-hygiene.sh`) — current
+- `skills/vibe-to-prod/references/production-readiness-playbook.md` — copy of `skills/audit/audit-orchestrator/references/production-readiness-playbook.md` shipped with the skill (kept identical by `tests/test-repo-hygiene.sh`) — current
 - `skills/deploy-verify/SKILL.md` — post-deploy verification — current
 - `skills/security-review/SKILL.md` — security pass over pending changes — current
 - `skills/security-review/references/full-checklist.md` — long security checklist — current
@@ -82,37 +82,41 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 ## Audit bundle (`skills/audit/`)
 
-- `audit-orchestrator/SKILL.md` — full due-diligence audit entry point (`/audit`) — current
-- `audit-method/SKILL.md` — stack fingerprint and inventory setup — current
-- `audit-hard-stops/SKILL.md` — H1-H11 hard-stop walk — current
-- `audit-tambon-hunt/SKILL.md` — Tambon LLM-signature hunt — current
-- `audit-blind-spots/SKILL.md` — B1-B19 blind-spot walk — current
-- `audit-domain-01-security/SKILL.md` — domain audit: security — current
-- `audit-domain-02-architecture/SKILL.md` — domain audit: architecture & code quality — current
-- `audit-domain-03-database/SKILL.md` — domain audit: database/data layer — current
-- `audit-domain-04-devops/SKILL.md` — domain audit: infra & DevOps — current
-- `audit-domain-05-performance/SKILL.md` — domain audit: performance — current
-- `audit-domain-06-ux-a11y/SKILL.md` — domain audit: UX & accessibility — current
-- `audit-domain-07-reliability/SKILL.md` — domain audit: reliability — current
-- `audit-domain-08-compliance/SKILL.md` — domain audit: legal/privacy/compliance — current
-- `audit-domain-09-maintainability/SKILL.md` — domain audit: DX & maintainability — current
-- `audit-domain-10-cost/SKILL.md` — domain audit: cost & billing risk — current
-- `audit-domain-11-demo-vs-prod/SKILL.md` — domain audit: demo vs production gap — current
-- `audit-domain-12-missing/SKILL.md` — domain audit: missing production features — current
-- `audit-domain-13-code-integrity/SKILL.md` — domain audit: code integrity — current
-- `audit-domain-05-performance/references/speed-31.md` — 31-item app-speed checklist — current
-- `audit-domain-06-ux-a11y/references/feel-20.md` — 20-item UX "feel" checklist — current
-- `audit-decisions/SKILL.md` — remediation decision / baseline-policy templates — current
-- `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix-generator`) — current
+Three installable skills; modules have no `SKILL.md` and load on demand. Paths are relative to `skills/audit/`.
+
+- `audit-orchestrator/SKILL.md` — full due-diligence audit entry point (`/audit`); bundle layout and phase order — current
+- `audit-orchestrator/modules/audit-method.md` — stack fingerprint and inventory setup — current
+- `audit-orchestrator/modules/audit-hard-stops.md` — H1-H11 hard-stop walk — current
+- `audit-orchestrator/modules/audit-tambon-hunt.md` — Tambon LLM-signature hunt — current
+- `audit-orchestrator/modules/audit-blind-spots.md` — B1-B19 blind-spot walk — current
+- `audit-orchestrator/modules/audit-domain-01-security.md` — domain audit: security — current
+- `audit-orchestrator/modules/audit-domain-02-architecture.md` — domain audit: architecture & code quality — current
+- `audit-orchestrator/modules/audit-domain-03-database.md` — domain audit: database/data layer — current
+- `audit-orchestrator/modules/audit-domain-04-devops.md` — domain audit: infra & DevOps — current
+- `audit-orchestrator/modules/audit-domain-05-performance.md` — domain audit: performance — current
+- `audit-orchestrator/modules/audit-domain-06-ux-a11y.md` — domain audit: UX & accessibility — current
+- `audit-orchestrator/modules/audit-domain-07-reliability.md` — domain audit: reliability — current
+- `audit-orchestrator/modules/audit-domain-08-compliance.md` — domain audit: legal/privacy/compliance — current
+- `audit-orchestrator/modules/audit-domain-09-maintainability.md` — domain audit: DX & maintainability — current
+- `audit-orchestrator/modules/audit-domain-10-cost.md` — domain audit: cost & billing risk — current
+- `audit-orchestrator/modules/audit-domain-11-demo-vs-prod.md` — domain audit: demo vs production gap — current
+- `audit-orchestrator/modules/audit-domain-12-missing.md` — domain audit: missing production features — current
+- `audit-orchestrator/modules/audit-domain-13-code-integrity.md` — domain audit: code integrity — current
+- `audit-orchestrator/modules/speed-31.md` — 31-item app-speed checklist (domain 05) — current
+- `audit-orchestrator/modules/feel-20.md` — 20-item UX "feel" checklist (domain 06) — current
+- `audit-orchestrator/references/audit-rules.md` — rules R1-R7 (canonical copy) — current
+- `audit-orchestrator/references/audit-hard-stops.md` — hard-stops catalog (H1-H11) (canonical copy) — current
+- `audit-orchestrator/references/audit-blind-spots.md` — blind-spots catalog (B1-B19) (canonical copy) — current
+- `audit-orchestrator/references/audit-tambon-signatures.md` — Tambon signatures (canonical copy) — current
+- `audit-orchestrator/references/audit-report-format.md` — report format (canonical copy) — current
+- `audit-orchestrator/references/audit-triage-rubric.md` — triage rubric (canonical copy) — current
+- `audit-orchestrator/references/domain-audit-contract.md` — contract every domain audit follows (canonical copy) — current
+- `audit-orchestrator/references/production-readiness-playbook.md` — production-readiness playbook the domain modules cite (canonical copy) — current
 - `audit-loop/SKILL.md` — audit → remediate → rerun loop — current
-- `references/audit-rules.md` — rules R1-R7 — current
-- `references/audit-hard-stops.md` — hard-stops catalog (H1-H11) — current
-- `references/audit-blind-spots.md` — blind-spots catalog (B1-B19) — current
-- `references/audit-tambon-signatures.md` — Tambon signatures — current
-- `references/audit-report-format.md` — report format — current
-- `references/audit-triage-rubric.md` — triage rubric — current
-- `references/domain-audit-contract.md` — contract every domain audit follows — current
-- `references/production-readiness-playbook.md` — production-readiness playbook the domain audits read from the audit context directory (`.claude/context/` or `~/.codex/context/`; the install lines copy it there) — current
+- `audit-loop/modules/audit-decisions.md` — remediation decision / baseline-policy templates — current
+- `audit-loop/references/*.md` — identical copy of the eight `audit-orchestrator/references/` files — current
+- `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix-generator`) — current
+- `audit-fix-generator/references/*.md` — identical copy of the eight `audit-orchestrator/references/` files — current
 
 ## Third-party skills (copied as found; origin in `README.md`)
 

@@ -12,8 +12,10 @@ runs as a service.
 - `skills/<name>/` — one skill per folder: `SKILL.md` (frontmatter + short
   body), optional `references/`, `scripts/`, `assets/`, `agents/openai.yaml`
   (Codex UI and invocation policy). `skills/` root holds folders only.
-- `skills/audit/` — the audit bundle: 21 `audit-*` skills plus shared
-  catalogs in `skills/audit/references/`.
+- `skills/audit/` — the audit bundle: three entry-point skills
+  (`audit-orchestrator`, `audit-loop`, `audit-fix-generator`); phase and
+  domain modules in `audit-orchestrator/modules/` (no `SKILL.md`); each
+  entry point ships an identical copy of the catalogs in `references/`.
 - `commands/`, `agents/`, `hooks/`, `workflows/` — Claude Code slash commands,
   subagents, hook scripts and the `/audit-remediate` workflow script.
 - `prompts/` — copy-paste run prompts; `tools/` — legacy docs and
