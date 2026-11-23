@@ -77,6 +77,26 @@ test_slash_commands_resolve() {
     [[ -z "$missing" ]] && pass || fail "no skill or command named:$missing"
 }
 
+# Test 7: explicit-only skills say so to every provider
+# Claude Code: disable-model-invocation: true. Codex: agents/openai.yaml
+# policy.allow_implicit_invocation: false. Others: "Explicit invocation only"
+# in the description. A skill with any one of them must have all three.
+test_explicit_only_consistent() {
+    echo -n "Test 7: Explicit-only skills are explicit in every provider... "
+    local bad="" f dir dmi pol txt
+    while IFS= read -r f; do
+        dir=$(dirname "$f")
+        dmi=0; pol=0; txt=0
+        sed -n '2,/^---/p' "$f" | grep -q '^disable-model-invocation:[[:space:]]*true' && dmi=1
+        [[ -f "$dir/agents/openai.yaml" ]] && grep -q '^[[:space:]]*allow_implicit_invocation:[[:space:]]*false' "$dir/agents/openai.yaml" && pol=1
+        sed -n '2,/^---/p' "$f" | grep '^description:' | grep -q 'Explicit invocation only' && txt=1
+        if (( dmi + pol + txt > 0 && dmi + pol + txt < 3 )); then
+            bad+=" $dir(dmi=$dmi,codex=$pol,text=$txt)"
+        fi
+    done < <(find skills -name SKILL.md | sort)
+    [[ -z "$bad" ]] && pass || fail "inconsistent:$bad"
+}
+
 run_all_tests() {
     echo ""
     echo "Running Repo Hygiene Tests"
@@ -104,6 +124,7 @@ TESTS=(
     test_no_tracked_junk
     test_no_personal_paths
     test_slash_commands_resolve
+    test_explicit_only_consistent
 )
 
 run_all_tests

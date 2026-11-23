@@ -1,0 +1,7 @@
+interface:
+  display_name: "Debate"
+  short_description: "Three-way Claude, Codex and Gemini debate"
+  default_prompt: "Use $debate to run a multi-round debate on this question and synthesize the result."
+
+policy:
+  allow_implicit_invocation: false

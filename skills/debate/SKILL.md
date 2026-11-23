@@ -1,6 +1,7 @@
 ---
 name: debate
-description: Multi-LLM debate orchestration (Claude vs Codex vs Gemini) with rounds + synthesis.
+description: "Multi-LLM debate orchestration (Claude vs Codex vs Gemini) with rounds + synthesis. Explicit invocation only: start it when the user types /debate or explicitly asks for a multi-model debate; never on your own (it calls external CLIs that spend tokens)."
+disable-model-invocation: true
 ---
 
 # AI Debate Hub Skill v6.0.0

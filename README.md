@@ -260,7 +260,15 @@ fits, in `tools/references/` (`backend-patterns.md`, `clickhouse-io.md`).
 
 Trigger phrases (the skill picks them up from its description; the skill names
 are `battle-test`, `validation`, `vibe-to-prod`, `audit-orchestrator`, `debate`;
-`/audit` and `/audit-remediate` are commands from `commands/`):
+`/audit` and `/audit-remediate` are commands from `commands/`). In Claude Code a
+skill's slash command is its `name` or folder name; in Codex mention it as
+`$name`. `battle-test`, `debate` and `handoff` are explicit-only: Claude Code
+never starts them on its own (`disable-model-invocation: true`) and Codex keeps
+them out of the model context (`agents/openai.yaml`
+`policy.allow_implicit_invocation: false`), so type `/battle-test` or
+`$battle-test`. `audit-orchestrator`, `audit-loop` and `vibe-to-prod` stay
+model-invocable because `battle-test`, `/audit` and `audit-orchestrator` load
+them; their descriptions forbid starting them unasked.
 
 ```text
 # full hardening cycle on the current project

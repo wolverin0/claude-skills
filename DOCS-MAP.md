@@ -22,7 +22,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/battle-test/references/gates.md` — gates and pass signals, incl. "UX profile gate" — current
 - `skills/battle-test/references/report.md` — unified report format, incl. UX verdicts — current
 - `skills/battle-test/references/thermos-rubrics.md` — harsh code-quality review rubric layered on battle-test reviews (Cursor `thermos` plugin text, header kept) — current
-- `skills/battle-test/agents/openai.yaml` — Codex display metadata for `battle-test` — current
+- `skills/battle-test/agents/openai.yaml` — Codex display metadata and explicit-only policy for `battle-test` — current
 - `skills/quality-loop/SKILL.md` — hardening loop in an isolated worktree (`--staged` under `battle-test`) — current
 - `skills/product-ux-audit/SKILL.md` — task-centered UX audit, feeds `battle-test --ux` — current
 - `skills/product-ux-audit/agents/openai.yaml` — Codex display metadata for `product-ux-audit` — current
@@ -213,6 +213,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/handoff/SKILL.md` — verified, identity-bound session checkpoint v3 — current
 - `skills/handoff/scripts/handoff-contract.cjs` — handoff validation and publication library (required by the publisher) — current
 - `skills/handoff/scripts/publish-handoff.cjs` — handoff publisher CLI (validate and publish exclusively) — current
+- `skills/handoff/agents/openai.yaml` — Codex display metadata and explicit-only policy for `handoff` — current
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
 - `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current
@@ -227,6 +228,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 - `skills/debate/SKILL.md` — three-way Claude/Gemini/Codex debate — current
 - `skills/debate/README.md` — debate hub user guide — current
+- `skills/debate/agents/openai.yaml` — Codex display metadata and explicit-only policy for `debate` — current
 - `skills/debate/helpers.md` — debate helper functions (tested by `tests/`) — current
 - `skills/debate/tools/state-lock.sh` — sourceable mkdir-lock state/index writers with stale-lock recovery (tested by `tests/test-atomic-state-writes.sh`, `tests/test-state-lock-recovery.sh`) — current
 - `skills/debate/tools/atomic-json.mjs` — Node alternative sharing the same `<file>.lock` directory — current

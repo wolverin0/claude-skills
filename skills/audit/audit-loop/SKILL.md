@@ -1,6 +1,6 @@
 ---
 name: audit-loop
-description: "Orchestrate the full audit improvement cycle: audit, roadmap, remediation, rerun, delta comparison, and skill patching for missed findings until convergence or a terminal blocked state."
+description: "Orchestrate the full audit improvement cycle: audit, roadmap, remediation, rerun, delta comparison, and skill patching for missed findings until convergence or a terminal blocked state. Heavy multi-round cycle: start it only when the user asks for the audit improvement loop or audit-orchestrator hands off to it; never on your own. Not for a one-off audit report (audit-orchestrator)."
 ---
 
 # Skill: Audit Loop

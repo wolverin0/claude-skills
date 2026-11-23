@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Prepare a verified, identity-bound session checkpoint for a later restart or transfer; never clear or rotate a session.
+description: "Prepare a verified, identity-bound session checkpoint for a later restart or transfer; never clear or rotate a session. Explicit invocation only: start it when the user types /handoff or explicitly asks for a handoff."
 argument-hint: "[focus; supplied session-id, generation and corr]"
 disable-model-invocation: true
 metadata:
