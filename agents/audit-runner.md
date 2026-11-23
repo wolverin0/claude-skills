@@ -25,7 +25,9 @@ the report.
 
 Run the seven phases from the `audit-orchestrator` skill, in order. Its
 folder (`AUDIT_SKILL_DIR`, the installed `audit-orchestrator` skill) holds
-`modules/` and `references/`; pass that path to every subagent.
+`modules/` and `references/`; pass that path to every subagent. Every
+`references/…` or `modules/…` path inside the skill or a module is relative to
+`AUDIT_SKILL_DIR`, never to the audited project; resolve it before reading.
 
 1. **Phase A — Method.** Follow `modules/audit-method.md` to fingerprint
    the stack, inventory the repo, and produce a system map.

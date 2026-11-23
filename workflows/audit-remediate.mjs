@@ -22,6 +22,7 @@ const DESIRED_BRANCH = `audit/remediation-${STAMP}`
 const MIN_BUDGET = 80_000                 // stop remediating below this many output tokens
 // Installed audit-orchestrator skill: holds modules/ (phase and domain modules) and references/ (catalogs).
 const AUDIT_DIR = A.auditSkillDir || '~/.claude/skills/audit-orchestrator'
+const PATH_RULE = `Paths inside a module (references/..., modules/...) are relative to ${AUDIT_DIR}, not to the audited project.`
 
 // ----- structured-output schemas -----
 const PREP = {
@@ -119,10 +120,10 @@ function auditThunks(label, branchNote) {
   const ph = label === 'audit' ? 'Audit' : 'Re-review'
   return [
     ...WALKERS.map(([k, p]) => () => agent(
-      `${p}\nSCOPE=${SCOPE}. ${branchNote} Read-only. Cite file:line for every finding (R1/R2 — quote before cite).`,
+      `${p}\nSCOPE=${SCOPE}. ${branchNote} ${PATH_RULE} Read-only. Cite file:line for every finding (R1/R2 — quote before cite).`,
       { label: `${label}:${k}`, phase: ph, schema: FINDINGS })),
     ...DOMAINS.map(d => () => agent(
-      `Read ${AUDIT_DIR}/modules/audit-domain-${d}-*.md (exactly one file matches) and follow it. Audit ONLY your domain against SCOPE=${SCOPE}. ${branchNote} Read ${AUDIT_DIR}/references/audit-rules.md first. Return findings as the schema with file:line evidence (R1/R2). Read-only.`,
+      `Read ${AUDIT_DIR}/modules/audit-domain-${d}-*.md (exactly one file matches) and follow it. ${PATH_RULE} Audit ONLY your domain against SCOPE=${SCOPE}. ${branchNote} Read ${AUDIT_DIR}/references/audit-rules.md first. Return findings as the schema with file:line evidence (R1/R2). Read-only.`,
       { label: `${label}:d${d}`, phase: ph, schema: FINDINGS })),
   ]
 }

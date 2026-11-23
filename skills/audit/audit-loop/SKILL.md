@@ -30,10 +30,10 @@ Run this cycle:
    - unchanged findings
    - severity changes
    - new findings
-6. If new findings appear, patch the audit module that missed them (in the
-   `audit-orchestrator` source, `skills/audit/audit-orchestrator/modules/`) before
+6. If new findings appear, patch the audit module that missed them before
    starting the next loop. Use the report's "why missed" or comparison
-   rationale to identify the failing skill and add an enumeration,
+   rationale to identify the failing module (a file in the `audit-orchestrator`
+   skill's `modules/`, edited in the source repo and reinstalled) and add an enumeration,
    grep, trace, or success-semantics check that would have caught it.
 7. Continue until the convergence rule is met or a terminal blocked
    state is reached.

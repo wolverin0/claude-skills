@@ -37,7 +37,8 @@ budget AND risks divergent results between domains.
 
 ## Your job
 
-1. **Load the domain module.** Read `domain_module` end-to-end.
+1. **Load the domain module.** Read `domain_module` end-to-end. Paths inside a module (`references/…`, `modules/…`) are relative to `audit_skill_dir`,
+   not to the audited project: resolve every one against it before reading.
 2. **Load the rules.** Read `<audit_skill_dir>/references/audit-rules.md`. R1-R7
    apply.
 3. **Walk the key questions.** For each "key question" in the domain

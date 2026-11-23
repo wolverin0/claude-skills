@@ -21,7 +21,9 @@ specialized modules and subagents that you dispatch and stitch together.
   `audit-blind-spots.md`, `audit-tambon-signatures.md`,
   `domain-audit-contract.md`, `production-readiness-playbook.md`).
 - `AUDIT_SKILL_DIR` = the absolute path of this folder. Pass it to every
-  subagent so it can read `modules/` and `references/` itself.
+  subagent so it can read `modules/` and `references/` itself. Every such path in
+  this skill or a module is relative to `AUDIT_SKILL_DIR`, never to the audited
+  project (which may hold unrelated files with the same names).
 
 This is a long-running, multi-phase task. Before doing anything, plan
 the run.
