@@ -46,6 +46,7 @@ runs as a service.
 ```bash
 for t in tests/*.sh; do bash "$t" || echo "FAILED: $t"; done   # includes quick_validate on every skill
 python skills/skill-creator/scripts/quick_validate.py skills/<name>
+python skills/skill-creator/scripts/eval_routing.py   # description/trigger collisions
 node --test skills/validation/scripts/validation-contract.test.js
 git diff --check
 ```

@@ -310,6 +310,7 @@ Validate changed skills with:
 
 ```bash
 python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
+python skills/skill-creator/scripts/eval_routing.py   # trigger collisions across all skills (38 prompts)
 ```
 
 Package a distributable skill with:

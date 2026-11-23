@@ -40,6 +40,9 @@ jobs:
           done
           exit $status
 
+      - name: Routing collisions (eval_routing.py)
+        run: python skills/skill-creator/scripts/eval_routing.py
+
       - name: Validation contract (node --test)
         run: node --test skills/validation/scripts/validation-contract.test.js
 

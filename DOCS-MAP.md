@@ -15,6 +15,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `tests/test-skill-frontmatter.sh` — runs `quick_validate.py` on every skill — current
 - `tests/test-mercadopago-webhook.sh` — x-signature agreement (Python, Web Crypto, openssl), IPN classification, `check-config` — current
 - `tests/test-handoff-guard.sh` — handoff PreCompact guard against handoffs published by the shipped publisher — current
+- `tests/test-eval-routing.sh` — repo routing cases pass; a planted trigger collision is caught — current
 - `tests/test-install-skills.sh` — installer and prune against a throwaway HOME — current
 - `tests/test-repo-hygiene.sh` — loose files, playbook copy drift, tracked `.bak`/`.lock`, personal paths — current
 
@@ -229,6 +230,8 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/handoff/agents/openai.yaml` — Codex display metadata and explicit-only policy for `handoff` — current
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
+- `skills/skill-creator/scripts/eval_routing.py` — BM25 check of description triggers against prompts; fails on misroutes, prints near-ties — current
+- `skills/skill-creator/scripts/routing_cases.json` — 38 realistic routing prompts covering every skill — current
 - `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current
 - `skills/project-setup/references/full-process.md` — long setup process — current\* (`/monitoring-setup` not in repo)
 - `skills/project-setup/references/coding-standards.md` — TS/JS coding standards offered when a project has none (moved from `skills/` root) — current
