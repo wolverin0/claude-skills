@@ -9,6 +9,11 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 - `README.md` — catalog, `--ux` mode, third-party skills and their origin, what is not included, layout, install, verification commands — current
 - `DOCS-MAP.md` — this index — current
+- `AGENTS.md` — repo rules for agents: layout, skill-editing rules, verification commands, installed-copy comparison — current
+- `CLAUDE.md` — one-line `@AGENTS.md` pointer — current
+- `.github/workflows/ci.yml` — CI: quick_validate on every skill, `tests/*.sh`, `node --test`, `git diff --check` on the changed range — current
+- `tests/test-skill-frontmatter.sh` — runs `quick_validate.py` on every skill — current
+- `tests/test-repo-hygiene.sh` — loose files, playbook copy drift, tracked `.bak`/`.lock`, personal paths — current
 
 ## Ship & verify
 
