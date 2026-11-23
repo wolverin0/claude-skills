@@ -372,6 +372,14 @@ The debate lock tests (`tests/test-atomic-state-writes.sh`,
 `skills/debate/tools/state-lock.sh`; run them on Linux or macOS with `jq`
 installed, or the JSON-validation case is skipped.
 
+`tests/test-skill-frontmatter.sh` runs `quick_validate.py` on every skill (the
+third-party `impeccable` keeps its upstream `version` key and is the one listed
+exception). `tests/test-repo-hygiene.sh` fails on loose files at `skills/` root,
+a drifted playbook copy, tracked `.bak`/`.lock` files or personal absolute
+paths. `.github/workflows/ci.yml` runs all of the above on every push and pull
+request (Ubuntu, Python 3.12 + PyYAML, Node 20), plus `git diff --check` on
+the changed range.
+
 Compare repo skills against installed provider copies:
 
 ```bash

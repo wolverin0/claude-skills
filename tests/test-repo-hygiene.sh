@@ -44,6 +44,24 @@ test_no_loose_files_in_skills_root() {
     [[ -z "$hits" ]] && pass || fail "move into a skill's references/ or tools/references/:" $hits
 }
 
+# Test 4: no backup, lock or editor junk is tracked
+test_no_tracked_junk() {
+    echo -n "Test 4: No tracked .bak/.lock/.orig/~ files... "
+    local hits
+    hits=$(git ls-files | grep -E '\.(bak|lock|orig|rej)$|\.bak\.|~$' || true)
+    [[ -z "$hits" ]] && pass || fail $hits
+}
+
+# Test 5: no personal absolute paths (placeholder user names are allowed)
+test_no_personal_paths() {
+    echo -n "Test 5: No personal absolute paths... "
+    local placeholders='user|username|you|me|name|runner|specific-user|example|\$USER|<[^>]*>'
+    local hits
+    hits=$(git grep -nIE '(/Users/|/home/|[A-Za-z]:[\/]+Users[\/]+)[A-Za-z0-9._$<>-]+' -- . ':!tests/test-repo-hygiene.sh' \
+        | grep -vE "(/Users/|/home/|[A-Za-z]:[\/]+Users[\/]+)(${placeholders})([^A-Za-z0-9._-]|$)" || true)
+    [[ -z "$hits" ]] && pass || fail "use ~ or <projects-root>:" "$hits"
+}
+
 run_all_tests() {
     echo ""
     echo "Running Repo Hygiene Tests"
@@ -68,6 +86,8 @@ TESTS=(
     test_playbook_copies_identical
     test_no_hardcoded_playbook_path
     test_no_loose_files_in_skills_root
+    test_no_tracked_junk
+    test_no_personal_paths
 )
 
 run_all_tests
