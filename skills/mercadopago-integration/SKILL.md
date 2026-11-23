@@ -124,58 +124,25 @@ Webhooks notify your app when payment status changes (e.g., payment approved).
 
 ### 1. Create Webhook Edge Function
 
-```typescript
-// supabase/functions/mercadopago-webhook/index.ts
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+Copy `assets/mercadopago-webhook.ts` to `supabase/functions/mercadopago-webhook/index.ts`
+and `assets/mp-webhook-signature.mjs` next to it; run `assets/webhook-events.sql`.
+It covers the four production pitfalls:
 
-serve(async (req) => {
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
-  }
+| Pitfall | What the asset does |
+|---|---|
+| Forged notifications | Verifies `x-signature` (`ts=…,v1=…`): HMAC-SHA256 with the webhook secret over `id:<data.id>;request-id:<x-request-id>;ts:<ts>;` (`data.id` from the URL query, lowercased if alphanumeric; missing parts left out), constant-time compare, 10-minute replay window. Invalid → 401. |
+| Legacy IPN (`?topic=payment&id=…`) arriving next to the webhook | IPN is unsigned: only its id is used and the payment is re-read from `GET /v1/payments/{id}`; status and amount never come from a notification body. |
+| Duplicates (webhook + IPN, retries, out-of-order) | Order updates are guarded transitions (never leave `paid`); `mp_webhook_events` has a unique `payment:<id>:<status>` key, a duplicate insert (23505) returns 200 and skips non-idempotent side effects. |
+| Supabase answers 401 before your code runs | MercadoPago sends no Supabase JWT, so the function needs `verify_jwt = false` in `supabase/config.toml`. |
 
-  const body = await req.json();
-
-  // MercadoPago sends: { action: "payment.updated", data: { id: "123" } }
-  if (body.action === "payment.updated" || body.action === "payment.created") {
-    const paymentId = body.data?.id;
-
-    // Fetch payment details from MercadoPago
-    const paymentResponse = await fetch(
-      `https://api.mercadopago.com/v1/payments/${paymentId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${Deno.env.get("MP_ACCESS_TOKEN")}`,
-        },
-      }
-    );
-    const payment = await paymentResponse.json();
-
-    // Update order in database
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // external_reference should contain your order ID
-    const orderId = payment.external_reference;
-
-    if (payment.status === "approved") {
-      await supabase
-        .from("orders")
-        .update({ payment_status: "paid" })
-        .eq("id", orderId);
-    } else if (payment.status === "rejected") {
-      await supabase
-        .from("orders")
-        .update({ payment_status: "failed" })
-        .eq("id", orderId);
-    }
-  }
-
-  return new Response("OK", { status: 200 });
-});
+```toml
+# supabase/config.toml
+[functions.mercadopago-webhook]
+verify_jwt = false
 ```
+
+Secrets: `MP_ACCESS_TOKEN`, `MP_WEBHOOK_SECRET` (application → Webhooks → secret signature),
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Answer non-2xx only when MercadoPago should retry.
 
 ### 2. Configure Webhook in MercadoPago Dashboard
 
@@ -190,18 +157,25 @@ serve(async (req) => {
 ### 3. Test Webhook
 
 ```bash
-# Deploy the function
-supabase functions deploy mercadopago-webhook
+# verify_jwt = false is set for the function
+python scripts/mp_webhook_tool.py check-config supabase/config.toml
 
-# Test with curl
-curl -X POST https://<project>.supabase.co/functions/v1/mercadopago-webhook \
-  -H "Content-Type: application/json" \
-  -d '{"action":"payment.updated","data":{"id":"test123"}}'
+# serve locally, then send a correctly signed notification (secret read from the env var)
+supabase functions serve mercadopago-webhook --env-file supabase/.env.local
+MP_WEBHOOK_SECRET=... python scripts/mp_webhook_tool.py sign --data-id <payment-id>   # prints headers + curl
+
+# a bad signature must get 401; the same notification twice must answer {"duplicate": true}
+python scripts/mp_webhook_tool.py verify --x-signature 'ts=…,v1=…' --data-id <id> --request-id <x-request-id>
+supabase functions deploy mercadopago-webhook
 ```
 
 ## Resources
 
 - **assets/supabase-edge-function.ts**: Complete OAuth edge function template
+- **assets/mercadopago-webhook.ts**: webhook Edge Function (signature, IPN, idempotency)
+- **assets/mp-webhook-signature.mjs**: x-signature and notification helpers (Deno and Node)
+- **assets/webhook-events.sql**: `mp_webhook_events` dedupe table
+- **scripts/mp_webhook_tool.py**: sign / verify x-signature locally, check `verify_jwt = false`
 - **assets/use-mercadopago.tsx**: React hook for OAuth flow
 - **assets/migration.sql**: Database migration template
 - **references/troubleshooting.md**: Detailed debugging guide

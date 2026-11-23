@@ -13,6 +13,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `CLAUDE.md` — one-line `@AGENTS.md` pointer — current
 - `.github/workflows/ci.yml` — CI: quick_validate on every skill, `tests/*.sh`, `node --test`, `git diff --check` on the changed range — current
 - `tests/test-skill-frontmatter.sh` — runs `quick_validate.py` on every skill — current
+- `tests/test-mercadopago-webhook.sh` — x-signature agreement (Python, Web Crypto, openssl), IPN classification, `check-config` — current
 - `tests/test-install-skills.sh` — installer and prune against a throwaway HOME — current
 - `tests/test-repo-hygiene.sh` — loose files, playbook copy drift, tracked `.bak`/`.lock`, personal paths — current
 
@@ -205,6 +206,10 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/supabase-debug/SKILL.md` — Supabase diagnosis — current
 - `skills/mercadopago-integration/SKILL.md` — MercadoPago OAuth/checkout/webhooks — current
 - `skills/mercadopago-integration/references/troubleshooting.md` — MercadoPago troubleshooting — current
+- `skills/mercadopago-integration/assets/mercadopago-webhook.ts` — webhook Edge Function: x-signature check, legacy IPN, idempotent updates — current
+- `skills/mercadopago-integration/assets/mp-webhook-signature.mjs` — x-signature and notification helpers (Deno and Node; tested by `tests/test-mercadopago-webhook.sh`) — current
+- `skills/mercadopago-integration/assets/webhook-events.sql` — `mp_webhook_events` dedupe table — current
+- `skills/mercadopago-integration/scripts/mp_webhook_tool.py` — sign/verify x-signature locally, `check-config` for `verify_jwt = false` — current
 - `skills/checklist-design-app-audit/SKILL.md` — Checklist Design audit — current
 - `skills/checklist-design-app-audit/references/README.md` — dataset reference — current
 - `skills/feature-validation/SKILL.md` — deprecated alias routing to `validation` — current (alias)
