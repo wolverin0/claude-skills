@@ -128,7 +128,7 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 
 | Skill | What it does |
 |---|---|
-| `handoff` | Verified, identity-bound session checkpoint (v3: required sections, session/generation/corr identity, checksummed exclusive publication via the bundled `publish-handoff.cjs`; Node.js required). The next session starts from the file, not from vibes. |
+| `handoff` | Verified, identity-bound session checkpoint (v3: required sections, session/generation/corr identity, checksummed exclusive publication via the bundled `publish-handoff.cjs`; Node.js required). The next session starts from the file, not from vibes. v3.1 adds an optional PreCompact guard (`assets/settings-hooks.json` + `scripts/handoff-guard.cjs`) that blocks a manual compaction without a fresh verified handoff and carries the handoff's path and corr into the compaction summary. |
 | `skillify` | Turn a proven repeated workflow into a reusable skill. |
 | `skill-creator` | Create and validate skills locally (progressive disclosure). |
 | `project-setup` | Generate/refresh AGENTS.md / CLAUDE.md from the real codebase. |

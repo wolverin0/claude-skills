@@ -14,6 +14,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `.github/workflows/ci.yml` — CI: quick_validate on every skill, `tests/*.sh`, `node --test`, `git diff --check` on the changed range — current
 - `tests/test-skill-frontmatter.sh` — runs `quick_validate.py` on every skill — current
 - `tests/test-mercadopago-webhook.sh` — x-signature agreement (Python, Web Crypto, openssl), IPN classification, `check-config` — current
+- `tests/test-handoff-guard.sh` — handoff PreCompact guard against handoffs published by the shipped publisher — current
 - `tests/test-install-skills.sh` — installer and prune against a throwaway HOME — current
 - `tests/test-repo-hygiene.sh` — loose files, playbook copy drift, tracked `.bak`/`.lock`, personal paths — current
 
@@ -223,6 +224,8 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/handoff/SKILL.md` — verified, identity-bound session checkpoint v3 — current
 - `skills/handoff/scripts/handoff-contract.cjs` — handoff validation and publication library (required by the publisher) — current
 - `skills/handoff/scripts/publish-handoff.cjs` — handoff publisher CLI (validate and publish exclusively) — current
+- `skills/handoff/scripts/handoff-guard.cjs` — PreCompact hook: verifies a fresh published handoff of this session; blocks manual compaction without one, never blocks auto compaction (tested by `tests/test-handoff-guard.sh`) — current
+- `skills/handoff/assets/settings-hooks.json` — `.claude/settings.json` fragment wiring the guard as a PreCompact hook — current
 - `skills/handoff/agents/openai.yaml` — Codex display metadata and explicit-only policy for `handoff` — current
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
