@@ -62,6 +62,21 @@ test_no_personal_paths() {
     [[ -z "$hits" ]] && pass || fail "use ~ or <projects-root>:" "$hits"
 }
 
+# Test 6: every /command in the docs resolves to a skill name or a commands/ file
+test_slash_commands_resolve() {
+    echo -n "Test 6: Documented /commands resolve... "
+    # Named in the docs as not shipped here (README "What this repo does not include").
+    local not_shipped=" monitoring-setup "
+    local names=" " token missing=""
+    names+=$(grep -h '^name:' $(find skills -name SKILL.md) | sed 's/^name:[[:space:]]*//; s/["'\'']//g' | tr '\n' ' ')
+    names+=" $(ls commands | sed 's/\.md$//' | tr '\n' ' ') "
+    for token in $(grep -ohE '(^|[[:space:]`(])/[a-z][a-z0-9-]+' README.md DOCS-MAP.md prompts/*.md commands/*.md \
+                   | sed 's/^[^/]*\///' | sort -u); do
+        [[ "$names" == *" $token "* || "$not_shipped" == *" $token "* ]] || missing+=" /$token"
+    done
+    [[ -z "$missing" ]] && pass || fail "no skill or command named:$missing"
+}
+
 run_all_tests() {
     echo ""
     echo "Running Repo Hygiene Tests"
@@ -88,6 +103,7 @@ TESTS=(
     test_no_loose_files_in_skills_root
     test_no_tracked_junk
     test_no_personal_paths
+    test_slash_commands_resolve
 )
 
 run_all_tests

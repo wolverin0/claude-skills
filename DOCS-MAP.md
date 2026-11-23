@@ -103,7 +103,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `audit-domain-05-performance/references/speed-31.md` — 31-item app-speed checklist — current
 - `audit-domain-06-ux-a11y/references/feel-20.md` — 20-item UX "feel" checklist — current
 - `audit-decisions/SKILL.md` — remediation decision / baseline-policy templates — current
-- `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix`) — current
+- `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix-generator`) — current
 - `audit-loop/SKILL.md` — audit → remediate → rerun loop — current
 - `references/audit-rules.md` — rules R1-R7 — current
 - `references/audit-hard-stops.md` — hard-stops catalog (H1-H11) — current
