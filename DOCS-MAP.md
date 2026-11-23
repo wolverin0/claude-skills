@@ -1,6 +1,6 @@
 # DOCS-MAP
 
-One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync, the run prompts, the third-party skills and the audit agents, hooks, workflow and playbook; updated 2026-11-23 for the audit hardening (lock fix, moved root docs, CI, root AGENTS.md, negative triggers, explicit-only skills).
+One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync, the run prompts, the third-party skills and the audit agents, hooks, workflow and playbook; updated 2026-11-23 for the audit hardening (lock fix, moved root docs, CI, root AGENTS.md, negative triggers, explicit-only skills, three-entry-point audit bundle, installer, batched screenshot review, MercadoPago webhook, handoff guard, eval_routing).
 Status: **current** · **current\*** (current, but cites files/skills
 not shipped in this repo) · **drifted** (content drifted from what it names) ·
 **legacy** (kept for history; superseded). A trailing `*` on any status means it cites files/skills not shipped here.

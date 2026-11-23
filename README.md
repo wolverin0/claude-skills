@@ -6,7 +6,15 @@ and related CLI-based development workflows.
 This repo is the canonical source for the maintained skill set. Install copies
 into the active skill root for each provider, or symlink them while iterating.
 
-**Last sync: 2026-11-11** — added `quality-loop`, `product-ux-audit` and the
+**Last sync: 2026-11-23** — audit hardening: the audit bundle installs as three
+entry points (`audit-orchestrator`, `audit-loop`, `audit-fix-generator`) with
+modules and catalogs inside them; `tools/install_skills.py` installs by profile
+and finds orphaned old skills; CI, root `AGENTS.md`, negative triggers,
+explicit-only heavy skills, a fixed debate lock, batched screenshot review,
+MercadoPago webhook signing, a handoff PreCompact guard and
+`eval_routing.py`. See `DOCS-MAP.md` for every path.
+
+**Sync 2026-11-11** — added `quality-loop`, `product-ux-audit` and the
 `commands/` folder (`/audit`, `/audit-remediate`); `battle-test` gained the
 `--ux` mode; the audit reference catalogs now cover H1-H11 and B1-B19; the
 `validation` invocation name is `/validation`. Previous sync: 2026-08-24.
@@ -248,7 +256,7 @@ commands/                     /audit and /audit-remediate slash commands
 hooks/                        pre/post audit report check hooks (Python)
 workflows/                    audit-remediate.mjs (workflow-runtime script)
 tools/                        install_skills.py + skill-profiles.json + retired-skills.txt, references/ (backend, ClickHouse), legacy docs
-tests/                        Shell tests for the debate helper functions
+tests/                        Shell tests (debate lock, hygiene, frontmatter, installer, routing, MercadoPago, handoff guard)
 ```
 
 `skills/` holds only skill folders. The former root reference docs now live with
@@ -356,8 +364,9 @@ mkdir -p .claude/hooks && cp hooks/*.py .claude/hooks/   # still needs a setting
 
 ## Verification
 
-Requirements: Python 3 with PyYAML (`pip install pyyaml`, used by
-`quick_validate.py`), Node.js 18+ and bash.
+Requirements: Python 3.11+ with PyYAML (`pip install pyyaml`, used by
+`quick_validate.py` and `eval_routing.py`), Node.js 18+, bash, `jq` and `openssl`
+(debate lock and MercadoPago tests).
 
 Run focused validation after edits:
 
