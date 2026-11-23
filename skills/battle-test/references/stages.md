@@ -4,6 +4,37 @@ Run stages in order. Checkpoint to `<repo>/.battle-test/state.json` after each s
 `--resume` can continue. Keep this orchestrator's context lean by dispatching heavy stages as
 subagents and reading back only their result + the artifact path.
 
+## Screenshot review budget (Stages 2, 4 and UX smoke)
+
+Every stage that says "inspect" or "review every screenshot" follows this protocol, so the
+orchestrator never holds the images in its own context. Review checklist: text contrast,
+hierarchy, clipped controls, empty/error/loading states, fixed overlays, tables/cards,
+pagination, destructive actions, sideways scroll.
+
+Light/dark x desktop/tablet/mobile is six images per route, so the orchestrating
+thread must not open them itself:
+
+1. Split the screenshot queue into batches: one route family, or at most about
+   24 images, per batch. Never split one route's six cells across batches.
+2. Give each batch to a review subagent with the image paths, the expected
+   route/role/theme/viewport of each image, and the review checklist. The
+   subagent opens every image in its batch.
+3. The subagent returns only JSON lines, one per image, and nothing else:
+
+   ```json
+   {"route": "/orders", "viewport": "mobile", "theme": "dark", "role": "admin",
+    "image": "<path>", "sha256": "<hash>", "verdict": "pass|fail|blocked",
+    "issues": [{"severity": "high|medium|low", "kind": "clipped-control|contrast|overflow|empty-state|error-state|overlay|other",
+                "detail": "<one sentence>", "where": "<region or selector>"}]}
+   ```
+
+4. The orchestrator merges the lines into the ledger, checks that every
+   expected route x role x theme x viewport cell has exactly one line, and
+   reopens a single image only to confirm a disputed `fail`.
+5. Without subagents, review the batches one after another and keep only the
+   JSON lines between batches. A batch that was not reviewed counts as
+   `blocked`, never as `pass`.
+
 ## Stage 0 — Preflight
 
 1. Resolve the project path (arg, or cwd). Record `HEAD`, `origin/main`, dirty paths, and the exact

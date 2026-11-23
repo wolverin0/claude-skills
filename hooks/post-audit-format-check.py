@@ -142,7 +142,7 @@ def main() -> int:
     if verdict is None:
         issues.append(
             "No valid verdict string found. The report must contain ONE of the "
-            "five verdict strings exactly. See @.claude/context/audit-triage-rubric.md."
+            "five verdict strings exactly. See references/audit-triage-rubric.md in the audit-orchestrator skill."
         )
 
     # 2. Severity census makes sense

@@ -9,6 +9,12 @@ When an audit finds 30 issues, the developer doesn't want 30 paragraphs
 of advice — they want 30 prompts they can paste into a fresh AI session
 to fix each one. This skill produces those prompts on demand.
 
+Catalogs ship in this skill's `references/` (identical to `audit-orchestrator`'s):
+read `references/audit-report-format.md` to locate a finding block,
+`references/audit-hard-stops.md` / `references/audit-blind-spots.md` when the
+finding cites an H- or B-id, and `references/production-readiness-playbook.md`
+for the anchors it names.
+
 The fix prompt for each finding follows a strict template that includes:
 
 1. Context (what's broken, where, why it matters)

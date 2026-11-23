@@ -1,10 +1,10 @@
 ---
 name: handoff
-description: Prepare a verified, identity-bound session checkpoint for a later restart or transfer; never clear or rotate a session.
+description: "Prepare a verified, identity-bound session checkpoint for a later restart or transfer; never clear or rotate a session. Explicit invocation only: start it when the user types /handoff or explicitly asks for a handoff."
 argument-hint: "[focus; supplied session-id, generation and corr]"
 disable-model-invocation: true
 metadata:
-  version: "3.0.2"
+  version: "3.1.0"
 ---
 
 # Handoff: prepare, validate, then stop
@@ -116,6 +116,25 @@ required setup from optional setup; do not invent commands or provider features.
    observations; same-user hostile path replacement is outside this guarantee.
 5. After acknowledgement, stop ordinary work. If validation failed, report the
    draft and blockers and keep this session intact. Do not promise losslessness.
+
+## Optional PreCompact guard (Claude Code)
+
+`assets/settings-hooks.json` is a ready `.claude/settings.json` fragment that runs
+`scripts/handoff-guard.cjs` before every compaction. The guard only reads: it looks
+for a published, checksum-valid handoff of the current session and project in
+`handoffs/`, no older than `HANDOFF_GUARD_MAX_AGE_MIN` minutes (default 60).
+
+- Manual compaction with none found: blocked (exit 2), the user is told to run
+  `/handoff` first. `HANDOFF_GUARD=off` lets one compaction through.
+- Automatic compaction: never blocked, because blocking the compaction that
+  recovers from a context-limit error fails the request. The hook's stdout goes
+  into the summary instead: the handoff path and corr when one exists, otherwise
+  a note that no fresh handoff covers this point.
+- Found: the summary keeps the handoff path, corr and generation verbatim.
+
+There is no Stop hook: this skill is explicit-only, so a Stop hook cannot make
+the model write a handoff and would only loop until the continuation cap. The
+guard never writes or publishes a handoff; only this skill does.
 
 ## Resume and idle policy
 

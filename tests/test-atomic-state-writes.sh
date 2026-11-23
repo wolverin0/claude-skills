@@ -24,61 +24,9 @@ cleanup() {
 
 # Source the helper function
 source_helper() {
-    # Extract the helper function from skills/debate/SKILL.md
-    # For testing, we'll define it directly
-    update_debate_state() {
-        local state_file="$1"
-        local new_data="$2"
-
-        # Check if flock is available
-        if ! command -v flock &>/dev/null; then
-            echo "WARN: flock not available, skipping file locking" >&2
-            # Fallback: Direct atomic write without locking
-            echo "$new_data" > "${state_file}.tmp" || return 1
-            if command -v jq &>/dev/null && ! jq empty "${state_file}.tmp" 2>/dev/null; then
-                rm "${state_file}.tmp" 2>/dev/null
-                return 1
-            fi
-            mv "${state_file}.tmp" "$state_file" || return 1
-            return 0
-        fi
-
-        (
-            flock -x -w 5 200 || {
-                echo "ERROR: Could not acquire lock on $state_file after 5s" >&2
-                return 1
-            }
-
-            if [[ -f "$state_file" ]]; then
-                cp "$state_file" "${state_file}.backup" 2>/dev/null
-            fi
-
-            echo "$new_data" > "${state_file}.tmp" || {
-                echo "ERROR: Failed to write new state to ${state_file}.tmp" >&2
-                return 1
-            }
-
-            if command -v jq &>/dev/null; then
-                if ! jq empty "${state_file}.tmp" 2>/dev/null; then
-                    echo "ERROR: Invalid JSON in new state" >&2
-                    rm "${state_file}.tmp" 2>/dev/null
-                    return 1
-                fi
-            fi
-
-            mv "${state_file}.tmp" "$state_file" || {
-                echo "ERROR: Failed to atomically update $state_file" >&2
-                if [[ -f "${state_file}.backup" ]]; then
-                    mv "${state_file}.backup" "$state_file" 2>/dev/null
-                fi
-                return 1
-            }
-
-            rm "${state_file}.backup" 2>/dev/null
-            rm "${state_file}.tmp" 2>/dev/null
-
-        ) 200>"${state_file}.lock"
-    }
+    # Test the shipped implementation, not a copy of it.
+    # shellcheck source=../skills/debate/tools/state-lock.sh
+    source "$SCRIPT_DIR/../skills/debate/tools/state-lock.sh"
 }
 
 # Test 1: Basic state update
@@ -89,10 +37,11 @@ test_basic_update() {
     echo '{"status":"in_progress"}' > "$state_file"
 
     local new_state='{"status":"completed","current_round":3}'
-    update_debate_state "$state_file" "$new_state"
+    local rc=0
+    update_debate_state "$state_file" "$new_state" || rc=$?
 
     local result=$(cat "$state_file")
-    if [[ "$result" == "$new_state" ]]; then
+    if [[ $rc -eq 0 ]] && [[ "$result" == "$new_state" ]]; then
         echo -e "${GREEN}✓ PASS${NC}"
         return 0
     else
@@ -112,7 +61,7 @@ test_no_leftover_files() {
 
     update_debate_state "$state_file" '{"status":"completed"}'
 
-    if [[ -f "${state_file}.tmp" ]] || [[ -f "${state_file}.backup" ]] || [[ -f "${state_file}.lock" ]]; then
+    if [[ -e "${state_file}.tmp" ]] || [[ -e "${state_file}.backup" ]] || [[ -e "${state_file}.lock" ]]; then
         echo -e "${RED}✗ FAIL${NC}"
         echo "  Found leftover files:"
         ls -la "$TEST_DIR"
@@ -157,21 +106,17 @@ test_invalid_json() {
 
 # Test 4: Concurrent updates (simplified - just verify locking works)
 test_concurrent_updates() {
-    if ! command -v flock &>/dev/null; then
-        echo "Test 4: Lock timeout (simulated)... SKIPPED (flock not installed)"
-        return 0
-    fi
-
-    echo -n "Test 4: Lock timeout (simulated)... "
+    echo -n "Test 4: Lock wait (held by another process)... "
 
     local state_file="$TEST_DIR/state4.json"
     echo '{"counter":0}' > "$state_file"
 
-    # Acquire lock in background
+    # Hold the same lock in a live background process for 3 seconds
     (
-        flock -x 200
-        sleep 3  # Hold lock for 3 seconds
-    ) 200>"${state_file}.lock" &
+        debate_lock_acquire "$state_file" || exit 1
+        sleep 3
+        debate_lock_release "$state_file"
+    ) &
 
     local lock_pid=$!
 
@@ -184,7 +129,7 @@ test_concurrent_updates() {
         local elapsed=$((end - start))
 
         # Should succeed after ~3s (when background lock releases)
-        if [[ $elapsed -ge 2 ]] && [[ $elapsed -le 4 ]]; then
+        if [[ $elapsed -ge 2 ]] && [[ $elapsed -le 4 ]] && [[ "$(cat "$state_file")" == '{"counter":1}' ]]; then
             echo -e "${GREEN}✓ PASS${NC} (waited ${elapsed}s for lock)"
             wait $lock_pid 2>/dev/null
             return 0

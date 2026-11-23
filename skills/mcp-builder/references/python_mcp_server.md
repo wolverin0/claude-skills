@@ -4,6 +4,10 @@
 
 This document provides Python-specific best practices and examples for implementing MCP servers using the MCP Python SDK. It covers server setup, tool registration patterns, input validation with Pydantic, error handling, and complete working examples.
 
+> **SDK version.** The examples target the v1 SDKs (`mcp<2`, `FastMCP`). Both SDKs now have a v2 line
+> with breaking renames (in `mcp` 2.x `FastMCP` became `mcp.server.mcpserver.MCPServer`; importing `mcp.server.fastmcp` raises `ModuleNotFoundError`). Pin v1 for this guide, or follow the official v2 migration
+> guide before copying code.
+
 ---
 
 ## Quick Reference
@@ -652,19 +656,18 @@ FastMCP supports different transport mechanisms:
 if __name__ == "__main__":
     mcp.run()
 
-# HTTP transport (for web services)
+# Streamable HTTP (remote servers; the default choice for anything not local)
 if __name__ == "__main__":
-    mcp.run(transport="streamable_http", port=8000)
+    mcp.run(transport="streamable-http")   # literal is "streamable-http", with a hyphen
 
-# SSE transport (for real-time updates)
-if __name__ == "__main__":
-    mcp.run(transport="sse", port=8000)
+# Legacy HTTP+SSE: deprecated by the 2025-03-26 spec; only for clients that cannot speak Streamable HTTP
+# mcp.run(transport="sse")
 ```
 
 **Transport selection:**
 - **Stdio**: Command-line tools, subprocess integration
-- **HTTP**: Web services, remote access, multiple clients
-- **SSE**: Real-time updates, push notifications
+- **Streamable HTTP**: every remote or multi-client server; one `/mcp` endpoint, responses can stream (SSE inside the same endpoint), optional `Mcp-Session-Id`
+- **SSE (legacy HTTP+SSE)**: do not choose it for new servers; keep it only to serve an old client
 
 ---
 

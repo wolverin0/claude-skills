@@ -1,6 +1,7 @@
 ---
 name: debate
-description: Multi-LLM debate orchestration (Claude vs Codex vs Gemini) with rounds + synthesis.
+description: "Multi-LLM debate orchestration (Claude vs Codex vs Gemini) with rounds + synthesis. Explicit invocation only: start it when the user types /debate or explicitly asks for a multi-model debate; never on your own (it calls external CLIs that spend tokens)."
+disable-model-invocation: true
 ---
 
 # AI Debate Hub Skill v6.0.0
@@ -285,12 +286,12 @@ For error handling, retry logic, and atomic state updates, read:
 `helpers.md` in this skill folder.
 
 This contains:
-- `update_debate_state()` - Safe atomic state writes
+- `update_debate_state()` - Safe atomic state writes (shipped in `tools/state-lock.sh`; `source` it)
 - `update_debate_index()` - Safe atomic index.json writes (parallel-safe)
 - `run_advisor_with_retry()` - Exponential backoff retry with telemetry
 - `log_contextual_error()` - User-friendly error output
 
-**Cross-platform alternative:** For Windows/macOS without `flock`, use:
+**Cross-platform alternative:** Without bash or `jq`, use:
 ```bash
 node tools/atomic-json.mjs write state.json '<json>'
 node tools/atomic-json.mjs append-index index.json '<entry-json>'

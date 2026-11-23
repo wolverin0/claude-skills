@@ -47,6 +47,14 @@ Symptom: Function call returns error or unexpected result
 3. Check function has correct permissions (auth required vs public)
 4. Test directly: `curl -X POST <supabase_url>/functions/v1/<function_name>`
 
+### External Webhook Gets 401 Before the Function Runs
+
+Symptom: MercadoPago, Stripe or another provider's webhook gets 401 and the function logs show nothing.
+Cause: `verify_jwt` defaults to true and the provider sends no Supabase JWT.
+Fix: add `[functions.<name>]` with `verify_jwt = false` to `supabase/config.toml` (or deploy with
+`--no-verify-jwt`), then verify the provider's own signature in code. For MercadoPago, the
+`mercadopago-integration` skill ships the signature check and a `check-config` command.
+
 ### Migration Issues
 ```
 Symptom: Schema mismatch, missing columns/tables

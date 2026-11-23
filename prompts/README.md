@@ -99,8 +99,8 @@ Each row was checked against the text: the cited line contains the token.
 | `UX SCOPE FAILED` | `skills/battle-test/references/report.md:19` | `--ux` verdict |
 | `SMOKE VERIFIED` | `skills/validation/SKILL.md:50` | Verdict of the validation smoke mode |
 | `VISUAL ROUTE SWEEP GREEN` | `skills/visual-route-sweep/SKILL.md:46` | visual-route-sweep verdict |
-| `🛑 DO NOT LAUNCH UNTIL HARD STOPS RESOLVED` | `skills/audit/references/audit-triage-rubric.md:52` | Audit verdict (1 of 5) |
-| `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` | `skills/audit/references/audit-triage-rubric.md:56` | Audit verdict (5 of 5) |
+| `🛑 DO NOT LAUNCH UNTIL HARD STOPS RESOLVED` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:52` | Audit verdict (1 of 5) |
+| `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:56` | Audit verdict (5 of 5) |
 | `AUDIT COMPLETE: all 7 rules attested, all 13 domains covered` | `skills/audit/audit-orchestrator/SKILL.md:243` | End-of-audit signal |
 | `AUDIT TRUNCATED: <reason>` | `skills/audit/audit-orchestrator/SKILL.md:244` | Audit cutoff signal |
 | `QUALITY-LOOP COMPLETE` | `skills/quality-loop/SKILL.md:115` | quality-loop end signal |
@@ -125,7 +125,7 @@ What each case says in its own section is repeated here.
 - No mode has been run end to end. Nor has any of these prompts been pasted into an agent.
 - The citations were checked with a script that verifies that each cited line contains the flag or the verdict. That proves none was made up; it does not prove that the skill behaves as its text describes.
 - It was assumed that a current installed version has the flags. Which version each agent has was not checked.
-- It was not checked that the `audit-remediate` workflow, the `audit-runner` and `audit-domain-runner` agents, or the reference file that `vibe-to-prod` cites exist in your installation. The repo ships them under `workflows/`, `agents/` and `skills/audit/references/`; install them as the root README describes.
+- It was not checked that the `audit-remediate` workflow, the `audit-runner` and `audit-domain-runner` agents, or the reference file that `vibe-to-prod` cites exist in your installation. The repo ships them under `workflows/`, `agents/` and `skills/vibe-to-prod/references/`; install them as the root README describes.
 - The `$visual-route-sweep` form is the published one; it was not tried in an agent that does not use `$`.
 - The prompts were never put to the test against a project with auto-deploy, nor against one without `validation.config.json`.
 - How an agent reacts to the "stop and tell me" instructions was not observed: it is the intent of the prompt, not an observed behavior.

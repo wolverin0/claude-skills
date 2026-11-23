@@ -1,13 +1,29 @@
 ---
 name: audit-orchestrator
-description: Conduct a full technical due diligence audit of a vibe-coded codebase. Use when the user types `/audit`, asks for a "full audit," asks for a "due diligence review," asks "is this codebase ready to ship?", or asks for a comprehensive code review of an entire repository (not a single PR). Coordinates the 13 domain skills, the hard-stop hunt, the Tambon LLM-signature hunt, and the blind-spot walk. Produces a single dual-layer report (founder view + technical evidence).
+description: "Conduct a full, read-only technical due diligence audit of an entire vibe-coded repository. Use when the user types `/audit`, asks for a \"full audit\" or a \"due diligence review\", or asks for a comprehensive review of a whole repository (not a single PR). Coordinates the 13 domain modules, the hard-stop hunt, the Tambon LLM-signature hunt, and the blind-spot walk. Produces a single dual-layer report (founder view + technical evidence). Not for a quick launch checklist (vibe-to-prod), a pending diff or PR (security-review) or a UI/UX checklist audit (checklist-design-app-audit). Heavy (about 40-70 minutes of subagents): start it only when the user asks for it or a parent workflow (battle-test, /audit, audit-loop) calls it; never on your own."
 ---
 
 # Skill: Audit Orchestrator
 
 You are the conductor of a multi-domain technical due diligence audit.
 Your job is sequencing, not finding. The actual hunting happens in
-specialized skills and subagents that you invoke and stitch together.
+specialized modules and subagents that you dispatch and stitch together.
+
+## Bundle layout (paths are relative to this skill's folder)
+
+- `modules/` — the phase modules you hand to yourself or to subagents:
+  `audit-method.md`, `audit-hard-stops.md`, `audit-tambon-hunt.md`,
+  `audit-blind-spots.md`, `audit-domain-01-security.md` …
+  `audit-domain-13-code-integrity.md`, plus `speed-31.md` and `feel-20.md`.
+  They are not separate skills; read them when their phase starts.
+- `references/` — the shared catalogs (`audit-rules.md`,
+  `audit-report-format.md`, `audit-triage-rubric.md`, `audit-hard-stops.md`,
+  `audit-blind-spots.md`, `audit-tambon-signatures.md`,
+  `domain-audit-contract.md`, `production-readiness-playbook.md`).
+- `AUDIT_SKILL_DIR` = the absolute path of this folder. Pass it to every
+  subagent so it can read `modules/` and `references/` itself. Every such path in
+  this skill or a module is relative to `AUDIT_SKILL_DIR`, never to the audited
+  project (which may hold unrelated files with the same names).
 
 This is a long-running, multi-phase task. Before doing anything, plan
 the run.
@@ -17,7 +33,7 @@ the run.
 ## What this skill produces
 
 A single report following the format in
-`~/.codex/context/audit-report-format.md`. Founder view + technical
+`references/audit-report-format.md`. Founder view + technical
 evidence, with severity census, verdict, and remediation plan at the top
 and 13 domain sections below.
 
@@ -25,7 +41,7 @@ and 13 domain sections below.
 
 ## What this skill does NOT do
 
-- Find findings directly. The domain skills do that.
+- Find findings directly. The domain modules do that.
 - Modify any code. Read-only audit.
 - Produce AI fix prompts for every finding inline. The
   `audit-fix-generator` skill does that on demand.
@@ -36,21 +52,21 @@ and 13 domain sections below.
 
 ## Pre-flight (do once, at the start)
 
-Before invoking any other skill, do this in order:
+Before starting any phase, do this in order:
 
 ### 1. Load the rules
 
-Read `~/.codex/context/audit-rules.md` end-to-end. The seven rules
+Read `references/audit-rules.md` end-to-end. The seven rules
 (R1-R7) apply to the entire audit.
 
 ### 2. Load the report format
 
-Read `~/.codex/context/audit-report-format.md`. You're going to be
+Read `references/audit-report-format.md`. You're going to be
 producing this format; familiarize yourself.
 
 ### 3. Load the triage rubric
 
-Read `~/.codex/context/audit-triage-rubric.md`. The verdict at the top
+Read `references/audit-triage-rubric.md`. The verdict at the top
 of the report is determined by the rules in this file.
 
 ### 4. Create inventory.json preflight
@@ -81,7 +97,7 @@ use that as the audit scope.
 
 ### 6. Detect the stack (R7 enforcement)
 
-Run the audit-method skill phase 1 (tool fingerprinting) to confirm:
+Run phase 1 of `modules/audit-method.md` (tool fingerprinting) to confirm:
 
 - Primary language(s)
 - Web framework(s)
@@ -89,7 +105,7 @@ Run the audit-method skill phase 1 (tool fingerprinting) to confirm:
 - Auth approach (cookie session, JWT, OAuth, custom)
 - Deployment target (if detectable from config)
 
-Record this. The domain skills use it. R7 ("stack honesty") forbids
+Record this. The domain modules use it. R7 ("stack honesty") forbids
 projecting framework conventions from a different stack.
 
 ---
@@ -100,7 +116,7 @@ Execute these phases in order. Do not skip. Do not reorder.
 
 ```
 PHASE A — METHOD
-  ├─ audit-method skill
+  ├─ modules/audit-method.md
   │    ├─ Phase 1: Tool fingerprinting        (already done in pre-flight)
   │    ├─ Phase 2: Repository inventory
   │    └─ Phase 3: System mapping (high-level architecture)
@@ -109,30 +125,30 @@ PHASE A — METHOD
      (3-5 paragraphs, kept in your context for the rest of the audit)
 
 PHASE B — HARD STOPS (runs FIRST after method)
-  ├─ audit-hard-stops skill
+  ├─ modules/audit-hard-stops.md
   │    └─ Walks H1-H11 systematically
   │
   └─ Output: list of FOUND / NOT FOUND for each H1-H11
      (If any FOUND, the report's verdict is locked to 🛑)
 
 PHASE C — TAMBON SIGNATURES
-  ├─ audit-tambon-hunt skill
+  ├─ modules/audit-tambon-hunt.md
   │    └─ Scans for Hallucinated Object / Wrong Attribute / Silly Mistake
   │
   └─ Output: signature counts + density per 1000 LoC
      (Findings flow into Domain 13)
 
 PHASE D — BLIND SPOTS
-  ├─ audit-blind-spots skill
+  ├─ modules/audit-blind-spots.md
   │    └─ Walks B1-B19 systematically
   │
   └─ Output: PRESENT / NOT PRESENT for each B1-B19
      (Findings flow into the appropriate domain)
 
-PHASE E — DOMAIN AUDITS (13 skills, IN ISOLATED SUBAGENT CONTEXTS)
+PHASE E — DOMAIN AUDITS (13 modules, IN ISOLATED SUBAGENT CONTEXTS)
   │
   │  Use the `audit-domain-runner` subagent. Spawn ONE subagent per
-  │  domain. Each subagent loads the domain skill and the audit-rules,
+  │  domain. Each subagent reads its domain module and the audit-rules,
   │  runs against the audit scope, returns a ~2K-token findings report.
   │
   │  Why subagents:
@@ -181,26 +197,26 @@ PHASE G — SELF-CHECK (mandatory, per R6)
 
 **Phase A (audit-method):**
 
-> "Use the audit-method skill to fingerprint and inventory the
+> "Read `modules/audit-method.md` and use it to fingerprint and inventory the
 > codebase at `<scope>`. Return: detected stack, repo structure
 > summary, inventory.json counts, system map. Do not produce findings yet."
 
 **Phase B (audit-hard-stops):**
 
-> "Use the audit-hard-stops skill to walk H1-H11 against `<scope>`.
+> "Read `modules/audit-hard-stops.md` and walk H1-H11 against `<scope>`.
 > For each, run the detection commands from
-> `~/.codex/context/audit-hard-stops.md`. Return: status (FOUND /
+> `references/audit-hard-stops.md`. Return: status (FOUND /
 > NOT FOUND / UNABLE) per H-class with evidence."
 
 **Phase C (audit-tambon-hunt):**
 
-> "Use the audit-tambon-hunt skill to scan `<scope>` for the three
+> "Read `modules/audit-tambon-hunt.md` and scan `<scope>` for the three
 > Tambon signatures. Use mypy / pyright / tsc as appropriate. Return:
 > counts per signature, top occurrences, density per 1000 LoC."
 
 **Phase D (audit-blind-spots):**
 
-> "Use the audit-blind-spots skill to walk B1-B19 against `<scope>`.
+> "Read `modules/audit-blind-spots.md` and walk B1-B19 against `<scope>`.
 > Return: PRESENT / NOT PRESENT per B-class with evidence."
 
 **Phase E (each domain):**
@@ -209,9 +225,9 @@ For each of the 13 domains, spawn a subagent:
 
 > "Use the audit-domain-runner subagent. Pass it: domain=<N>, scope=`<path>`,
 > stack=<from method>, hard-stops-found=<list>, tambon-density=<X>,
-> blind-spots-present=<list>. The subagent will load
-> audit-domain-0<N>-<name>/SKILL.md and produce a domain findings
-> report. Return only the findings report, no commentary."
+> blind-spots-present=<list>, audit_skill_dir=<AUDIT_SKILL_DIR>. The subagent
+> reads `<AUDIT_SKILL_DIR>/modules/audit-domain-<NN>-<name>.md` and produces
+> a domain findings report. Return only the findings report, no commentary."
 
 If your environment supports parallel subagent execution, dispatch all
 13 in parallel. Otherwise, dispatch sequentially. Either way, each
@@ -222,7 +238,7 @@ each other or with you.
 
 This phase happens in your context (the orchestrator). You receive 13
 domain reports + the hard-stops, Tambon, and blind-spots reports. You
-stitch them into the format from `~/.codex/context/audit-report-format.md`.
+stitch them into the format from `references/audit-report-format.md`.
 Before writing the fresh report, if `audit-report.md` already exists,
 rename it to `audit-report.previous-YYYYMMDD-HHMM.md`.
 
@@ -232,9 +248,9 @@ triage rubric — apply it mechanically.
 
 If the audit is part of an improvement cycle, invoke `audit-loop` after
 report generation to generate the roadmap, execute remediation, rerun
-the audit, and compare deltas. If a finding is accepted, deferred, or
-requires non-repo action, invoke `audit-decisions` before treating it as
-resolved or blocked.
+the audit, and compare deltas. Accepted, deferred, or non-repo findings
+are recorded by `audit-loop` (its audit-decisions module) before they
+count as resolved or blocked.
 
 **Phase G (self-check):**
 
@@ -293,7 +309,7 @@ degradation thresholds:
 
 ## Failure modes to refuse
 
-- ❌ Producing the report without running the domain skills (writing
+- ❌ Producing the report without running the domain modules (writing
   from imagination — this is what v3's monolithic prompt risked)
 - ❌ Skipping the hard-stops phase (it MUST run, even if domains are
   truncated)
@@ -325,7 +341,6 @@ Tell the user this up front so they don't expect it in 30 seconds.
 
 - Audit mode is read-only for product code unless the user explicitly requests remediation.
 - Treat `.claude/`, `.codex/`, `.agents/`, `.gitnexus/`, caches, `node_modules/`, virtualenvs, and generated build outputs as tooling or generated scope unless the finding is specifically repo hygiene.
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find` when running in PowerShell.
 - If GitNexus MCP tools are unavailable, use `.gitnexus/meta.json`, `.gitnexus/` artifacts, and `npx gitnexus` CLI as the fallback.
 - Findings should also be representable as: `{id, domain, severity, exploitability, evidence_path, evidence_line, summary, impact, recommended_fix, verification}`.

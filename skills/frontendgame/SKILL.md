@@ -34,6 +34,7 @@ Then identify the named patterns. Do not describe everything as “modern UI.”
 1. **Infer the product context.** Identify user, job-to-be-done, density level, primary action, and trust requirements.
 2. **Choose a visual language.** Commit to a coherent direction: refined fintech, utilitarian internal tool, editorial marketplace, playful consumer app, luxury minimal, industrial dashboard, etc. Intentionality matters more than intensity.
 3. **Define the interaction architecture.** Name the navigation model, scroll behavior, tab behavior, cards, sheets, forms, feedback states, and loading states.
+3a. **Standard flows: apply the UX checklist while building.** When the screen is a login or signup, checkout, pricing page, form, or data table, and the `checklist-design-app-audit` skill is installed, use it in targeted mode before writing components: run its `search` for the flow (`"login authentication password"`, `"checkout payment cart"`, `"pricing plan"`, `"form input validation"`, `"table data"`), `show` the top one to three keys, and turn the applicable items into acceptance criteria for this build. Name the keys you used in the output. If the skill is not installed, say so and continue; this step never replaces the audit after the build.
 4. **Create design tokens before screens.** Define color roles, spacing scale, type scale, radius scale, shadow/elevation, motion durations, easing/spring presets, icon style, and component variants.
 5. **Implement reusable components.** Prefer `MobileShell`, `SafeAreaHeader`, `CollapsingHeader`, `MorphingSearchBar`, `AnimatedSegmentedTabs`, `StickyCardStack`, `BalanceCard`, `PromoCard`, `BottomNav`, `FloatingActionButton`, `SkeletonCard`, `EmptyState`, and `ErrorState`.
 6. **Add real states.** Include loading, empty, error, success, disabled, active/pressed, focus, overflow, and small-screen behavior.
@@ -80,6 +81,8 @@ Read `references/motion-engineering.md` for detailed implementation guidance.
 ## Stack selection
 
 When the stack is known, use the relevant recipe in `references/stack-recipes.md`.
+For React/Next.js component, state, data-fetching and performance patterns, read
+`references/frontend-patterns.md`.
 
 | Stack | Preferred approach |
 |---|---|

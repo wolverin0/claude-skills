@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
+description: "Guide and scripts for creating or updating a skill: structure, progressive disclosure, quick_validate.py and package_skill.py. Use when the user wants to design a new skill or change an existing one. To capture a workflow that just worked in this session, use skillify, which follows this guide."
 license: Complete terms in LICENSE.txt
 ---
 
@@ -120,6 +120,20 @@ scripts/package_skill.py <path/to/skill-folder>
 ```
 
 The packaging script will validate the skill automatically and create a .skill file.
+
+### Checking trigger collisions
+
+After writing or changing a `description`, check that it does not steal prompts from a sibling:
+
+```bash
+scripts/eval_routing.py                                  # skills next to this one + scripts/routing_cases.json
+scripts/eval_routing.py --skills-root <dir> --cases <cases.json>
+```
+
+It scores every description against realistic prompts (BM25, no network) and fails when the
+expected skill is not in the top 2 or a skill listed under `not` ranks above it; near-ties are
+printed as collisions to sharpen. Add a case for each new skill. Sentences starting with
+"Not for" are ignored, so redirect overlapping requests there.
 
 ## Reference Documentation
 

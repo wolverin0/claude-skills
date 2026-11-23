@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$HOME/.claude/skills/handoff/scripts/handoff-guard.cjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -79,7 +79,7 @@ Block B (`/audit`):
 | `AUDIT COMPLETE: all 7 rules attested, all 13 domains covered` | `skills/audit/audit-orchestrator/SKILL.md:243` | Full end signal |
 | `AUDIT TRUNCATED: <reason>` | `skills/audit/audit-orchestrator/SKILL.md:244` | Cutoff signal |
 | `Emitting + AUDIT COMPLETE + if any domain truncated` | `skills/audit/audit-orchestrator/SKILL.md:304` | COMPLETE is not emitted if a domain was truncated |
-| `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` | `skills/audit/references/audit-triage-rubric.md:56` | Last of the five verdicts (full list in case 04) |
+| `🟢 ACCEPTABLE — routine cleanup; no launch-blockers` | `skills/audit/audit-orchestrator/references/audit-triage-rubric.md:56` | Last of the five verdicts (full list in case 04) |
 
 ## Not defined in the text
 

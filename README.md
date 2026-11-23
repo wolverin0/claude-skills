@@ -6,7 +6,15 @@ and related CLI-based development workflows.
 This repo is the canonical source for the maintained skill set. Install copies
 into the active skill root for each provider, or symlink them while iterating.
 
-**Last sync: 2026-11-11** — added `quality-loop`, `product-ux-audit` and the
+**Last sync: 2026-11-23** — audit hardening: the audit bundle installs as three
+entry points (`audit-orchestrator`, `audit-loop`, `audit-fix-generator`) with
+modules and catalogs inside them; `tools/install_skills.py` installs by profile
+and finds orphaned old skills; CI, root `AGENTS.md`, negative triggers,
+explicit-only heavy skills, a fixed debate lock, batched screenshot review,
+MercadoPago webhook signing, a handoff PreCompact guard and
+`eval_routing.py`. See `DOCS-MAP.md` for every path.
+
+**Sync 2026-11-11** — added `quality-loop`, `product-ux-audit` and the
 `commands/` folder (`/audit`, `/audit-remediate`); `battle-test` gained the
 `--ux` mode; the audit reference catalogs now cover H1-H11 and B1-B19; the
 `validation` invocation name is `/validation`. Previous sync: 2026-08-24.
@@ -37,30 +45,35 @@ Copy-paste prompts for each `battle-test` mode and its sibling skills (derived f
 
 ### Audit bundle — technical due diligence
 
-Location: `skills/audit/` (21 skills) plus two slash commands in `commands/`.
-Full-repository due diligence: the orchestrator, method setup, hard-stop
-checks (H1-H11), Tambon LLM-signature hunt, blind-spot walk (B1-B19), 13 domain
-audits, decision handling, fix-prompt generation, and the
-audit→remediate→rerun loop. Domains follow enumeration-before-verdict. The
-seven shared catalogs in `skills/audit/references/` are `audit-rules.md`,
-`audit-hard-stops.md` (H1-H11), `audit-blind-spots.md` (B1-B19),
-`audit-tambon-signatures.md`, `audit-report-format.md`,
-`audit-triage-rubric.md` and `domain-audit-contract.md`; the same folder also
-holds `production-readiness-playbook.md`, the reference the domain skills and
-`vibe-to-prod` cite.
+Location: `skills/audit/` (3 installable skills) plus two slash commands in
+`commands/`. Full-repository due diligence: the orchestrator, method setup,
+hard-stop checks (H1-H11), Tambon LLM-signature hunt, blind-spot walk (B1-B19),
+13 domain audits, decision handling, fix-prompt generation, and the
+audit→remediate→rerun loop. Domains follow enumeration-before-verdict.
 
-The 21 children of `skills/audit/`:
+Only the three entry points install as skills, so a provider carries three
+metadata blocks instead of 21:
 
-- Pipeline: `audit-orchestrator`, `audit-method`, `audit-hard-stops`,
-  `audit-tambon-hunt`, `audit-blind-spots`, `audit-decisions`,
-  `audit-fix-generator`, `audit-loop`.
-- Domains: `audit-domain-01-security`, `audit-domain-02-architecture`,
-  `audit-domain-03-database`, `audit-domain-04-devops`,
-  `audit-domain-05-performance`, `audit-domain-06-ux-a11y`,
-  `audit-domain-07-reliability`, `audit-domain-08-compliance`,
-  `audit-domain-09-maintainability`, `audit-domain-10-cost`,
-  `audit-domain-11-demo-vs-prod`, `audit-domain-12-missing`,
-  `audit-domain-13-code-integrity`.
+```text
+skills/audit/
+  audit-orchestrator/   SKILL.md + modules/ + references/
+  audit-loop/           SKILL.md + modules/audit-decisions.md + references/
+  audit-fix-generator/  SKILL.md + references/
+```
+
+- `audit-orchestrator/modules/`: the phase modules it reads or hands to
+  subagents on demand (`audit-method`, `audit-hard-stops`, `audit-tambon-hunt`,
+  `audit-blind-spots`, `audit-domain-01-security` … `audit-domain-13-code-integrity`,
+  plus the `speed-31.md` and `feel-20.md` checklists). They have no `SKILL.md`,
+  so no provider lists them.
+- `references/`: the seven shared catalogs (`audit-rules.md`,
+  `audit-hard-stops.md` H1-H11, `audit-blind-spots.md` B1-B19,
+  `audit-tambon-signatures.md`, `audit-report-format.md`,
+  `audit-triage-rubric.md`, `domain-audit-contract.md`) and
+  `production-readiness-playbook.md`. Each entry point ships an identical copy
+  (canonical: `audit-orchestrator/references/`), so every skill works from its
+  own folder; `tests/test-repo-hygiene.sh` fails if a copy drifts.
+  `vibe-to-prod` ships the same playbook.
 
 Primary entry points:
 
@@ -75,25 +88,21 @@ Slash commands (`commands/`):
 | `/audit` | Runs the `audit-orchestrator` skill and writes one `audit-report.md`. Read-only: it never modifies source. Args: `--scope=<path>`, `--priority-domains=<csv of 1-13>`, `--resume-from=<N>`. |
 | `/audit-remediate` | Launches the `audit-remediate` workflow: audit, fix on a dedicated branch with per-fix verification, re-audit until green or out of budget, then open a PR. Never merges and never touches `main`. Args: `--scope=<path>`, `--max-rounds=<N>` (default 4). Needs `workflows/audit-remediate.mjs` installed (see the install block below). |
 
-Install the 21 `audit-*` children of `skills/audit/` into the provider skill
-root, and the shared catalogs in `skills/audit/references/` into the context
-directory the skills read from (`@.claude/context/` in the project, or
-`~/.codex/context/` for Codex):
+Install the three entry points into the provider skill root; the catalogs
+travel inside them, so there is no separate context directory to fill:
 
 ```bash
-cp -r skills/audit/audit-* ~/.claude/skills/
-cp -r skills/audit/audit-* ~/.codex/skills/
-mkdir -p .claude/context ~/.codex/context
-cp skills/audit/references/*.md .claude/context/
-cp skills/audit/references/*.md ~/.codex/context/
+python tools/install_skills.py --profile audit --target all --dry-run
+python tools/install_skills.py --profile audit --target all
 ```
 
-The `cp skills/audit/references/*.md` lines also install
-`production-readiness-playbook.md`, which the skills cite as
-`~/.codex/context/production-readiness-playbook.md`. The workflow script reads
-the catalogs from `~/.claude/context/`; copy them there too if you run
-`/audit-remediate` (see Installation).
-Install the two commands with `cp commands/*.md ~/.claude/commands/`.
+An older install left 18 retired `audit-*` skill folders (`audit-method`,
+`audit-hard-stops`, `audit-domain-01-security` …) in the provider roots; see
+Installation (`--prune-orphans --dry-run`) for how to find them. The `/audit-remediate` workflow reads the
+modules from `~/.claude/skills/audit-orchestrator/` (override with the
+`auditSkillDir` argument).
+The Claude target also installs the two commands, the two agents and the
+workflow script.
 
 The audit pieces outside `skills/`:
 
@@ -118,8 +127,8 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 | `tdd-workflow` | Red-first test-driven flow. |
 | `debug-resolve` | Systematic debugging to resolution. |
 | `supabase-debug` | Supabase-specific diagnosis. |
-| `feature-validation` | Validate a feature against its spec. |
-| `mercadopago-integration` | MercadoPago OAuth/checkout/webhooks for Supabase/React SaaS, with production pitfalls from 7+ real Argentine projects. Assets: edge function, hook, migration SQL. |
+| `feature-validation` | Deprecated alias: routes old `feature-validation` prompts to `validation`. |
+| `mercadopago-integration` | MercadoPago OAuth/checkout/webhooks for Supabase/React SaaS, with production pitfalls from 7+ real Argentine projects. Assets: OAuth edge function, hook, migration SQL, and a webhook Edge Function with x-signature verification, legacy-IPN handling and idempotent updates; `scripts/mp_webhook_tool.py` signs test notifications and checks `verify_jwt = false`. |
 | `checklist-design-app-audit` | Audits against a validated Checklist Design snapshot: 703 auditable items, evidence-aware scoring, deterministic search scripts. |
 | `designmotion-ui` | 89 canonical UI/UX rules distilled strictly from 147 `@designmotionhq` posts across layout, type, color, motion, micro-interactions, forms, navigation, a11y, data-viz, onboarding, pricing, and anti-dark-patterns. |
 
@@ -127,7 +136,7 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 
 | Skill | What it does |
 |---|---|
-| `handoff` | Verified, identity-bound session checkpoint (v3: required sections, session/generation/corr identity, checksummed exclusive publication via the bundled `publish-handoff.cjs`; Node.js required). The next session starts from the file, not from vibes. |
+| `handoff` | Verified, identity-bound session checkpoint (v3: required sections, session/generation/corr identity, checksummed exclusive publication via the bundled `publish-handoff.cjs`; Node.js required). The next session starts from the file, not from vibes. v3.1 adds an optional PreCompact guard (`assets/settings-hooks.json` + `scripts/handoff-guard.cjs`) that blocks a manual compaction without a fresh verified handoff and carries the handoff's path and corr into the compaction summary. |
 | `skillify` | Turn a proven repeated workflow into a reusable skill. |
 | `skill-creator` | Create and validate skills locally (progressive disclosure). |
 | `project-setup` | Generate/refresh AGENTS.md / CLAUDE.md from the real codebase. |
@@ -210,7 +219,7 @@ unavailable.
 
 ```text
 skills/
-  audit/                      21-skill due diligence bundle + references/ (see above)
+  audit/                      due diligence bundle: 3 entry-point skills (see above)
   autoqa/                     Third-party: self-QA against a running app
   battle-test/                Fail-closed e2e hardening cycle (+ --ux mode)
   checklist-design-app-audit/ Checklist Design evidence audits
@@ -220,7 +229,7 @@ skills/
   designmotion-ui/            89 UI/UX rules distilled from @designmotionhq
   desloppify/                 Third-party: codebase health scanner
   emil-design-eng/            Third-party: animation and micro-interaction craft
-  feature-validation/         Feature-vs-spec validation
+  feature-validation/         Deprecated alias routing to validation
   frontendgame/               Premium mobile-first UI engineering
   handoff/                    Verified session checkpoints (v3) + publisher scripts
   impeccable/                 Third-party: design operations (no engine binary)
@@ -246,19 +255,29 @@ agents/                       audit-runner and audit-domain-runner subagents
 commands/                     /audit and /audit-remediate slash commands
 hooks/                        pre/post audit report check hooks (Python)
 workflows/                    audit-remediate.mjs (workflow-runtime script)
-tools/                        Supporting docs and legacy helpers
-tests/                        Shell tests for the debate helper functions
+tools/                        install_skills.py + skill-profiles.json + retired-skills.txt, references/ (backend, ClickHouse), legacy docs
+tests/                        Shell tests (debate lock, hygiene, frontmatter, installer, routing, MercadoPago, handoff guard)
 ```
 
-Reference docs at `skills/` root: `backend-patterns.md`, `frontend-patterns.md`,
-`coding-standards.md`, `clickhouse-io.md`, `project-guidelines-example.md`,
-`AUTO-HEALING-INTEGRATION-GUIDE.md`.
+`skills/` holds only skill folders. The former root reference docs now live with
+the skill that loads them (`frontendgame/references/frontend-patterns.md`,
+`project-setup/references/coding-standards.md`,
+`project-setup/assets/project-guidelines-example.md`) or, when no shipped skill
+fits, in `tools/references/` (`backend-patterns.md`, `clickhouse-io.md`).
 
 ## Quick starts
 
 Trigger phrases (the skill picks them up from its description; the skill names
 are `battle-test`, `validation`, `vibe-to-prod`, `audit-orchestrator`, `debate`;
-`/audit` and `/audit-remediate` are commands from `commands/`):
+`/audit` and `/audit-remediate` are commands from `commands/`). In Claude Code a
+skill's slash command is its `name` or folder name; in Codex mention it as
+`$name`. `battle-test`, `debate` and `handoff` are explicit-only: Claude Code
+never starts them on its own (`disable-model-invocation: true`) and Codex keeps
+them out of the model context (`agents/openai.yaml`
+`policy.allow_implicit_invocation: false`), so type `/battle-test` or
+`$battle-test`. `audit-orchestrator`, `audit-loop` and `vibe-to-prod` stay
+model-invocable because `battle-test`, `/audit` and `audit-orchestrator` load
+them; their descriptions forbid starting them unasked.
 
 ```text
 # full hardening cycle on the current project
@@ -299,6 +318,7 @@ Validate changed skills with:
 
 ```bash
 python skills/skill-creator/scripts/quick_validate.py skills/<skill-name>
+python skills/skill-creator/scripts/eval_routing.py   # trigger collisions across all skills (38 prompts)
 ```
 
 Package a distributable skill with:
@@ -309,47 +329,44 @@ python skills/skill-creator/scripts/package_skill.py skills/<skill-name>
 
 ## Installation
 
-Install only the skills you actually want active. Copy or symlink from this
-repo into each provider's skill root (`~/.claude/skills/`, `~/.codex/skills/`).
+Install only the skills you actually want active, with `tools/install_skills.py`.
+Always look at the `--dry-run` output first:
 
 ```bash
-# ship & verify set (battle-test conducts audit, validation, visual-route-sweep and quality-loop)
-cp -r skills/battle-test skills/validation skills/visual-route-sweep skills/vibe-to-prod skills/quality-loop skills/product-ux-audit ~/.claude/skills/
-
-# audit bundle (installs as 21 sibling skills + shared catalogs)
-cp -r skills/audit/audit-* ~/.claude/skills/
-mkdir -p .claude/context && cp skills/audit/references/*.md .claude/context/
-
-# slash commands (/audit, /audit-remediate)
-mkdir -p ~/.claude/commands && cp commands/*.md ~/.claude/commands/
-
-# audit agents and workflow (user level), hooks (project level, where their docstrings expect them)
-mkdir -p ~/.claude/agents ~/.claude/workflows ~/.claude/context .claude/hooks
-cp agents/*.md ~/.claude/agents/
-cp workflows/*.mjs ~/.claude/workflows/
-cp hooks/*.py .claude/hooks/   # still needs a settings entry, see the audit section
-cp skills/audit/references/*.md ~/.claude/context/
-
-# third-party design and QA skills
-cp -r skills/impeccable skills/improve skills/taste-skill skills/ui-ux-pro-max skills/emil-design-eng skills/autoqa skills/desloppify ~/.claude/skills/
-
-# workflow set
-cp -r skills/handoff skills/skillify skills/project-setup skills/project-curate skills/project-doctor ~/.claude/skills/
-
-# build set
-cp -r skills/frontendgame skills/mercadopago-integration ~/.claude/skills/
+python tools/install_skills.py --profile ship --target all --dry-run   # plan only, writes nothing
+python tools/install_skills.py --profile ship --target all             # copy
+python tools/install_skills.py --profile audit --target claude --symlink  # link to the repo while iterating
 ```
 
-Symlink while iterating:
+| Flag | Meaning |
+|---|---|
+| `--profile` | `ship` (battle-test family incl. the audit entry points), `audit` (the three audit entry points), `build`, `workflow`, `all` (every skill, third-party included). Lists live in `tools/skill-profiles.json`. |
+| `--target` | `claude` (`~/.claude/skills/`), `codex` (`~/.codex/skills/`), `all` (default). |
+| `--symlink` | link the installed folder to the repo instead of copying (Windows needs Developer Mode). |
+| `--dry-run` | report `install` / `update (backup)` / `same` per item and name files that exist only in the installed copy (an update moves them to backup with the old folder); write nothing. |
+| `--prune-orphans` | find retired skills (`tools/retired-skills.txt`, e.g. the 18 old `audit-*` folders) and `_backup_sync/` or `_archive/` folders hiding `SKILL.md` files inside `~/.claude/skills`, `~/.codex/skills` or `~/.agents/skills`. Codex loads such nested copies as live skills. |
+| `--yes` | required to move orphans; without `--dry-run` and `--yes` the prune refuses. |
+
+Copy mode backs up a changed installed copy to
+`<provider-home>/_backup_sync/<timestamp>/` (for example
+`~/.claude/_backup_sync/`), outside the skill root. A pruned orphan is moved to
+`<provider-home>/_backup_sync/<timestamp>/pruned/`; nothing is deleted.
+Installing `audit-orchestrator` for Claude also installs its extras into
+`~/.claude/`: `commands/audit.md`, `commands/audit-remediate.md`,
+`agents/audit-runner.md`, `agents/audit-domain-runner.md`,
+`workflows/audit-remediate.mjs`.
+
+Hooks are per project and stay manual:
 
 ```bash
-ln -s "$(pwd)/skills/validation" ~/.claude/skills/validation
+mkdir -p .claude/hooks && cp hooks/*.py .claude/hooks/   # still needs a settings entry, see the audit section
 ```
 
 ## Verification
 
-Requirements: Python 3 with PyYAML (`pip install pyyaml`, used by
-`quick_validate.py`), Node.js 18+ and bash.
+Requirements: Python 3.11+ with PyYAML (`pip install pyyaml`, used by
+`quick_validate.py` and `eval_routing.py`), Node.js 18+, bash, `jq` and `openssl`
+(debate lock and MercadoPago tests).
 
 Run focused validation after edits:
 
@@ -365,8 +382,18 @@ for t in tests/*.sh; do bash "$t"; done
 node --test skills/validation/scripts/validation-contract.test.js
 ```
 
-As of 2026-11-04 `tests/test-atomic-state-writes.sh` fails 2 of 4 cases
-(leftover `.lock` files, lock-timeout case); the other suites pass.
+The debate lock tests (`tests/test-atomic-state-writes.sh`,
+`tests/test-state-lock-recovery.sh`) exercise the shipped
+`skills/debate/tools/state-lock.sh`; run them on Linux or macOS with `jq`
+installed, or the JSON-validation case is skipped.
+
+`tests/test-skill-frontmatter.sh` runs `quick_validate.py` on every skill (the
+third-party `impeccable` keeps its upstream `version` key and is the one listed
+exception). `tests/test-repo-hygiene.sh` fails on loose files at `skills/` root,
+a drifted playbook copy, tracked `.bak`/`.lock` files or personal absolute
+paths. `.github/workflows/ci.yml` runs all of the above on every push and pull
+request (Ubuntu, Python 3.12 + PyYAML, Node 20), plus `git diff --check` on
+the changed range.
 
 Compare repo skills against installed provider copies:
 
@@ -375,8 +402,8 @@ python skills/skill-creator/scripts/compare_installed_skills.py --target all
 python skills/skill-creator/scripts/compare_installed_skills.py --target claude --skill validation
 ```
 
-To overlay repo copies into a provider skill root, use `--sync`. Existing
-installed copies are backed up under `_backup_sync/` first.
+The comparison is read-only. To install or update copies use
+`tools/install_skills.py` (see Installation).
 
 ## Notes
 

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Handoff"
+  short_description: "Verified, identity-bound session checkpoint"
+  default_prompt: "Use $handoff to write a verified checkpoint of this session for a later restart."
+
+policy:
+  allow_implicit_invocation: false

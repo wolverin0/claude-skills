@@ -1,0 +1,26 @@
+# Skill folder names this repo no longer ships as skills. tools/install_skills.py
+# --prune-orphans reports an installed folder with one of these names (and a
+# SKILL.md) as an orphan. One name per line; text after "#" is the reason.
+
+# Absorbed into the audit-orchestrator skill as modules (2026-11-23)
+audit-method                     # now audit-orchestrator/modules/audit-method.md
+audit-hard-stops                 # now audit-orchestrator/modules/audit-hard-stops.md
+audit-tambon-hunt                # now audit-orchestrator/modules/audit-tambon-hunt.md
+audit-blind-spots                # now audit-orchestrator/modules/audit-blind-spots.md
+audit-domain-01-security         # now audit-orchestrator/modules/audit-domain-01-security.md
+audit-domain-02-architecture     # now audit-orchestrator/modules/audit-domain-02-architecture.md
+audit-domain-03-database         # now audit-orchestrator/modules/audit-domain-03-database.md
+audit-domain-04-devops           # now audit-orchestrator/modules/audit-domain-04-devops.md
+audit-domain-05-performance      # now audit-orchestrator/modules/audit-domain-05-performance.md
+audit-domain-06-ux-a11y          # now audit-orchestrator/modules/audit-domain-06-ux-a11y.md
+audit-domain-07-reliability      # now audit-orchestrator/modules/audit-domain-07-reliability.md
+audit-domain-08-compliance       # now audit-orchestrator/modules/audit-domain-08-compliance.md
+audit-domain-09-maintainability  # now audit-orchestrator/modules/audit-domain-09-maintainability.md
+audit-domain-10-cost             # now audit-orchestrator/modules/audit-domain-10-cost.md
+audit-domain-11-demo-vs-prod     # now audit-orchestrator/modules/audit-domain-11-demo-vs-prod.md
+audit-domain-12-missing          # now audit-orchestrator/modules/audit-domain-12-missing.md
+audit-domain-13-code-integrity   # now audit-orchestrator/modules/audit-domain-13-code-integrity.md
+# Absorbed into the audit-loop skill as a module (2026-11-23)
+audit-decisions                  # now audit-loop/modules/audit-decisions.md
+# Renamed
+ultimate-validation              # succeeded by validation (see skills/validation/SKILL.md)

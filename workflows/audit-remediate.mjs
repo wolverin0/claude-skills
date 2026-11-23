@@ -20,6 +20,9 @@ const MAX_ROUNDS = A.maxRounds || 4
 const MAX_FIXES_PER_ROUND = A.maxFixesPerRound || 15  // cost guard: don't serial-fix 50 findings in one round
 const DESIRED_BRANCH = `audit/remediation-${STAMP}`
 const MIN_BUDGET = 80_000                 // stop remediating below this many output tokens
+// Installed audit-orchestrator skill: holds modules/ (phase and domain modules) and references/ (catalogs).
+const AUDIT_DIR = A.auditSkillDir || '~/.claude/skills/audit-orchestrator'
+const PATH_RULE = `Paths inside a module (references/..., modules/...) are relative to ${AUDIT_DIR}, not to the audited project.`
 
 // ----- structured-output schemas -----
 const PREP = {
@@ -107,9 +110,9 @@ function dedupe(results) {
 
 // ----- audit fan-out (read-only; safe to parallelize) -----
 const WALKERS = [
-  ['hard-stops', 'Use the audit-hard-stops skill to walk H1-H11 against the scope. Read ~/.claude/context/audit-hard-stops.md. Return each FOUND hard stop as a finding (hardStop = the H-id, severity "critical").'],
-  ['tambon', 'Use the audit-tambon-hunt skill against the scope. Return confirmed signature occurrences on critical paths (auth/payments/deletes) as findings.'],
-  ['blind-spots', 'Use the audit-blind-spots skill to walk B1-B19 against the scope. Return PRESENT findings with blindSpot = the B-id and the routed domain.'],
+  ['hard-stops', `Read ${AUDIT_DIR}/modules/audit-hard-stops.md and follow it to walk H1-H11 against the scope. Read ${AUDIT_DIR}/references/audit-hard-stops.md. Return each FOUND hard stop as a finding (hardStop = the H-id, severity "critical").`],
+  ['tambon', `Read ${AUDIT_DIR}/modules/audit-tambon-hunt.md and follow it against the scope. Return confirmed signature occurrences on critical paths (auth/payments/deletes) as findings.`],
+  ['blind-spots', `Read ${AUDIT_DIR}/modules/audit-blind-spots.md and follow it to walk B1-B19 against the scope. Return PRESENT findings with blindSpot = the B-id and the routed domain.`],
 ]
 const DOMAINS = Array.from({ length: 13 }, (_, i) => String(i + 1).padStart(2, '0'))
 
@@ -117,10 +120,10 @@ function auditThunks(label, branchNote) {
   const ph = label === 'audit' ? 'Audit' : 'Re-review'
   return [
     ...WALKERS.map(([k, p]) => () => agent(
-      `${p}\nSCOPE=${SCOPE}. ${branchNote} Read-only. Cite file:line for every finding (R1/R2 — quote before cite).`,
+      `${p}\nSCOPE=${SCOPE}. ${branchNote} ${PATH_RULE} Read-only. Cite file:line for every finding (R1/R2 — quote before cite).`,
       { label: `${label}:${k}`, phase: ph, schema: FINDINGS })),
     ...DOMAINS.map(d => () => agent(
-      `Use the audit-domain-${d} skill (audit-domain-${d}-*). Audit ONLY your domain against SCOPE=${SCOPE}. ${branchNote} Read ~/.claude/context/audit-rules.md first. Return findings as the schema with file:line evidence (R1/R2). Read-only.`,
+      `Read ${AUDIT_DIR}/modules/audit-domain-${d}-*.md (exactly one file matches) and follow it. ${PATH_RULE} Audit ONLY your domain against SCOPE=${SCOPE}. ${branchNote} Read ${AUDIT_DIR}/references/audit-rules.md first. Return findings as the schema with file:line evidence (R1/R2). Read-only.`,
       { label: `${label}:d${d}`, phase: ph, schema: FINDINGS })),
   ]
 }

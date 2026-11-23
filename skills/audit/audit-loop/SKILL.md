@@ -1,6 +1,6 @@
 ---
 name: audit-loop
-description: "Orchestrate the full audit improvement cycle: audit, roadmap, remediation, rerun, delta comparison, and skill patching for missed findings until convergence or a terminal blocked state."
+description: "Orchestrate the full audit improvement cycle: audit, roadmap, remediation, rerun, delta comparison, and skill patching for missed findings until convergence or a terminal blocked state. Heavy multi-round cycle: start it only when the user asks for the audit improvement loop or audit-orchestrator hands off to it; never on your own. Not for a one-off audit report (audit-orchestrator)."
 ---
 
 # Skill: Audit Loop
@@ -10,6 +10,9 @@ cycle instead of a one-time report.
 
 This skill coordinates existing audit skills. It does not replace
 `audit-orchestrator`; it calls it repeatedly and compares outputs.
+Paths below are relative to this skill's folder: `modules/audit-decisions.md`
+holds the decision and baseline-policy templates, `references/` the shared
+catalogs (an identical copy of the ones `audit-orchestrator` ships).
 
 ---
 
@@ -27,9 +30,10 @@ Run this cycle:
    - unchanged findings
    - severity changes
    - new findings
-6. If new findings appear, patch the audit skill that missed them before
+6. If new findings appear, patch the audit module that missed them before
    starting the next loop. Use the report's "why missed" or comparison
-   rationale to identify the failing skill and add an enumeration,
+   rationale to identify the failing module (a file in the `audit-orchestrator`
+   skill's `modules/`, edited in the source repo and reinstalled) and add an enumeration,
    grep, trace, or success-semantics check that would have caught it.
 7. Continue until the convergence rule is met or a terminal blocked
    state is reached.
@@ -78,8 +82,8 @@ Mark the finding `BLOCKED-EXTERNAL`.
 
 ### Baseline-policy banner
 
-If the team deliberately accepts a policy exception, invoke
-`audit-decisions`, add a structured entry to `baseline-policy.md`, and
+If the team deliberately accepts a policy exception, follow
+`modules/audit-decisions.md`, add a structured entry to `baseline-policy.md`, and
 mark the finding `BLOCKED-POLICY`. `BLOCKED-POLICY` counts as resolved
 for convergence only while the policy entry is complete, approved, and
 not expired.
@@ -123,9 +127,9 @@ Convergence: READY | LOOP AGAIN | TERMINAL BLOCKED
 - Marking convergence while new findings still appear in the latest delta.
 - Marking `BLOCKED-POLICY` without a complete baseline-policy entry.
 - Marking legal/privacy/security policy exceptions accepted without
-  running `audit-decisions`.
+  following `modules/audit-decisions.md`.
 - Patching product code when the user only requested audit-loop planning.
-- Patching an audit skill without explaining which missed-finding pattern
+- Patching an audit module without explaining which missed-finding pattern
   the patch closes.
 
 [SECTION COMPLETE: audit-loop]

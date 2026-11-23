@@ -185,12 +185,13 @@ MCP servers support multiple transport mechanisms for different deployment scena
 - Creating command-line utilities
 - Single-user, single-session scenarios
 
-### HTTP Transport
+### Streamable HTTP Transport (default for remote servers)
 
 **Best for**: Web services, remote access, multi-client scenarios
 
 **Characteristics**:
-- Request-response pattern over HTTP
+- One endpoint (for example `/mcp`): clients POST JSON-RPC; the server answers with JSON or streams the answer as SSE inside that same response; GET opens an optional server-to-client stream
+- Optional sessions through the `Mcp-Session-Id` header; stateless servers skip them and scale horizontally
 - Supports multiple simultaneous clients
 - Can be deployed as a web service
 - Requires network configuration and security considerations
@@ -201,31 +202,25 @@ MCP servers support multiple transport mechanisms for different deployment scena
 - Integration with web applications
 - Need for load balancing or scaling
 
-### Server-Sent Events (SSE) Transport
+### Legacy HTTP+SSE Transport (deprecated)
 
-**Best for**: Real-time updates, push notifications, streaming data
-
-**Characteristics**:
-- One-way server-to-client streaming over HTTP
-- Enables real-time updates without polling
-- Long-lived connections for continuous data flow
-- Built on standard HTTP infrastructure
-
-**Use when**:
-- Clients need real-time data updates
-- Implementing push notifications
-- Streaming logs or monitoring data
-- Progressive result delivery for long operations
+The two-endpoint HTTP+SSE transport (a GET `/sse` stream plus a separate POST `/messages`)
+was replaced by Streamable HTTP in the 2025-03-26 MCP specification; `SSEServerTransport` is
+`@deprecated` in the TypeScript SDK 1.x and absent from its v2 server. Streaming and server push
+still work, inside Streamable HTTP. Keep HTTP+SSE only as a compatibility endpoint for an old client
+that cannot be upgraded, never as the primary transport of a new server.
 
 ### Transport Selection Criteria
 
-| Criterion | Stdio | HTTP | SSE |
-|-----------|-------|------|-----|
-| **Deployment** | Local | Remote | Remote |
+| Criterion | Stdio | Streamable HTTP | Legacy HTTP+SSE |
+|-----------|-------|-----------------|-----------------|
+| **Deployment** | Local | Remote | Remote (old clients only) |
 | **Clients** | Single | Multiple | Multiple |
-| **Communication** | Bidirectional | Request-Response | Server-Push |
-| **Complexity** | Low | Medium | Medium-High |
-| **Real-time** | No | No | Yes |
+| **Communication** | Bidirectional | Request-response, optional streaming and server push | Server push + separate POST endpoint |
+| **Status** | Current | Current, default for remote | Deprecated |
+
+Priority: stdio for local tools, Streamable HTTP for anything remote, HTTP+SSE only as a
+backwards-compatibility shim.
 
 ---
 
@@ -267,7 +262,7 @@ MCP servers support multiple transport mechanisms for different deployment scena
 - Validate return values
 
 ### Tool Annotations
-- Provide readOnlyHint and destructiveHint annotations
+- Every tool declares all four hints explicitly: `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` (a missing hint falls back to the most cautious default, which mislabels safe tools)
 - Remember annotations are hints, not security guarantees
 - Clients should not make security-critical decisions based solely on annotations
 
@@ -287,6 +282,11 @@ MCP servers support multiple transport mechanisms for different deployment scena
 - Implement proper authentication mechanisms
 - Validate message formats
 - Handle malformed messages gracefully
+
+### Streamable HTTP Specific
+- Validate the `Origin` header and bind to `127.0.0.1` when the server is local (DNS rebinding)
+- Require authentication on remote servers; never trust a client-supplied `Mcp-Session-Id` as identity
+- Prefer stateless mode unless the tools need per-session state
 
 ### Stdio Transport Specific
 - Local MCP servers should NOT log to stdout (interferes with protocol)

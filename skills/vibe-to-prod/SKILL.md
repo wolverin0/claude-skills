@@ -1,6 +1,6 @@
 ---
 name: vibe-to-prod
-description: Guided 13-layer production-readiness self-check for a vibe-coded app. Use when the user asks "is this production ready", "what am I missing before launch", "ship check", "did I forget anything", or wants to harden an AI-generated MVP. Walks the 13 layers, runs cheap detections + manual tests, emits a per-layer PASS/GAP scorecard. Lighter than /audit (which is full due-diligence).
+description: "Guided 13-layer production-readiness self-check for a vibe-coded app. Use when the user asks \"is this production ready\", \"what am I missing before launch\", \"ship check\", \"did I forget anything\", or wants to harden an AI-generated MVP. Walks the 13 layers, runs cheap detections + manual tests, emits a per-layer PASS/GAP scorecard in one pass. Not for an evidence-cited whole-repository audit (audit-orchestrator, /audit), a review of pending changes (security-review) or a UI/UX checklist audit (checklist-design-app-audit). Start it only when the user asks for it or battle-test --quick calls it; never on your own."
 ---
 
 # Skill: vibe-to-prod
@@ -21,8 +21,10 @@ Read the playbook first — it holds the layer definitions, thresholds, failure
 modes, and manual tests this skill checks against:
 
 ```
-view ~/.codex/context/production-readiness-playbook.md
+view references/production-readiness-playbook.md
 ```
+
+The path is relative to this skill's folder; the file ships with the skill.
 
 Cite playbook anchors (`L1`-`L13`, `FM-*`, `CHK-*`) in every gap you report so
 the user can read the depth. Do not paste the playbook back; reference it.
@@ -111,6 +113,5 @@ NEXT STEP:
 - ❌ Reporting the value of any secret you find (name the location, never the value).
 
 ## Codex Port Notes
-- For context references written as `@.claude/context/<file>`, read `~/.codex/context/<file>` in Codex.
 - Prefer PowerShell equivalents on Windows; use `rg` before `grep` and `Get-ChildItem` before Unix `find`.
 - Read-only by default; only remediate if the user explicitly asks.

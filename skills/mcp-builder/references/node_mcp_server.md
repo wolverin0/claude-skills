@@ -4,6 +4,10 @@
 
 This document provides Node/TypeScript-specific best practices and examples for implementing MCP servers using the MCP TypeScript SDK. It covers project structure, server setup, tool registration patterns, input validation with Zod, error handling, and complete working examples.
 
+> **SDK version.** The examples target the v1 SDKs (`@modelcontextprotocol/sdk@1`). Both SDKs now have a v2 line
+> with breaking renames (the v2 server ships as `@modelcontextprotocol/server` and drops the SSE server transport). Pin v1 for this guide, or follow the official v2 migration
+> guide before copying code.
+
 ---
 
 ## Quick Reference
@@ -782,25 +786,42 @@ server.registerResourceList(async () => {
 The TypeScript SDK supports different transport mechanisms:
 
 ```typescript
+import express from "express";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-// Stdio transport (default - for CLI tools)
-const stdioTransport = new StdioServerTransport();
-await server.connect(stdioTransport);
+// One factory builds a fully registered server; each transport gets its own instance.
+function createServer(): McpServer {
+  const server = new McpServer({ name: "example-mcp-server", version: "1.0.0" });
+  // server.registerTool("tool_name", {...config}, async (params) => { ... }) for every tool
+  return server;
+}
 
-// SSE transport (for real-time web updates)
-const sseTransport = new SSEServerTransport("/message", response);
-await server.connect(sseTransport);
+// Stdio transport (local tools, spawned by the client)
+await createServer().connect(new StdioServerTransport());
 
-// HTTP transport (for web services)
-// Configure based on your HTTP framework integration
+// Streamable HTTP (remote servers): one /mcp endpoint. Stateless form: a fresh
+// server + transport per request, no session id.
+const app = express();
+app.use(express.json());
+app.post("/mcp", async (req, res) => {
+  const server = createServer();
+  const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  res.on("close", () => { transport.close(); server.close(); });
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
+});
+app.listen(3000, "127.0.0.1");   // bind locally unless it sits behind an authenticating proxy
+
+// For sessions use sessionIdGenerator: () => randomUUID() and keep one transport per Mcp-Session-Id.
+// SSEServerTransport (legacy HTTP+SSE) is @deprecated in SDK 1.x: do not use it for new servers.
 ```
 
 **Transport selection guide:**
 - **Stdio**: Command-line tools, subprocess integration, local development
-- **HTTP**: Web services, remote access, multiple simultaneous clients
-- **SSE**: Real-time updates, server-push notifications, web dashboards
+- **Streamable HTTP**: every remote or multi-client server (responses can still stream inside the same endpoint)
+- **SSE (legacy HTTP+SSE)**: only to keep an old client working; never for a new server
 
 ### Notification Support
 
@@ -889,7 +910,7 @@ Before finalizing your Node/TypeScript MCP server implementation, ensure:
 
 ### Advanced Features (where applicable)
 - [ ] Resources registered for appropriate data endpoints
-- [ ] Appropriate transport configured (stdio, HTTP, SSE)
+- [ ] Transport: stdio for local, Streamable HTTP for remote; no new HTTP+SSE
 - [ ] Notifications implemented for dynamic server capabilities
 - [ ] Type-safe with SDK interfaces
 

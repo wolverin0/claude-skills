@@ -1,0 +1,29 @@
+{
+  "_doc": "Install profiles for tools/install_skills.py. Names are skill folder names under skills/ (skills/audit/<name> included). 'all' installs every skill in the repo. claude_extras: files a skill needs outside the skill root, installed only for the claude target.",
+  "profiles": {
+    "ship": [
+      "battle-test", "validation", "visual-route-sweep", "vibe-to-prod", "quality-loop",
+      "product-ux-audit", "deploy-verify", "security-review",
+      "audit-orchestrator", "audit-loop", "audit-fix-generator"
+    ],
+    "audit": ["audit-orchestrator", "audit-loop", "audit-fix-generator"],
+    "build": [
+      "frontendgame", "mcp-builder", "tdd-workflow", "debug-resolve", "supabase-debug",
+      "mercadopago-integration", "checklist-design-app-audit", "designmotion-ui"
+    ],
+    "workflow": [
+      "handoff", "skillify", "skill-creator", "project-setup", "project-curate",
+      "project-doctor", "debate"
+    ],
+    "all": "*"
+  },
+  "claude_extras": {
+    "audit-orchestrator": [
+      "commands/audit.md",
+      "commands/audit-remediate.md",
+      "agents/audit-runner.md",
+      "agents/audit-domain-runner.md",
+      "workflows/audit-remediate.mjs"
+    ]
+  }
+}

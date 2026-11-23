@@ -1,6 +1,6 @@
 # DOCS-MAP
 
-One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync, the run prompts, the third-party skills and the audit agents, hooks, workflow and playbook.
+One line per document: path — purpose — status. Audited 2026-11-04; updated 2026-11-11 for the battle-test family sync, the run prompts, the third-party skills and the audit agents, hooks, workflow and playbook; updated 2026-11-23 for the audit hardening (lock fix, moved root docs, CI, root AGENTS.md, negative triggers, explicit-only skills, three-entry-point audit bundle, installer, batched screenshot review, MercadoPago webhook, handoff guard, eval_routing).
 Status: **current** · **current\*** (current, but cites files/skills
 not shipped in this repo) · **drifted** (content drifted from what it names) ·
 **legacy** (kept for history; superseded). A trailing `*` on any status means it cites files/skills not shipped here.
@@ -9,15 +9,24 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 - `README.md` — catalog, `--ux` mode, third-party skills and their origin, what is not included, layout, install, verification commands — current
 - `DOCS-MAP.md` — this index — current
+- `AGENTS.md` — repo rules for agents: layout, skill-editing rules, verification commands, installed-copy comparison — current
+- `CLAUDE.md` — one-line `@AGENTS.md` pointer — current
+- `.github/workflows/ci.yml` — CI: quick_validate on every skill, `tests/*.sh`, `node --test`, `git diff --check` on the changed range — current
+- `tests/test-skill-frontmatter.sh` — runs `quick_validate.py` on every skill — current
+- `tests/test-mercadopago-webhook.sh` — x-signature agreement (Python, Web Crypto, openssl), IPN classification, `check-config` — current
+- `tests/test-handoff-guard.sh` — handoff PreCompact guard against handoffs published by the shipped publisher — current
+- `tests/test-eval-routing.sh` — repo routing cases pass; a planted trigger collision is caught — current
+- `tests/test-install-skills.sh` — installer and prune against a throwaway HOME — current
+- `tests/test-repo-hygiene.sh` — loose files, playbook copy drift, tracked `.bak`/`.lock`, personal paths — current
 
 ## Ship & verify
 
 - `skills/battle-test/SKILL.md` — fail-closed e2e hardening cycle, incl. `--ux` mode (not yet run end to end) — current
-- `skills/battle-test/references/stages.md` — stage execution detail, incl. "UX mode" — current
+- `skills/battle-test/references/stages.md` — stage execution detail, incl. "UX mode" and the screenshot review budget (subagent batches, one JSON line per image) — current
 - `skills/battle-test/references/gates.md` — gates and pass signals, incl. "UX profile gate" — current
 - `skills/battle-test/references/report.md` — unified report format, incl. UX verdicts — current
 - `skills/battle-test/references/thermos-rubrics.md` — harsh code-quality review rubric layered on battle-test reviews (Cursor `thermos` plugin text, header kept) — current
-- `skills/battle-test/agents/openai.yaml` — Codex display metadata for `battle-test` — current
+- `skills/battle-test/agents/openai.yaml` — Codex display metadata and explicit-only policy for `battle-test` — current
 - `skills/quality-loop/SKILL.md` — hardening loop in an isolated worktree (`--staged` under `battle-test`) — current
 - `skills/product-ux-audit/SKILL.md` — task-centered UX audit, feeds `battle-test --ux` — current
 - `skills/product-ux-audit/agents/openai.yaml` — Codex display metadata for `product-ux-audit` — current
@@ -48,8 +57,9 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/validation/references/state-schema.md` — resumable state schema — current
 - `skills/validation/references/visual-regression.md` — visual regression — current
 - `skills/visual-route-sweep/SKILL.md` — visual route screenshot sweep — current
-- `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract — current
+- `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract, incl. batched subagent review of screenshots — current
 - `skills/vibe-to-prod/SKILL.md` — 13-layer production-readiness self-check — current
+- `skills/vibe-to-prod/references/production-readiness-playbook.md` — copy of `skills/audit/audit-orchestrator/references/production-readiness-playbook.md` shipped with the skill (kept identical by `tests/test-repo-hygiene.sh`) — current
 - `skills/deploy-verify/SKILL.md` — post-deploy verification — current
 - `skills/security-review/SKILL.md` — security pass over pending changes — current
 - `skills/security-review/references/full-checklist.md` — long security checklist — current
@@ -76,37 +86,41 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 ## Audit bundle (`skills/audit/`)
 
-- `audit-orchestrator/SKILL.md` — full due-diligence audit entry point (`/audit`) — current
-- `audit-method/SKILL.md` — stack fingerprint and inventory setup — current
-- `audit-hard-stops/SKILL.md` — H1-H11 hard-stop walk — current
-- `audit-tambon-hunt/SKILL.md` — Tambon LLM-signature hunt — current
-- `audit-blind-spots/SKILL.md` — B1-B19 blind-spot walk — current
-- `audit-domain-01-security/SKILL.md` — domain audit: security — current
-- `audit-domain-02-architecture/SKILL.md` — domain audit: architecture & code quality — current
-- `audit-domain-03-database/SKILL.md` — domain audit: database/data layer — current
-- `audit-domain-04-devops/SKILL.md` — domain audit: infra & DevOps — current
-- `audit-domain-05-performance/SKILL.md` — domain audit: performance — current
-- `audit-domain-06-ux-a11y/SKILL.md` — domain audit: UX & accessibility — current
-- `audit-domain-07-reliability/SKILL.md` — domain audit: reliability — current
-- `audit-domain-08-compliance/SKILL.md` — domain audit: legal/privacy/compliance — current
-- `audit-domain-09-maintainability/SKILL.md` — domain audit: DX & maintainability — current
-- `audit-domain-10-cost/SKILL.md` — domain audit: cost & billing risk — current
-- `audit-domain-11-demo-vs-prod/SKILL.md` — domain audit: demo vs production gap — current
-- `audit-domain-12-missing/SKILL.md` — domain audit: missing production features — current
-- `audit-domain-13-code-integrity/SKILL.md` — domain audit: code integrity — current
-- `audit-domain-05-performance/references/speed-31.md` — 31-item app-speed checklist — current
-- `audit-domain-06-ux-a11y/references/feel-20.md` — 20-item UX "feel" checklist — current
-- `audit-decisions/SKILL.md` — remediation decision / baseline-policy templates — current
-- `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix`) — current
+Three installable skills; modules have no `SKILL.md` and load on demand. Paths are relative to `skills/audit/`.
+
+- `audit-orchestrator/SKILL.md` — full due-diligence audit entry point (`/audit`); bundle layout and phase order — current
+- `audit-orchestrator/modules/audit-method.md` — stack fingerprint and inventory setup — current
+- `audit-orchestrator/modules/audit-hard-stops.md` — H1-H11 hard-stop walk — current
+- `audit-orchestrator/modules/audit-tambon-hunt.md` — Tambon LLM-signature hunt — current
+- `audit-orchestrator/modules/audit-blind-spots.md` — B1-B19 blind-spot walk — current
+- `audit-orchestrator/modules/audit-domain-01-security.md` — domain audit: security — current
+- `audit-orchestrator/modules/audit-domain-02-architecture.md` — domain audit: architecture & code quality — current
+- `audit-orchestrator/modules/audit-domain-03-database.md` — domain audit: database/data layer — current
+- `audit-orchestrator/modules/audit-domain-04-devops.md` — domain audit: infra & DevOps — current
+- `audit-orchestrator/modules/audit-domain-05-performance.md` — domain audit: performance — current
+- `audit-orchestrator/modules/audit-domain-06-ux-a11y.md` — domain audit: UX & accessibility — current
+- `audit-orchestrator/modules/audit-domain-07-reliability.md` — domain audit: reliability — current
+- `audit-orchestrator/modules/audit-domain-08-compliance.md` — domain audit: legal/privacy/compliance — current
+- `audit-orchestrator/modules/audit-domain-09-maintainability.md` — domain audit: DX & maintainability — current
+- `audit-orchestrator/modules/audit-domain-10-cost.md` — domain audit: cost & billing risk — current
+- `audit-orchestrator/modules/audit-domain-11-demo-vs-prod.md` — domain audit: demo vs production gap — current
+- `audit-orchestrator/modules/audit-domain-12-missing.md` — domain audit: missing production features — current
+- `audit-orchestrator/modules/audit-domain-13-code-integrity.md` — domain audit: code integrity — current
+- `audit-orchestrator/modules/speed-31.md` — 31-item app-speed checklist (domain 05) — current
+- `audit-orchestrator/modules/feel-20.md` — 20-item UX "feel" checklist (domain 06) — current
+- `audit-orchestrator/references/audit-rules.md` — rules R1-R7 (canonical copy) — current
+- `audit-orchestrator/references/audit-hard-stops.md` — hard-stops catalog (H1-H11) (canonical copy) — current
+- `audit-orchestrator/references/audit-blind-spots.md` — blind-spots catalog (B1-B19) (canonical copy) — current
+- `audit-orchestrator/references/audit-tambon-signatures.md` — Tambon signatures (canonical copy) — current
+- `audit-orchestrator/references/audit-report-format.md` — report format (canonical copy) — current
+- `audit-orchestrator/references/audit-triage-rubric.md` — triage rubric (canonical copy) — current
+- `audit-orchestrator/references/domain-audit-contract.md` — contract every domain audit follows (canonical copy) — current
+- `audit-orchestrator/references/production-readiness-playbook.md` — production-readiness playbook the domain modules cite (canonical copy) — current
 - `audit-loop/SKILL.md` — audit → remediate → rerun loop — current
-- `references/audit-rules.md` — rules R1-R7 — current
-- `references/audit-hard-stops.md` — hard-stops catalog (H1-H11) — current
-- `references/audit-blind-spots.md` — blind-spots catalog (B1-B19) — current
-- `references/audit-tambon-signatures.md` — Tambon signatures — current
-- `references/audit-report-format.md` — report format — current
-- `references/audit-triage-rubric.md` — triage rubric — current
-- `references/domain-audit-contract.md` — contract every domain audit follows — current
-- `references/production-readiness-playbook.md` — production-readiness playbook cited by `vibe-to-prod` and the domain audits (cited as `~/.codex/context/production-readiness-playbook.md`; the install lines copy it there) — current
+- `audit-loop/modules/audit-decisions.md` — remediation decision / baseline-policy templates — current
+- `audit-loop/references/*.md` — identical copy of the eight `audit-orchestrator/references/` files — current
+- `audit-fix-generator/SKILL.md` — per-finding fix prompt (`/audit-fix-generator`) — current
+- `audit-fix-generator/references/*.md` — identical copy of the eight `audit-orchestrator/references/` files — current
 
 ## Third-party skills (copied as found; origin in `README.md`)
 
@@ -182,6 +196,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/frontendgame/references/motion-engineering.md` — motion — current
 - `skills/frontendgame/references/reverse-engineering.md` — screenshot-to-code — current
 - `skills/frontendgame/references/stack-recipes.md` — stack recipes — current
+- `skills/frontendgame/references/frontend-patterns.md` — React/Next.js component, state and performance patterns (moved from `skills/` root) — current
 - `skills/mcp-builder/SKILL.md` — build MCP servers — current
 - `skills/mcp-builder/references/mcp_best_practices.md` — MCP best practices — current
 - `skills/mcp-builder/references/node_mcp_server.md` — Node/TS server guide — current
@@ -193,6 +208,10 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/supabase-debug/SKILL.md` — Supabase diagnosis — current
 - `skills/mercadopago-integration/SKILL.md` — MercadoPago OAuth/checkout/webhooks — current
 - `skills/mercadopago-integration/references/troubleshooting.md` — MercadoPago troubleshooting — current
+- `skills/mercadopago-integration/assets/mercadopago-webhook.ts` — webhook Edge Function: x-signature check, legacy IPN, idempotent updates — current
+- `skills/mercadopago-integration/assets/mp-webhook-signature.mjs` — x-signature and notification helpers (Deno and Node; tested by `tests/test-mercadopago-webhook.sh`) — current
+- `skills/mercadopago-integration/assets/webhook-events.sql` — `mp_webhook_events` dedupe table — current
+- `skills/mercadopago-integration/scripts/mp_webhook_tool.py` — sign/verify x-signature locally, `check-config` for `verify_jwt = false` — current
 - `skills/checklist-design-app-audit/SKILL.md` — Checklist Design audit — current
 - `skills/checklist-design-app-audit/references/README.md` — dataset reference — current
 - `skills/feature-validation/SKILL.md` — deprecated alias routing to `validation` — current (alias)
@@ -206,10 +225,17 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/handoff/SKILL.md` — verified, identity-bound session checkpoint v3 — current
 - `skills/handoff/scripts/handoff-contract.cjs` — handoff validation and publication library (required by the publisher) — current
 - `skills/handoff/scripts/publish-handoff.cjs` — handoff publisher CLI (validate and publish exclusively) — current
+- `skills/handoff/scripts/handoff-guard.cjs` — PreCompact hook: verifies a fresh published handoff of this session; blocks manual compaction without one, never blocks auto compaction (tested by `tests/test-handoff-guard.sh`) — current
+- `skills/handoff/assets/settings-hooks.json` — `.claude/settings.json` fragment wiring the guard as a PreCompact hook — current
+- `skills/handoff/agents/openai.yaml` — Codex display metadata and explicit-only policy for `handoff` — current
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
+- `skills/skill-creator/scripts/eval_routing.py` — BM25 check of description triggers against prompts; fails on misroutes, prints near-ties — current
+- `skills/skill-creator/scripts/routing_cases.json` — 38 realistic routing prompts covering every skill — current
 - `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current
 - `skills/project-setup/references/full-process.md` — long setup process — current\* (`/monitoring-setup` not in repo)
+- `skills/project-setup/references/coding-standards.md` — TS/JS coding standards offered when a project has none (moved from `skills/` root) — current
+- `skills/project-setup/assets/project-guidelines-example.md` — example project-guidelines skill (moved from `skills/` root) — current (example)
 - `skills/project-curate/SKILL.md` — curate a project's `.claude/` — current
 - `skills/project-curate/references/full-process.md` — long curation process — current\* (`skills/architecture-decision-records/` not in repo)
 - `skills/project-doctor/SKILL.md` — read-only orchestration health check — current\* (`/monitoring-setup`)
@@ -218,19 +244,18 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 
 - `skills/debate/SKILL.md` — three-way Claude/Gemini/Codex debate — current
 - `skills/debate/README.md` — debate hub user guide — current
+- `skills/debate/agents/openai.yaml` — Codex display metadata and explicit-only policy for `debate` — current
 - `skills/debate/helpers.md` — debate helper functions (tested by `tests/`) — current
-
-## Loose references (`skills/` root)
-
-- `skills/backend-patterns.md` — backend/API patterns — current
-- `skills/frontend-patterns.md` — React/Next.js patterns — current
-- `skills/coding-standards.md` — TS/JS coding standards — current
-- `skills/clickhouse-io.md` — ClickHouse patterns — current
-- `skills/project-guidelines-example.md` — example project-guidelines skill — current (example)
-- `skills/AUTO-HEALING-INTEGRATION-GUIDE.md` — older copy of the auto-healing guide — legacy\* (`skill-test.md`)
+- `skills/debate/tools/state-lock.sh` — sourceable mkdir-lock state/index writers with stale-lock recovery (tested by `tests/test-atomic-state-writes.sh`, `tests/test-state-lock-recovery.sh`) — current
+- `skills/debate/tools/atomic-json.mjs` — Node alternative sharing the same `<file>.lock` directory — current
 
 ## Tools
 
+- `tools/install_skills.py` — installer: profiles, targets, copy or symlink, backups outside the skill root, `--prune-orphans`, `--dry-run` — current
+- `tools/skill-profiles.json` — install profiles and Claude-only extras — current
+- `tools/retired-skills.txt` — skill names no longer shipped (prune targets) — current
+- `tools/references/backend-patterns.md` — backend/API patterns; not installed with any skill, read on demand (moved from `skills/` root) — current
+- `tools/references/clickhouse-io.md` — ClickHouse patterns; not installed with any skill, read on demand (moved from `skills/` root) — current
 - `tools/retrospective-learning.md` — skill retrospective learning module — legacy\* (`skill-test.md`, `learning.md`)
 - `tools/RETROSPECTIVE-LEARNING-INTEGRATION-GUIDE.md` — retrospective learning integration — legacy\* (`skill-test.md`, `learning.md`)
 - `tools/sample/feature-validation-SKILL.md` — sample of the old feature-validation skill — legacy

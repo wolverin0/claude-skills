@@ -10,7 +10,7 @@ You are about to run the audit-orchestrator skill against this codebase.
 
 ## What this command does
 
-1. **Loads the audit-orchestrator skill** from `.claude/skills/audit-orchestrator/SKILL.md`.
+1. **Loads the installed audit-orchestrator skill** (its `modules/` and `references/` ship inside it).
 2. The skill orchestrates a multi-phase audit pipeline:
    - Phase A — Method (fingerprint stack, inventory, system map)
    - Phase B — Hard Stops (H1-H11 walk)

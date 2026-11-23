@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Generate or refresh project AGENTS.md, CLAUDE.md, and optional GEMINI.md from real codebase evidence. Use when agent instructions are missing, stale, or need provider alignment.
+description: "Generate or refresh project AGENTS.md, CLAUDE.md, and optional GEMINI.md from real codebase evidence. Use when agent instructions are missing, stale, or need provider alignment. Not for rules and assets inside .claude/ (project-curate) or a read-only health check (project-doctor)."
 metadata:
   argument-hint: "[--force] [--dry-run] [--rollback] [--codex] [--no-memorymaster]"
 ---
@@ -60,6 +60,12 @@ instructions.
 
 Load `references/full-process.md` when you need the full legacy template,
 section mapping table, example generated blocks, or intelligence-layer details.
+
+When the project has no coding conventions yet, offer
+`references/coding-standards.md` (TS/JS) as a starting point, and use
+`assets/project-guidelines-example.md` as the shape of a project-specific
+guidelines skill. Adapt both to the repository evidence; never paste them
+unchanged.
 
 ## Output
 
