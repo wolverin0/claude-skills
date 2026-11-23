@@ -1,6 +1,6 @@
 ---
 name: skillify
-description: Turn a just-proven repeated workflow into a concise reusable skill after explicit user approval. Use when the user asks to save, codify, or reuse a completed workflow.
+description: "Turn a just-proven repeated workflow into a concise reusable skill after explicit user approval. Use when the user asks to save, codify, or reuse a completed workflow. Not for designing a skill from scratch (skill-creator)."
 ---
 
 # Skillify
@@ -42,13 +42,16 @@ skill authoring flow, not autonomous transcript mining.
    - long material in `references/`
    - deterministic repeated work in `scripts/`
    - reusable output files in `assets/`
-6. Validate with:
+6. Final step, mandatory: validate the written skill and fix it until this
+   exits 0 (path relative to the claude-skills repo, or to the installed
+   `skill-creator` folder):
 
 ```bash
 python skills/skill-creator/scripts/quick_validate.py <skill-dir>
 ```
 
-7. Report the created/changed paths and the validation result.
+7. Report the created/changed paths and the validation output. A skill that
+   was not validated is not done.
 
 ## Frontmatter Template
 

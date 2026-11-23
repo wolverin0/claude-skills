@@ -1,6 +1,6 @@
 ---
 name: checklist-design-app-audit
-description: Audit websites, web apps, mobile apps, design systems, and user flows against the full public Checklist Design corpus. Use for comprehensive or targeted product/UI/UX audits, source-linked inspiration comparisons, evidence-backed scoring, and remediation plans.
+description: "Audit websites, web apps, mobile apps, design systems, and user flows against the full public Checklist Design corpus. Use for comprehensive or targeted UI/UX checklist audits, source-linked inspiration comparisons, evidence-backed scoring, and remediation plans. Not for task-centered journey audits of operational products (product-ux-audit), code or security audits (audit-orchestrator, security-review) or building UI (frontendgame)."
 ---
 
 # Checklist Design App Audit

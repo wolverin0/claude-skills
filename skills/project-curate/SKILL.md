@@ -1,6 +1,6 @@
 ---
 name: project-curate
-description: Curate a project's .claude directory with scoped rules, preserved user content, and grep-verified references. Use when project agent setup is bloated, stale, or missing stack-specific rules.
+description: "Curate a project's .claude directory with scoped rules, preserved user content, and grep-verified references, starting from project-doctor's read-only findings. Use when project agent setup is bloated, stale, or missing stack-specific rules. Not for AGENTS.md or CLAUDE.md (project-setup)."
 metadata:
   argument-hint: "[--dry-run] [--force] [--skip-verifier] [--no-graphify]"
   trigger: /project-curate
@@ -25,6 +25,10 @@ rules, curation logs, and reversible cleanup of noisy local agent assets.
 
 ## Fast Flow
 
+0. Diagnose first with `project-doctor` (read-only): run its checker and read
+   the FAIL/WARN rows. Fix what it reports inside `.claude/` here; hand
+   instruction-file findings to `project-setup`. If `project-doctor` is not
+   installed, say so and continue.
 1. Inventory the repo: manifests, existing `.claude/`, `AGENTS.md`,
    `CLAUDE.md`, git status, and stack.
 2. Query MemoryMaster for project decisions, constraints, and gotchas.

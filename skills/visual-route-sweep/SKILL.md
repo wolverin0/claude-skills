@@ -1,6 +1,6 @@
 ---
 name: visual-route-sweep
-description: "Inventory every safe visual route, capture authenticated light/dark desktop/tablet/mobile screenshots, detect responsive and browser-runtime failures, semantically review every image, and optionally remediate and rerun. Use when the user asks to screenshot or visually audit all endpoints without running the complete battle-test security, CRUD, and architecture cycle."
+description: "Inventory every safe visual route, capture authenticated light/dark desktop/tablet/mobile screenshots, detect responsive and browser-runtime failures, semantically review every image, and optionally remediate and rerun. Use when the user asks to screenshot or visually audit all endpoints without running the complete battle-test security, CRUD, and architecture cycle. For functional flows, forms or CRUD checks use validation."
 ---
 
 # Visual Route Sweep

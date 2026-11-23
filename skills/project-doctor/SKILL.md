@@ -1,6 +1,6 @@
 ---
 name: project-doctor
-description: Read-only audit for stale or broken project orchestration files, agent instructions, monitoring config, graphify output, and referenced skills.
+description: "Read-only audit for stale or broken project orchestration files, agent instructions, monitoring config, graphify output, and referenced skills. Use to diagnose before changing anything; it never edits. Fixes belong to project-setup (instruction files) or project-curate (.claude contents)."
 ---
 
 # project-doctor

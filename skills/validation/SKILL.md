@@ -1,6 +1,6 @@
 ---
 name: validation
-description: 'Run evidence-based browser validation for an implemented web app, UI feature, or workflow. Successor to ultimate-validation: inventories routes, elements, modals, flows, and APIs; executes browser checks; analyzes screenshots and responsiveness; checks console/network errors; persists resumable state; and emits an auditable HTML report. Use smoke for a bounded quick check, standard for the complete safe UI cycle, and exhaustive/full for release-depth CRUD, API, security, accessibility, and visual-regression coverage.'
+description: "Run evidence-based browser validation for an implemented web app, UI feature, or workflow. Successor to ultimate-validation: inventories routes, elements, modals, flows, and APIs; executes browser checks; analyzes screenshots and responsiveness; checks console/network errors; persists resumable state; and emits an auditable HTML report. Use smoke for a bounded quick check, standard for the complete safe UI cycle, and exhaustive/full for release-depth CRUD, API, security, accessibility, and visual-regression coverage. Not for the full audit-fix-reverify cycle (battle-test), a screenshot-only sweep of every route (visual-route-sweep) or CLI health checks after a deploy (deploy-verify)."
 ---
 
 # Validation

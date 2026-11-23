@@ -1,6 +1,6 @@
 ---
 name: vibe-to-prod
-description: Guided 13-layer production-readiness self-check for a vibe-coded app. Use when the user asks "is this production ready", "what am I missing before launch", "ship check", "did I forget anything", or wants to harden an AI-generated MVP. Walks the 13 layers, runs cheap detections + manual tests, emits a per-layer PASS/GAP scorecard. Lighter than /audit (which is full due-diligence).
+description: "Guided 13-layer production-readiness self-check for a vibe-coded app. Use when the user asks \"is this production ready\", \"what am I missing before launch\", \"ship check\", \"did I forget anything\", or wants to harden an AI-generated MVP. Walks the 13 layers, runs cheap detections + manual tests, emits a per-layer PASS/GAP scorecard in one pass. Not for an evidence-cited whole-repository audit (audit-orchestrator, /audit), a review of pending changes (security-review) or a UI/UX checklist audit (checklist-design-app-audit)."
 ---
 
 # Skill: vibe-to-prod

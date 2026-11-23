@@ -1,6 +1,6 @@
 ---
 name: audit-orchestrator
-description: Conduct a full technical due diligence audit of a vibe-coded codebase. Use when the user types `/audit`, asks for a "full audit," asks for a "due diligence review," asks "is this codebase ready to ship?", or asks for a comprehensive code review of an entire repository (not a single PR). Coordinates the 13 domain skills, the hard-stop hunt, the Tambon LLM-signature hunt, and the blind-spot walk. Produces a single dual-layer report (founder view + technical evidence).
+description: "Conduct a full, read-only technical due diligence audit of an entire vibe-coded repository. Use when the user types `/audit`, asks for a \"full audit\" or a \"due diligence review\", or asks for a comprehensive review of a whole repository (not a single PR). Coordinates the 13 domain skills, the hard-stop hunt, the Tambon LLM-signature hunt, and the blind-spot walk. Produces a single dual-layer report (founder view + technical evidence). Not for a quick launch checklist (vibe-to-prod), a pending diff or PR (security-review) or a UI/UX checklist audit (checklist-design-app-audit)."
 ---
 
 # Skill: Audit Orchestrator

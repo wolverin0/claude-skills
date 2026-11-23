@@ -1,6 +1,6 @@
 ---
 name: deploy-verify
-description: Use after deployments to verify health endpoints, run API smoke tests, and confirm release integrity with CLI checks.
+description: "Verify a release right after it is deployed, using CLI checks only: health endpoints, API smoke tests, container status and recent error logs. Not for pre-release browser validation (validation) or the full hardening cycle (battle-test); when the release changed UI, hand the deployed URL to validation smoke instead of driving a browser here."
 ---
 
 # Deploy & Verify Workflow
@@ -90,6 +90,8 @@ Overall: PASS/FAIL
 
 ## Rules
 - **NEVER use browser tools** for deployment verification
+- If the release changed UI, hand the deployed URL to the `validation` skill
+  (`--mode smoke`); its browser rules apply there, not here
 - Always check logs after verifying endpoints
 - If any check fails, investigate before reporting success
 - For Docker projects: verify both container status AND API responses

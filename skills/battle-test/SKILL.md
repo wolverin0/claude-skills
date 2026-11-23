@@ -1,6 +1,6 @@
 ---
 name: battle-test
-description: 'Run a fail-closed end-to-end project hardening cycle: static audit, exhaustive real-browser validation, semantic screenshot review, multi-role/security/visual-regression probes, isolated remediation, and re-verification. Use when the user asks to battle-test or prove production readiness. Default is the full cycle; --quick runs a clearly weaker smoke/readiness check and can never emit a battle-tested verdict. Main integration requires --push-main; deployment is never automatic. --ux curates only UX/UI and ends with its own verdict (UX SCOPE VERIFIED or UX SCOPE FAILED), never battle-tested.'
+description: "Run a fail-closed end-to-end project hardening cycle: static audit, exhaustive real-browser validation, semantic screenshot review, multi-role/security/visual-regression probes, isolated remediation, and re-verification. Use when the user asks to battle-test a project. It conducts audit-orchestrator, validation, visual-route-sweep and quality-loop; do not use it for one of those alone, for a quick readiness scorecard (vibe-to-prod) or for a post-deploy check (deploy-verify). Default is the full cycle; --quick runs a clearly weaker smoke/readiness check and can never emit a battle-tested verdict. Main integration requires --push-main; deployment is never automatic. --ux curates only UX/UI and ends with its own verdict (UX SCOPE VERIFIED or UX SCOPE FAILED), never battle-tested."
 ---
 
 # Battle Test

@@ -1,6 +1,6 @@
 ---
 name: project-setup
-description: Generate or refresh project AGENTS.md, CLAUDE.md, and optional GEMINI.md from real codebase evidence. Use when agent instructions are missing, stale, or need provider alignment.
+description: "Generate or refresh project AGENTS.md, CLAUDE.md, and optional GEMINI.md from real codebase evidence. Use when agent instructions are missing, stale, or need provider alignment. Not for rules and assets inside .claude/ (project-curate) or a read-only health check (project-doctor)."
 metadata:
   argument-hint: "[--force] [--dry-run] [--rollback] [--codex] [--no-memorymaster]"
 ---

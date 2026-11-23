@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.
+description: "Guide and scripts for creating or updating a skill: structure, progressive disclosure, quick_validate.py and package_skill.py. Use when the user wants to design a new skill or change an existing one. To capture a workflow that just worked in this session, use skillify, which follows this guide."
 license: Complete terms in LICENSE.txt
 ---
 
