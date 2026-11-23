@@ -25,7 +25,9 @@ Locking: `mkdir "<file>.lock"` (atomic, no `flock`), with an `owner` file holdin
 `<pid> <epoch-seconds>`. A waiter retries every 0.1s for `DEBATE_LOCK_TIMEOUT`
 seconds (default 5) and removes a stale lock (owner PID gone, or older than
 `DEBATE_LOCK_STALE` seconds, default 30). Each write runs in a subshell whose
-`EXIT`/`INT`/`TERM` trap releases the lock, so no `.lock` is left behind.
+`EXIT`/`INT`/`TERM` trap releases the lock, so no `.lock` is left behind;
+release removes only a lock whose `owner` PID is the caller's, so a waiter that
+timed out never deletes the holder's lock.
 
 **Usage:**
 ```bash

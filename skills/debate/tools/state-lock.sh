@@ -58,9 +58,14 @@ debate_lock_acquire() {
     echo "${BASHPID:-$$} $(date +%s)" > "$lockdir/owner"
 }
 
-# debate_lock_release <file>
+# debate_lock_release <file>: remove the lock only if this process owns it, so
+# a waiter that timed out (or a holder whose lock was taken as stale) never
+# deletes someone else's lock.
 debate_lock_release() {
-    rm -rf "$1.lock"
+    local lockdir="$1.lock" pid=""
+    read -r pid _ < "$lockdir/owner" 2>/dev/null || return 0
+    [[ "$pid" == "${BASHPID:-$$}" ]] && rm -rf "$lockdir"
+    return 0
 }
 
 # Validate JSON when jq is available (jq is optional).

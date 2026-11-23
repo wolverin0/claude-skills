@@ -70,7 +70,10 @@ test_live_lock_times_out() {
     start=$(date +%s)
     DEBATE_LOCK_TIMEOUT=1 update_debate_state "$f" '{"v":3}' 2>/dev/null || rc=$?
     end=$(date +%s)
+    local survived=0
+    [[ -f "$f.lock/owner" && "$(cat "$f.lock/owner")" == "$$ "* ]] && survived=1
     rm -rf "$f.lock"
+    [[ $survived -eq 1 ]] || { fail "the timed-out waiter removed a lock it never held"; return 1; }
     [[ $rc -ne 0 ]] || { fail "update should have failed"; return 1; }
     [[ "$(cat "$f")" == '{"v":0}' ]] || { fail "state changed under a held lock"; return 1; }
     (( end - start <= 3 )) || { fail "waited $((end - start))s, expected about 1s"; return 1; }
