@@ -789,6 +789,14 @@ The TypeScript SDK supports different transport mechanisms:
 import express from "express";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+
+// One factory builds a fully registered server; each transport gets its own instance.
+function createServer(): McpServer {
+  const server = new McpServer({ name: "example-mcp-server", version: "1.0.0" });
+  // server.registerTool("tool_name", {...config}, async (params) => { ... }) for every tool
+  return server;
+}
 
 // Stdio transport (local tools, spawned by the client)
 await createServer().connect(new StdioServerTransport());

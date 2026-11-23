@@ -37,9 +37,11 @@ export function buildManifest({ dataId, requestId, ts }) {
 }
 
 export async function hmacSha256Hex(secret, message) {
+  // Deno and Node 19+ expose Web Crypto as a global; Node 18 needs the module.
+  const { subtle } = globalThis.crypto ?? (await import('node:crypto')).webcrypto;
   const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  const key = await subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await subtle.sign('HMAC', key, enc.encode(message));
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
