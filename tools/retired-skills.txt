@@ -1,0 +1,26 @@
+# Skill folder names this repo no longer ships as skills. tools/install_skills.py
+# --prune-orphans reports an installed folder with one of these names (and a
+# SKILL.md) as an orphan. One name per line; text after "#" is the reason.
+
+# Absorbed into audit-orchestrator/modules/ (2026-11-23)
+audit-method               # audit-orchestrator/modules/audit-method.md
+audit-hard-stops           # audit-orchestrator/modules/audit-hard-stops.md
+audit-tambon-hunt          # audit-orchestrator/modules/audit-tambon-hunt.md
+audit-blind-spots          # audit-orchestrator/modules/audit-blind-spots.md
+audit-domain-01-security   # audit-orchestrator/modules/
+audit-domain-02-architecture
+audit-domain-03-database
+audit-domain-04-devops
+audit-domain-05-performance
+audit-domain-06-ux-a11y
+audit-domain-07-reliability
+audit-domain-08-compliance
+audit-domain-09-maintainability
+audit-domain-10-cost
+audit-domain-11-demo-vs-prod
+audit-domain-12-missing
+audit-domain-13-code-integrity
+# Absorbed into audit-loop/modules/ (2026-11-23)
+audit-decisions            # audit-loop/modules/audit-decisions.md
+# Renamed
+ultimate-validation        # succeeded by validation (see skills/validation/SKILL.md)

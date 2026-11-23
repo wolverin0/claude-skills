@@ -2,7 +2,7 @@
 
 Covers: repo layout, skill-editing rules (progressive disclosure, frontmatter
 split Claude Code vs Codex, negative triggers, README/DOCS-MAP sync, path
-sanitization), the exact verification commands, and compare_installed_skills.py.
+sanitization), the exact verification commands, and the installer/compare tools.
 Read before changing any skill. Canonical source of skills installed into
 Claude Code (`~/.claude/skills/`) and Codex (`~/.codex/skills/`); nothing here
 runs as a service.
@@ -57,6 +57,7 @@ same commands.
 ## Installed copies
 
 `python skills/skill-creator/scripts/compare_installed_skills.py --target all`
-compares repo skills with the installed ones and writes nothing. `--sync`
-overwrites installed copies (backing them up under `_backup_sync/`); run it
-only when the operator asks to install.
+compares repo skills with the installed ones and writes nothing.
+`python tools/install_skills.py --profile <p> --dry-run` and
+`--prune-orphans --dry-run` show what an install or prune would change; run
+them without `--dry-run` only when the operator asks to install.

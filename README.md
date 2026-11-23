@@ -84,16 +84,17 @@ Install the three entry points into the provider skill root; the catalogs
 travel inside them, so there is no separate context directory to fill:
 
 ```bash
-cp -r skills/audit/audit-orchestrator skills/audit/audit-loop skills/audit/audit-fix-generator ~/.claude/skills/
-cp -r skills/audit/audit-orchestrator skills/audit/audit-loop skills/audit/audit-fix-generator ~/.codex/skills/
+python tools/install_skills.py --profile audit --target all --dry-run
+python tools/install_skills.py --profile audit --target all
 ```
 
 An older install left 18 retired `audit-*` skill folders (`audit-method`,
 `audit-hard-stops`, `audit-domain-01-security` …) in the provider roots; see
-Installation for how to find them. The `/audit-remediate` workflow reads the
+Installation (`--prune-orphans --dry-run`) for how to find them. The `/audit-remediate` workflow reads the
 modules from `~/.claude/skills/audit-orchestrator/` (override with the
 `auditSkillDir` argument).
-Install the two commands with `cp commands/*.md ~/.claude/commands/`.
+The Claude target also installs the two commands, the two agents and the
+workflow script.
 
 The audit pieces outside `skills/`:
 
@@ -246,7 +247,7 @@ agents/                       audit-runner and audit-domain-runner subagents
 commands/                     /audit and /audit-remediate slash commands
 hooks/                        pre/post audit report check hooks (Python)
 workflows/                    audit-remediate.mjs (workflow-runtime script)
-tools/                        Supporting docs, legacy helpers, references/ (backend, ClickHouse)
+tools/                        install_skills.py + skill-profiles.json + retired-skills.txt, references/ (backend, ClickHouse), legacy docs
 tests/                        Shell tests for the debate helper functions
 ```
 
@@ -319,39 +320,37 @@ python skills/skill-creator/scripts/package_skill.py skills/<skill-name>
 
 ## Installation
 
-Install only the skills you actually want active. Copy or symlink from this
-repo into each provider's skill root (`~/.claude/skills/`, `~/.codex/skills/`).
+Install only the skills you actually want active, with `tools/install_skills.py`.
+Always look at the `--dry-run` output first:
 
 ```bash
-# ship & verify set (battle-test conducts audit, validation, visual-route-sweep and quality-loop)
-cp -r skills/battle-test skills/validation skills/visual-route-sweep skills/vibe-to-prod skills/quality-loop skills/product-ux-audit ~/.claude/skills/
-
-# audit bundle (three entry points; catalogs and modules ship inside them)
-cp -r skills/audit/audit-orchestrator skills/audit/audit-loop skills/audit/audit-fix-generator ~/.claude/skills/
-
-# slash commands (/audit, /audit-remediate)
-mkdir -p ~/.claude/commands && cp commands/*.md ~/.claude/commands/
-
-# audit agents and workflow (user level), hooks (project level, where their docstrings expect them)
-mkdir -p ~/.claude/agents ~/.claude/workflows .claude/hooks
-cp agents/*.md ~/.claude/agents/
-cp workflows/*.mjs ~/.claude/workflows/
-cp hooks/*.py .claude/hooks/   # still needs a settings entry, see the audit section
-
-# third-party design and QA skills
-cp -r skills/impeccable skills/improve skills/taste-skill skills/ui-ux-pro-max skills/emil-design-eng skills/autoqa skills/desloppify ~/.claude/skills/
-
-# workflow set
-cp -r skills/handoff skills/skillify skills/project-setup skills/project-curate skills/project-doctor ~/.claude/skills/
-
-# build set
-cp -r skills/frontendgame skills/mercadopago-integration ~/.claude/skills/
+python tools/install_skills.py --profile ship --target all --dry-run   # plan only, writes nothing
+python tools/install_skills.py --profile ship --target all             # copy
+python tools/install_skills.py --profile audit --target claude --symlink  # link to the repo while iterating
 ```
 
-Symlink while iterating:
+| Flag | Meaning |
+|---|---|
+| `--profile` | `ship` (battle-test family incl. the audit entry points), `audit` (the three audit entry points), `build`, `workflow`, `all` (every skill, third-party included). Lists live in `tools/skill-profiles.json`. |
+| `--target` | `claude` (`~/.claude/skills/`), `codex` (`~/.codex/skills/`), `all` (default). |
+| `--symlink` | link the installed folder to the repo instead of copying (Windows needs Developer Mode). |
+| `--dry-run` | report `install` / `update (backup)` / `same` per item; write nothing. |
+| `--prune-orphans` | find retired skills (`tools/retired-skills.txt`, e.g. the 18 old `audit-*` folders) and `_backup_sync/` or `_archive/` folders hiding `SKILL.md` files inside `~/.claude/skills`, `~/.codex/skills` or `~/.agents/skills`. Codex loads such nested copies as live skills. |
+| `--yes` | required to move orphans; without `--dry-run` and `--yes` the prune refuses. |
+
+Copy mode backs up a changed installed copy to
+`<provider-home>/_backup_sync/<timestamp>/` (for example
+`~/.claude/_backup_sync/`), outside the skill root. A pruned orphan is moved to
+`<provider-home>/_backup_sync/<timestamp>/pruned/`; nothing is deleted.
+Installing `audit-orchestrator` for Claude also installs its extras into
+`~/.claude/`: `commands/audit.md`, `commands/audit-remediate.md`,
+`agents/audit-runner.md`, `agents/audit-domain-runner.md`,
+`workflows/audit-remediate.mjs`.
+
+Hooks are per project and stay manual:
 
 ```bash
-ln -s "$(pwd)/skills/validation" ~/.claude/skills/validation
+mkdir -p .claude/hooks && cp hooks/*.py .claude/hooks/   # still needs a settings entry, see the audit section
 ```
 
 ## Verification
@@ -393,8 +392,8 @@ python skills/skill-creator/scripts/compare_installed_skills.py --target all
 python skills/skill-creator/scripts/compare_installed_skills.py --target claude --skill validation
 ```
 
-To overlay repo copies into a provider skill root, use `--sync`. Existing
-installed copies are backed up under `_backup_sync/` first.
+The comparison is read-only. To install or update copies use
+`tools/install_skills.py` (see Installation).
 
 ## Notes
 

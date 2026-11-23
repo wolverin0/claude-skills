@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compare repo skill packages with installed provider skill roots.
 
-Default mode is read-only. Use --sync to overlay repo copies into a provider
-root after backing up any existing installed copy.
+Read-only: it never writes. To install or update copies use
+tools/install_skills.py (profiles, --dry-run, backups outside the skill root).
 """
 
 from __future__ import annotations
@@ -10,9 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import shutil
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 
@@ -67,27 +65,6 @@ def installed_digest(root: Path, name: str) -> str | None:
     return skill_digest(skill_dir)
 
 
-def backup_installed(root: Path, name: str) -> Path | None:
-    src = root / name
-    if not src.exists():
-        return None
-    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-    dest = root / "_backup_sync" / ts / name
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(src, dest)
-    return dest
-
-
-def sync_skill(skill: Skill, root: Path) -> Path | None:
-    root.mkdir(parents=True, exist_ok=True)
-    backup = backup_installed(root, skill.name)
-    dest = root / skill.name
-    if dest.exists():
-        shutil.rmtree(dest)
-    shutil.copytree(skill.path, dest)
-    return backup
-
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, default=Path.cwd(), help="repo root")
@@ -104,11 +81,6 @@ def parse_args() -> argparse.Namespace:
         help="skill name to include; repeat for multiple skills",
     )
     parser.add_argument("--json", action="store_true", help="print JSON")
-    parser.add_argument(
-        "--sync",
-        action="store_true",
-        help="overlay repo skill packages into the selected provider root(s)",
-    )
     return parser.parse_args()
 
 
@@ -133,13 +105,6 @@ def main() -> int:
             else:
                 status = "different"
 
-            backup = None
-            if args.sync and status != "same":
-                backup_path = sync_skill(skill, root)
-                backup = str(backup_path) if backup_path else None
-                installed = installed_digest(root, name)
-                status = "same" if installed == skill.digest else "different"
-
             rows.append(
                 {
                     "skill": name,
@@ -149,7 +114,6 @@ def main() -> int:
                     "installed_digest": installed[:12] if installed else None,
                     "repo_path": str(skill.path.relative_to(repo_root)),
                     "provider_root": str(root),
-                    "backup": backup,
                 }
             )
 

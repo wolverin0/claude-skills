@@ -13,6 +13,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `CLAUDE.md` — one-line `@AGENTS.md` pointer — current
 - `.github/workflows/ci.yml` — CI: quick_validate on every skill, `tests/*.sh`, `node --test`, `git diff --check` on the changed range — current
 - `tests/test-skill-frontmatter.sh` — runs `quick_validate.py` on every skill — current
+- `tests/test-install-skills.sh` — installer and prune against a throwaway HOME — current
 - `tests/test-repo-hygiene.sh` — loose files, playbook copy drift, tracked `.bak`/`.lock`, personal paths — current
 
 ## Ship & verify
@@ -239,6 +240,9 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 
 ## Tools
 
+- `tools/install_skills.py` — installer: profiles, targets, copy or symlink, backups outside the skill root, `--prune-orphans`, `--dry-run` — current
+- `tools/skill-profiles.json` — install profiles and Claude-only extras — current
+- `tools/retired-skills.txt` — skill names no longer shipped (prune targets) — current
 - `tools/references/backend-patterns.md` — backend/API patterns; not installed with any skill, read on demand (moved from `skills/` root) — current
 - `tools/references/clickhouse-io.md` — ClickHouse patterns; not installed with any skill, read on demand (moved from `skills/` root) — current
 - `tools/retrospective-learning.md` — skill retrospective learning module — legacy\* (`skill-test.md`, `learning.md`)
