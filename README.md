@@ -46,8 +46,8 @@ seven shared catalogs in `skills/audit/references/` are `audit-rules.md`,
 `audit-hard-stops.md` (H1-H11), `audit-blind-spots.md` (B1-B19),
 `audit-tambon-signatures.md`, `audit-report-format.md`,
 `audit-triage-rubric.md` and `domain-audit-contract.md`; the same folder also
-holds `production-readiness-playbook.md`, the reference the domain skills and
-`vibe-to-prod` cite.
+holds `production-readiness-playbook.md`, the reference the domain skills cite;
+`vibe-to-prod` ships an identical copy in its own `references/`.
 
 The 21 children of `skills/audit/`:
 
@@ -89,8 +89,8 @@ cp skills/audit/references/*.md ~/.codex/context/
 ```
 
 The `cp skills/audit/references/*.md` lines also install
-`production-readiness-playbook.md`, which the skills cite as
-`~/.codex/context/production-readiness-playbook.md`. The workflow script reads
+`production-readiness-playbook.md`, which the domain skills read from the same
+context directory (a missing copy is reported, not fatal). The workflow script reads
 the catalogs from `~/.claude/context/`; copy them there too if you run
 `/audit-remediate` (see Installation).
 Install the two commands with `cp commands/*.md ~/.claude/commands/`.

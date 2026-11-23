@@ -46,7 +46,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - Vibe-coding hallmark: happy-path-only code (no error/empty branches), AI-written tests that mock the function under test, and comment-code drift after AI refactors — cross-reference the Tambon hunt and blind-spots B13/B14 (playbook PRIN-1).
 - Note: the new production-readiness blind-spots B16-B19 route to Domains 5/6/7/10, not here; this domain still owns duplication, dead code, and hallucinated references.

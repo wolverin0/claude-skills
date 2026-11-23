@@ -45,7 +45,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - Try-catch on every external call (payment/API/DB) with a fallback, not a blank screen (playbook L2, FM-6).
 - Retry with exponential backoff on transient failures (playbook L12).

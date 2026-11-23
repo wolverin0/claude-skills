@@ -21,8 +21,10 @@ Read the playbook first — it holds the layer definitions, thresholds, failure
 modes, and manual tests this skill checks against:
 
 ```
-view ~/.codex/context/production-readiness-playbook.md
+view references/production-readiness-playbook.md
 ```
+
+The path is relative to this skill's folder; the file ships with the skill.
 
 Cite playbook anchors (`L1`-`L13`, `FM-*`, `CHK-*`) in every gap you report so
 the user can read the depth. Do not paste the playbook back; reference it.

@@ -50,7 +50,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - Secrets in the client bundle: open built JS / search for `sk_`, `sk_live`, `AIza`, OpenAI/Stripe keys, or public-prefixed secret env vars (NEXT_PUBLIC_/VITE_/PUBLIC_). Any paid-API secret reachable in the browser = serious (playbook H11, FM-4, L8).
 - Session expiry: copy the URL/session after logout and reuse it — must fail (playbook CHK-4, L4).

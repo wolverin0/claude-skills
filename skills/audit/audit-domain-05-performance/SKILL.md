@@ -46,7 +46,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - N+1 queries: loops that query per-row instead of a JOIN (playbook FM-2).
 - Three-layer caching present where it matters — browser, CDN (even 60s cuts DB calls ~95%), application (semantic cache for AI: 40-60% hit) (playbook L10, FM-21, B17).

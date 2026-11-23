@@ -50,6 +50,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `skills/visual-route-sweep/SKILL.md` — visual route screenshot sweep — current
 - `skills/visual-route-sweep/references/coverage-contract.md` — sweep coverage contract — current
 - `skills/vibe-to-prod/SKILL.md` — 13-layer production-readiness self-check — current
+- `skills/vibe-to-prod/references/production-readiness-playbook.md` — copy of `skills/audit/references/production-readiness-playbook.md` shipped with the skill (kept identical by `tests/test-repo-hygiene.sh`) — current
 - `skills/deploy-verify/SKILL.md` — post-deploy verification — current
 - `skills/security-review/SKILL.md` — security pass over pending changes — current
 - `skills/security-review/references/full-checklist.md` — long security checklist — current
@@ -106,7 +107,7 @@ not shipped in this repo) · **drifted** (content drifted from what it names) ·
 - `references/audit-report-format.md` — report format — current
 - `references/audit-triage-rubric.md` — triage rubric — current
 - `references/domain-audit-contract.md` — contract every domain audit follows — current
-- `references/production-readiness-playbook.md` — production-readiness playbook cited by `vibe-to-prod` and the domain audits (cited as `~/.codex/context/production-readiness-playbook.md`; the install lines copy it there) — current
+- `references/production-readiness-playbook.md` — production-readiness playbook the domain audits read from the audit context directory (`.claude/context/` or `~/.codex/context/`; the install lines copy it there) — current
 
 ## Third-party skills (copied as found; origin in `README.md`)
 

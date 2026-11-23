@@ -47,7 +47,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - Every data-driven component handles all FOUR states: loading, error, empty, success — empty/error are most often missing (playbook L1, FM-6, B19).
 - Edge-case input is handled: apostrophes, 10,000 chars in a small field, emojis, blank required fields (playbook L1, CHK-3).

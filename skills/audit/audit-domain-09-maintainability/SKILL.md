@@ -46,7 +46,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - Dependency hygiene: lockfile committed; `npm audit` clean; a recurring (monthly) dependency-audit habit; no abandoned/phantom packages (playbook FM-20, L8).
 - Coverage theater check: high coverage % but no adversarial-input tests (already B15).

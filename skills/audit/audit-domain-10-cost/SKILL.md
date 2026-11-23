@@ -45,7 +45,7 @@ audit's spine — every finding maps back to one of them.
 
 ### Vibe-coding specific checks (production-readiness)
 
-Cite the playbook for depth: view ~/.codex/context/production-readiness-playbook.md
+Cite the playbook for depth: view `production-readiness-playbook.md` in the audit context directory (`.claude/context/` in Claude Code, `~/.codex/context/` in Codex; the README audit install copies it there). If it is not installed, cite the anchors only, say the file is missing, and continue.
 
 - Expensive/paid/AI endpoints have BOTH a rate limit and a spend cap; alert at 50%, kill at 90% of budget (playbook H10, FM-5, L9).
 - Model routing by complexity: cheap model for simple tasks, top model only when needed (~70% savings) (playbook FM-10).
