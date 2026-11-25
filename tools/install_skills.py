@@ -13,6 +13,16 @@ codex (~/.codex/skills). Copy mode backs up a changed installed copy to
 Codex also loads SKILL.md files nested under a skill root. --symlink links the
 installed folder to the repo instead of copying.
 
+Manifest guard (T-2776): an install is filtered through the wezbridge skills
+manifest (config/skills-manifest.json plus its "$parts"), the same file
+scripts/skills-parity.cjs checks. Per target root (claude, codex) a skill is
+installed only if it is in that root's "allow" and not in its "archive"; skipped
+names print as SKIP. Manifest path: --manifest, else $SKILLS_MANIFEST, else
+../wezbridge/config/skills-manifest.json next to this repo. A missing or
+unreadable manifest aborts with exit 3 (fail closed). --no-manifest installs
+without the guard and can reinstall archived skills: UNSAFE, only for a machine
+with no wezbridge checkout. --prune-orphans does not need the manifest.
+
 --prune-orphans scans ~/.claude/skills, ~/.codex/skills and ~/.agents/skills
 for retired skill folders, for backup/archive folders and for legacy bundle
 folders (no SKILL.md, retired skills nested inside) that hide SKILL.md files
@@ -39,6 +49,7 @@ from compare_installed_skills import discover_repo_skills, skill_digest  # noqa:
 PROVIDERS = {"claude": ".claude", "codex": ".codex"}
 SCAN_HOMES = (".claude", ".codex", ".agents")   # every skill root a provider reads
 NESTED_ORPHAN_DIRS = ("_backup_sync", "_archive")
+DEFAULT_MANIFEST = REPO.parent / "wezbridge" / "config" / "skills-manifest.json"
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache")
 
 
@@ -54,6 +65,25 @@ def load_retired() -> dict[str, str]:
         if name:
             retired[name] = reason.strip() or "retired"
     return retired
+
+
+def load_manifest_policy(manifest_file: Path) -> dict[str, tuple[set[str], set[str]]]:
+    """{root: (allow, archive)} from the wezbridge skills manifest; fails closed (SystemExit 3).
+
+    Same format as wezbridge fleet-config/sync_fs.py load_skills_policy: an index whose "$parts" lists
+    JSON files (relative to it) merged key by key, or a plain single file.
+    """
+    try:
+        m = json.loads(manifest_file.read_text(encoding="utf-8-sig"))
+        for part in m.pop("$parts", []):
+            m.update(json.loads((manifest_file.parent / part).read_text(encoding="utf-8-sig")))
+        archive = m["archive"]
+        return {key: (set(r["allow"]), set(archive.get(key, []))) for key, r in m["roots"].items()}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+        print(f"skills manifest unreadable ({manifest_file}): {exc!r}; nothing installed. "
+              "Set --manifest or $SKILLS_MANIFEST, or pass --no-manifest (UNSAFE: can reinstall archived skills).",
+              file=sys.stderr)
+        raise SystemExit(3) from exc
 
 
 def resolve_profile(name: str, profiles: dict, repo_skills: dict) -> list[str]:
@@ -137,6 +167,13 @@ def cmd_install(args, home: Path) -> int:
         raise SystemExit(f"--exclude names skills not in the repo: {', '.join(unknown)}")
     names = [n for n in names if n not in args.exclude]
     targets = list(PROVIDERS) if args.target == "all" else [args.target]
+    policy = None
+    if not args.no_manifest:
+        policy = load_manifest_policy(args.manifest or Path(os.environ.get("SKILLS_MANIFEST") or DEFAULT_MANIFEST))
+        absent = [t for t in targets if t not in policy]
+        if absent:
+            print(f"skills manifest has no root for: {', '.join(absent)}; nothing installed", file=sys.stderr)
+            return 3
     ts = stamp()
     mode = "symlink" if args.symlink else "copy"
     print(f"{'DRY RUN: ' if args.dry_run else ''}profile={args.profile} target={args.target} mode={mode}")
@@ -145,6 +182,12 @@ def cmd_install(args, home: Path) -> int:
         phome = home / PROVIDERS[provider]
         backup_root = phome / "_backup_sync" / ts
         for name in names:
+            if policy:
+                allow, archive = policy[provider]
+                skip = "archived in manifest" if name in archive else None if name in allow else "not in manifest allow"
+                if skip:
+                    print(f"{name:40} {provider:8} SKIP ({skip})")
+                    continue
             action = install_item(repo_skills[name].path, phome / "skills" / name, backup_root, mode, args.dry_run)
             print(f"{name:40} {provider:8} {action}")
             if provider != "claude":
@@ -221,6 +264,10 @@ def parse_args(argv=None):
     p.add_argument("--prune-orphans", action="store_true", help="find retired or nested-backup skills in provider roots")
     p.add_argument("--dry-run", action="store_true", help="report what would change; write nothing")
     p.add_argument("--yes", action="store_true", help="confirm moving orphans (prune without --dry-run)")
+    p.add_argument("--manifest", type=Path,
+                   help="wezbridge skills-manifest.json (default: $SKILLS_MANIFEST, else ../wezbridge/config/skills-manifest.json)")
+    p.add_argument("--no-manifest", action="store_true",
+                   help="UNSAFE: install without the manifest guard; can reinstall archived skills")
     p.add_argument("--home", type=Path, default=Path.home(), help="home directory holding .claude/.codex/.agents (tests)")
     args = p.parse_args(argv)
     if not args.profile and not args.prune_orphans:

@@ -334,6 +334,8 @@ python tools/install_skills.py --profile audit --target claude --symlink  # link
 |---|---|
 | `--profile` | `ship` (battle-test family incl. the audit entry points), `audit` (the three audit entry points), `build`, `workflow`, `all` (every skill, third-party included). Lists live in `tools/skill-profiles.json`. |
 | `--target` | `claude` (`~/.claude/skills/`), `codex` (`~/.codex/skills/`), `all` (default). |
+| `--manifest` | wezbridge skills manifest the install is filtered through (`config/skills-manifest.json`). Default: `$SKILLS_MANIFEST`, else `../wezbridge/config/skills-manifest.json`. A skill is installed only if it is in that root's `allow` and not in its `archive`; the rest print `SKIP`. A missing or unreadable manifest exits 3 and installs nothing. |
+| `--no-manifest` | UNSAFE: install without the manifest guard; can reinstall archived skills. Only for a machine with no wezbridge checkout. |
 | `--symlink` | link the installed folder to the repo instead of copying (Windows needs Developer Mode). |
 | `--dry-run` | report `install` / `update (backup)` / `same` per item and name files that exist only in the installed copy (an update moves them to backup with the old folder); write nothing. |
 | `--prune-orphans` | find retired skills (`tools/retired-skills.txt`, e.g. the 18 old `audit-*` folders) and `_backup_sync/` or `_archive/` folders hiding `SKILL.md` files inside `~/.claude/skills`, `~/.codex/skills` or `~/.agents/skills`. Codex loads such nested copies as live skills. |
