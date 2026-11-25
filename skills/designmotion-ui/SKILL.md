@@ -1,6 +1,6 @@
 ---
 name: designmotion-ui
-description: Apply the exact UI/UX, layout, typography, color, motion, micro-interaction, form, navigation, accessibility, data-viz, onboarding, pricing, and anti-dark-pattern rules distilled exclusively from @designmotionhq (89 canonical rules across 147 UI/UX posts). Use when designing, implementing, reviewing, or de-AI-ifying web/mobile UI components and screens strictly according to @designmotionhq guidance.
+description: Reference; prefer frontendgame for building UI. Apply the exact UI/UX, layout, typography, color, motion, micro-interaction, form, navigation, accessibility, data-viz, onboarding, pricing, and anti-dark-pattern rules distilled exclusively from @designmotionhq (89 canonical rules across 147 UI/UX posts). Use when designing, implementing, reviewing, or de-AI-ifying web/mobile UI components and screens strictly according to @designmotionhq guidance.
 ---
 
 # DesignMotion UI Systems (`designmotion-ui`)

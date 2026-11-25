@@ -1,6 +1,6 @@
 ---
 name: emil-design-eng
-description: "Use when adding or refining ANIMATIONS, transitions, micro-interactions, hover/press states, easing/timing, or making a UI feel polished, premium, or high-craft. Emil Kowalski's philosophy on motion decisions and the invisible details that make software feel great. Trigger phrases: 'add animation', 'make it feel polished/premium', 'the motion/transition feels off', 'micro-interactions', 'easing', 'feels janky', 'smooth it out'."
+description: "Reference; prefer frontendgame for building UI. Use when adding or refining ANIMATIONS, transitions, micro-interactions, hover/press states, easing/timing, or making a UI feel polished, premium, or high-craft. Emil Kowalski's philosophy on motion decisions and the invisible details that make software feel great. Trigger phrases: 'add animation', 'make it feel polished/premium', 'the motion/transition feels off', 'micro-interactions', 'easing', 'feels janky', 'smooth it out'."
 ---
 
 # Design Engineering

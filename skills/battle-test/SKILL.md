@@ -1,6 +1,6 @@
 ---
 name: battle-test
-description: "Run a fail-closed end-to-end project hardening cycle: static audit, exhaustive real-browser validation, semantic screenshot review, multi-role/security/visual-regression probes, isolated remediation, and re-verification. Use when the user asks to battle-test a project. It conducts audit-orchestrator, validation, visual-route-sweep and quality-loop; do not use it for one of those alone, for a quick readiness scorecard (vibe-to-prod) or for a post-deploy check (deploy-verify). Default is the full cycle; --quick runs a clearly weaker smoke/readiness check and can never emit a battle-tested verdict. Main integration requires --push-main; deployment is never automatic. --ux curates only UX/UI and ends with its own verdict (UX SCOPE VERIFIED or UX SCOPE FAILED), never battle-tested. Explicit invocation only: start it when the user types /battle-test or explicitly asks to battle-test; never on your own (long-running, edits code)."
+description: "Run a fail-closed end-to-end project hardening cycle: static audit, exhaustive real-browser validation, semantic screenshot review, multi-role/security/visual-regression probes, isolated remediation, and re-verification. Use when the user asks to battle-test a project. It conducts audit-orchestrator, validation and quality-loop; do not use it for one of those alone, for a quick readiness scorecard (vibe-to-prod) or for a post-deploy check (deploy-verify). Default is the full cycle; --quick runs a clearly weaker smoke/readiness check and can never emit a battle-tested verdict. Main integration requires --push-main; deployment is never automatic. --ux curates only UX/UI and ends with its own verdict (UX SCOPE VERIFIED or UX SCOPE FAILED), never battle-tested. Explicit invocation only: start it when the user types /battle-test or explicitly asks to battle-test; never on your own (long-running, edits code)."
 disable-model-invocation: true
 ---
 
@@ -8,8 +8,8 @@ disable-model-invocation: true
 
 `/battle-test [project-path-or-name]` runs the full quality loop end-to-end and produces one
 report: **diagnose → runtime-verify → harden → re-verify**. It does not reimplement those
-capabilities — it conducts four existing skills (`audit-orchestrator`, `validation`,
-`visual-route-sweep`, `quality-loop`; `--quick` adds `vibe-to-prod`) and gates between them.
+capabilities — it conducts three existing skills (`audit-orchestrator`, `validation`,
+`quality-loop`; `--quick` adds `vibe-to-prod`) and gates between them.
 
 ```
 /battle-test                 # current project
@@ -28,7 +28,7 @@ capabilities — it conducts four existing skills (`audit-orchestrator`, `valida
 | 1. Diagnose | `audit-orchestrator` (the `/audit` pipeline) + targeted `product-ux-audit` check on core workflows (home/dashboard utility, approval/auth controls, cross-page consistency & Anti-Slop) | `<repo>/audit-report.md` + `AUDIT VERDICT` block + `[AUDIT COMPLETE: ...]` token |
 | 2. Baseline verify | `validation --full` (5 viewports: `375x812`, `768x1024`, `1366x650` HD laptop, `1440x900`, `1920x1080` + WCAG contrast, sidebar clipping, above-the-fold CTA, narrow-column waste, multi-role RBAC, stateful/modal capture, security, and visual baselines) | `assert-coverage.js` and `certify-validation.js` both exit `0`; state has `completed`, `coverageComplete:true`, zero unaccounted, and clean health/multi-role/security/visual signals |
 | 3. Harden | `quality-loop` | commits on `loop/<project>`; `TRACKS.md` AUTO/GATED |
-| 4. Re-verify | `$visual-route-sweep` on the candidate build (100% screenshot inspection for `<= 30` routes across `1366x650`, `768x1024`, `375x812` + cross-page consistency) + `validation` compare + targeted `audit` re-check | current-build route matrix, re-run state, and visual-regression diff vs Stage-2 baseline |
+| 4. Re-verify | `$validation --mode standard` on the candidate build (light/dark matrix across all viewports incl. `1366x650`; 100% screenshot inspection for `<= 30` routes across `1366x650`, `768x1024`, `375x812` + cross-page consistency) + `validation` visual-regression compare + targeted `audit` re-check | current-build route matrix, re-run state, and visual-regression diff vs Stage-2 baseline |
 | 5. Report | this skill | one HTML artifact under `<repo>/artifacts/` |
 
 Load `references/stages.md` for the step-by-step of each stage, `references/gates.md` for how to

@@ -1,6 +1,6 @@
 ---
 name: taste-skill
-description: "Use when you need strict UI ENGINEERING DISCIPLINE — opinionated component architecture, metric-based spacing/type scales, CSS hardware-acceleration/performance rules, and overriding generic LLM UI defaults with senior-engineer standards. Trigger phrases: 'enforce design-system rules', 'component architecture', 'make the UI code disciplined', 'override default AI-looking layout', 'strict spacing/type scale', 'performance-tune the UI'."
+description: "Reference; prefer frontendgame for building UI. Use when you need strict UI ENGINEERING DISCIPLINE — opinionated component architecture, metric-based spacing/type scales, CSS hardware-acceleration/performance rules, and overriding generic LLM UI defaults with senior-engineer standards. Trigger phrases: 'enforce design-system rules', 'component architecture', 'make the UI code disciplined', 'override default AI-looking layout', 'strict spacing/type scale', 'performance-tune the UI'."
 ---
 
 # High-Agency Frontend Skill

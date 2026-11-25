@@ -107,3 +107,30 @@ Destructive actions (delete, pay, charge, approve, reject, sign out, send) are o
 when they target `VAL_` data created in this run, or the user approved destructive validation.
 Otherwise mark `skip` with reason `destructive-unapproved`. This is a safety boundary, not a
 coverage gap — but it is still listed in the ledger so the human can approve a deeper pass.
+
+## Visual matrix and review batching
+
+Standard and exhaustive modes capture every route at each configured viewport (`hd-laptop` 1366x650
+is mandatory), in light and dark when the app supports both. A route is not visually covered until
+its screenshot is opened and recorded with `record-visual-review.js`.
+
+- Short-desktop and mobile rules (sidebar clipping, above-the-fold CTA, narrow-column waste, nested
+  horizontal scroll, WCAG AA contrast) are measured by `scripts/responsive-audit.js`; do not re-judge them by eye.
+- Cross-page consistency (Anti-Slop): one `<PageHeader>` structure, one card surface palette, one
+  brand accent, and a home or dashboard that does more than repeat the sidebar links.
+
+### Review budget
+
+Light/dark x six viewports is up to twelve images per route, so the orchestrating thread must not
+open them itself:
+
+1. Split the screenshot queue into batches: one route family, or at most about 24 images per batch.
+   Never split one route's cells across batches.
+2. Give each batch to a review subagent with the image paths and the expected route, role, theme and
+   viewport of each image. The subagent opens every image in its batch.
+3. The subagent returns only JSON lines, one per image, with `route`, `viewport`, `theme`, `role`,
+   `image`, `sha256`, `verdict` (`pass|fail|blocked`) and `issues[]`, and nothing else.
+4. The orchestrator merges the lines into the ledger, checks that every expected route x role x theme x
+   viewport cell has exactly one line, and reopens a single image only to confirm a disputed `fail`.
+5. Without subagents, review the batches one after another and keep only the JSON lines between batches.
+   A batch that was not reviewed counts as `blocked`, never as `pass`.

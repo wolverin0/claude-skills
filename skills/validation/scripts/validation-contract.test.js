@@ -46,6 +46,18 @@ assert.ok(/smoke only/.test(autoqaStep) && /full release QA/.test(autoqaStep), '
 assert.ok(/certify-validation\.js/.test(autoqaStep) && /never replaces/i.test(autoqaStep), 'autoqa never replaces the certify gate');
 assert.ok(!/skills[\\/]autoqa/.test(autoqaStep), 'autoqa is cited by name, not by folder');
 
+// T-2794: validation is the one visual check. It owns the after-UI-change trigger, the light/dark
+// viewport matrix and batched review; visual-route-sweep is retired and SKILL.md must not name it.
+const triggerDescription = (skillMd.match(/^description: "([^"]*)"/m) || [])[1] || '';
+assert.ok(triggerDescription.includes('run after any UI/visual change (smoke on touched routes)'), 'description names the after-UI-change trigger');
+assert.ok(!/visual-route-sweep/.test(skillMd), 'SKILL.md does not name the retired visual-route-sweep');
+const discoverMd = fs.readFileSync(path.join(__dirname, '..', 'phases', 'DISCOVER.md'), 'utf8');
+assert.ok(/\| hd-laptop \| 1366 \| 650 \|/.test(discoverMd) && /\| fhd \| 1920 \| 1080 \|/.test(discoverMd), 'standard breakpoints include 1366x650 and 1920x1080');
+const runnerSource = fs.readFileSync(path.join(__dirname, 'run-smoke-playwright.js'), 'utf8');
+assert.ok(runnerSource.includes("name: 'hd-laptop', width: 1366, height: 650") && runnerSource.includes("name: 'fhd', width: 1920, height: 1080"), 'standard runner defaults include 1366x650 and 1920x1080');
+const coverageMd = fs.readFileSync(path.join(__dirname, '..', 'references', 'coverage-contract.md'), 'utf8');
+assert.ok(/### Review budget/.test(coverageMd) && /blocked/.test(coverageMd), 'coverage contract has the batched review budget');
+
 assert.strictEqual(normalizeMode('full'), 'exhaustive');
 assert.strictEqual(modePolicy('standard').defaultMaxRoutes, null);
 assert.strictEqual(modePolicy('smoke').defaultMaxRoutes, 6);

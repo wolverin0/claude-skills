@@ -1,6 +1,6 @@
 ---
 name: validation
-description: "Run evidence-based browser validation for an implemented web app, UI feature, or workflow. Successor to ultimate-validation: inventories routes, elements, modals, flows, and APIs; executes browser checks; analyzes screenshots and responsiveness; checks console/network errors; persists resumable state; and emits an auditable HTML report. Use smoke for a bounded quick check, standard for the complete safe UI cycle, and exhaustive/full for release-depth CRUD, API, security, accessibility, and visual-regression coverage. Not for the full audit-fix-reverify cycle (battle-test), a screenshot-only sweep of every route (visual-route-sweep) or CLI health checks after a deploy (deploy-verify)."
+description: "Run evidence-based browser validation for an implemented web app, UI feature, or workflow; run after any UI/visual change (smoke on touched routes). Inventories routes, elements, modals, flows, and APIs; executes browser checks; measures responsiveness; checks console/network errors; reviews light/dark screenshots at every viewport; persists resumable state; and emits an auditable HTML report. Use smoke for a bounded check, standard for the complete safe UI cycle, and exhaustive/full for release-depth CRUD, API, security, accessibility, and visual-regression coverage. Not for the full audit-fix-reverify cycle (battle-test) or CLI health checks after a deploy (deploy-verify)."
 ---
 
 # Validation
@@ -30,9 +30,8 @@ report. If no URL is provided, detect a running local server or start the repo's
 when it is unambiguous. If neither is safe, ask for the URL. A completed prior state is archived and
 a fresh run starts; use `--resume` only to continue an incomplete run.
 
-When the request is specifically to inventory visual routes, capture every route across themes and
-viewports, inspect screenshots, and check browser errors without running CRUD/security/audit stages,
-delegate to `$visual-route-sweep`. Its verdict is visual-only and never substitutes for full validation.
+A visual-only request (every route in light and dark at every viewport, screenshots reviewed) runs as
+`standard` with the visual-review phase; it never replaces full validation and has no separate verdict.
 
 ## Defaults
 
@@ -48,7 +47,7 @@ delegate to `$visual-route-sweep`. Its verdict is visual-only and never substitu
 | Mode | Use | Coverage |
 | --- | --- | --- |
 | `smoke` | Fast confidence after small changes | key/changed routes and flows, 2 breakpoints; sampling is allowed; verdict is `SMOKE VERIFIED`, never `FULLY VALIDATED` |
-| `standard` | Complete safe UI cycle; default | every declared/reachable route, every non-destructive element, every reachable modal, 4 breakpoints, console/network checks, critical flows, safe `VAL_` create/delete checks, and a zero-gap coverage ledger |
+| `standard` | Complete safe UI cycle; default | every declared/reachable route, every non-destructive element, every reachable modal, 6 viewports (`375x812`, `768x1024`, `1024x768`, `1366x650` HD laptop, `1440x900`, `1920x1080`), light and dark when the app supports them, console/network checks, critical flows, safe `VAL_` create/delete checks, batched screenshot review (`references/coverage-contract.md`, "Visual matrix and review batching"), and a zero-gap coverage ledger |
 | `exhaustive` / `full` / `human` | Release/regression depth | standard plus every code-only surface and backend method/path accounted for, forms, `VAL_`-scoped CRUD, role/security probes, accessibility/performance checks, and visual regression |
 
 Coverage is a contract, not a sample: in `standard` and `exhaustive`/`human` modes the skill
