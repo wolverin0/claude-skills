@@ -149,6 +149,16 @@ Read these when needed:
 | `certify` | `phases/TEST.md` (final accounting: `assert-coverage.js` then `certify-validation.js`, which sets the next phase to `report`) |
 | `report` | `phases/REPORT.md` |
 
+## Test-phase autoqa hand-off
+
+In the `test` phase, after the browser passes, delegate to `$autoqa` when `standard`/`exhaustive`
+is asked for release-readiness QA of a branch, or the change touches backend, API, CLI or background
+work that the browser cannot reach. Skip with a ledger note when `autoqa` is not installed.
+Pass it: the repo path, the instance already under test, the diff base, and an explicit scope so it
+does not stop to ask (`smoke` -> "smoke only", `standard` -> "changed behavior + seams", `exhaustive`
+-> "full release QA"). Cite its report path and failing rows in the validation issues. Its verdict
+never replaces the coverage ledger, `assert-coverage.js` or `certify-validation.js`.
+
 ## State Rules
 
 - Write state after every route, element, flow, and report step.
