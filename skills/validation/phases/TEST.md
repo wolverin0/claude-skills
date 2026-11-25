@@ -165,7 +165,8 @@ Do not delete non-`VAL_` data.
 
 ## 4b. Semantic Screenshot Review
 
-Open every screenshot in `queues.visualReviews` with an image-capable tool. Inspect layout,
+Open every screenshot in `queues.visualReviews` with an image-capable tool, in review batches
+(`references/coverage-contract.md`, "Review budget"); an unreviewed batch is `blocked`. Inspect layout,
 clipping, overlap, hierarchy, legibility, empty/error states, mobile navigation, and obvious visual
 inconsistency. Pixel diff and DOM measurements are supporting evidence, not this review.
 

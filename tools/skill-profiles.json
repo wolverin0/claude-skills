@@ -2,7 +2,7 @@
   "_doc": "Install profiles for tools/install_skills.py. Names are skill folder names under skills/ (skills/audit/<name> included). 'all' installs every skill in the repo. claude_extras: files a skill needs outside the skill root, installed only for the claude target.",
   "profiles": {
     "ship": [
-      "battle-test", "validation", "visual-route-sweep", "vibe-to-prod", "quality-loop",
+      "battle-test", "validation", "vibe-to-prod", "quality-loop",
       "product-ux-audit", "deploy-verify", "security-review",
       "audit-orchestrator", "audit-loop", "audit-fix-generator"
     ],

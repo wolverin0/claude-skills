@@ -1,11 +1,13 @@
 ---
 name: frontendgame
-description: PRIMARY skill for BUILDING or REDESIGNING app/product UI — the default entry point whenever the user starts a new interface or wants to improve/rework an existing one. Create, critique, reverse-engineer, and implement premium mobile-first product interfaces with advanced UX patterns, design-system discipline, and motion engineering. Use whenever the user asks to build/make/design/redesign/improve a UI, screen, page, dashboard, or component — app UI, mobile dashboards, fintech-style screens, screenshot-to-code, interaction design, scroll animations, sticky card stacks, animated tabs, bottom navigation, React/Next.js frontend, React Native/Expo, Flutter — or wants to avoid generic AI-looking UI. Strongly prefer this skill when screenshots or references are provided. For deep animation-feel work call emil-design-eng, for auditing an existing UI call impeccable, for palettes/fonts/style references call ui-ux-pro-max.
+description: Design-time entry point (PRIMARY) for BUILDING or REDESIGNING app/product UI — the default entry point whenever the user starts a new interface or wants to improve/rework an existing one. Create, critique, reverse-engineer, and implement premium mobile-first product interfaces with advanced UX patterns, design-system discipline, and motion engineering. Use whenever the user asks to build/make/design/redesign/improve a UI, screen, page, dashboard, or component — app UI, mobile dashboards, fintech-style screens, screenshot-to-code, interaction design, scroll animations, sticky card stacks, animated tabs, bottom navigation, React/Next.js frontend, React Native/Expo, Flutter — or wants to avoid generic AI-looking UI. Strongly prefer this skill when screenshots or references are provided. For deep animation-feel work call emil-design-eng, for auditing an existing UI call impeccable, for palettes/fonts/style references call ui-ux-pro-max.
 ---
 
 # Endgame Mobile Product Design
 
 Use this skill to turn vague UI taste into concrete, buildable product design. The goal is not “pretty screens.” The goal is production-grade mobile interfaces with clear hierarchy, intentional visual language, accessible behavior, and motion that explains state instead of decorating randomly.
+
+Design-time entry point. Reference-only skills called from here: designmotion-ui, ui-ux-pro-max, emil-design-eng, taste-skill.
 
 ## Operating mode
 

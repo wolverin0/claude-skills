@@ -113,7 +113,12 @@ Standard/exhaustive breakpoints:
 | mobile | 375 | 812 |
 | tablet | 768 | 1024 |
 | laptop | 1024 | 768 |
+| hd-laptop | 1366 | 650 |
 | desktop | 1440 | 900 |
+| fhd | 1920 | 1080 |
+
+`hd-laptop` (14" laptop, short viewport) is mandatory: it catches clipped sidebars and below-the-fold CTAs.
+Light and dark themes run when the app supports them (`config.themes`).
 
 Smoke breakpoints:
 

@@ -30,3 +30,5 @@ project-curate                   # now phase 2b of project-health
 project-doctor                   # now phase 1 of project-health
 # Deprecated alias removed 2026-11-25 (operator order, T-2769)
 feature-validation               # use validation (skills/validation/SKILL.md)
+# Merged into validation standard mode (light/dark x viewports, batched review), 2026-11-25 (T-2794)
+visual-route-sweep               # now validation --mode standard (skills/validation/SKILL.md)

@@ -38,7 +38,6 @@ Copy-paste prompts for each `battle-test` mode and its sibling skills (derived f
 | `quality-loop` | Self-verifying hardening and quality-sweep loop in an isolated git worktree: works an AUTO list in a fixed order (security → prod-readiness → deps/CVEs → tests/coverage → dead-code → perf → a11y → ux → docs), gates every commit on lint/types/tests/build, and queues operator-only items as GATED. Standalone it pushes verified batches to `main`; `--staged` commits only and leaves the push to the parent (this is how `battle-test` uses it). |
 | `product-ux-audit` | Task-centered UX audit: user journeys, duplicated actions, avoidable steps, container choice (modal, side panel, dedicated page), forms, error handling and notification policy for operational products (ERP, CRM, dashboards). Prepares before/after visual comparisons with selectable recommendations and keeps interaction decisions in `DESIGN.md`. |
 | `validation` | Evidence-based browser validation: route/element/flow/API inventory, screenshots, console+network checks, resumable state, redaction, auditable HTML report. Modes: smoke / standard / exhaustive. |
-| `visual-route-sweep` | Authenticated light/dark × desktop/tablet/mobile screenshots of every safe route, responsive+runtime failure detection, semantic review of every image — the visual slice of battle-test, standalone. |
 | `vibe-to-prod` | Guided 13-layer production-readiness self-check for an AI-generated MVP: per-layer PASS/GAP scorecard (security, errors, logging, deploy, compliance…). Lighter than the audit bundle. |
 | `deploy-verify` | Post-deploy verification workflow. |
 | `security-review` | Focused security pass over pending changes. |
@@ -242,7 +241,6 @@ skills/
   ui-ux-pro-max/              Third-party: design lookup data and search scripts
   validation/                 Evidence-based browser validation
   vibe-to-prod/               13-layer production-readiness self-check
-  visual-route-sweep/         Visual route sweep with semantic review
 agents/                       audit-runner and audit-domain-runner subagents
 commands/                     /audit and /audit-remediate slash commands
 hooks/                        pre/post audit report check hooks (Python)
