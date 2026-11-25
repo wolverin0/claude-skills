@@ -12,8 +12,7 @@
       "mercadopago-integration", "checklist-design-app-audit", "designmotion-ui"
     ],
     "workflow": [
-      "handoff", "skillify", "skill-creator", "project-setup", "project-curate",
-      "project-doctor", "debate"
+      "handoff", "skillify", "skill-creator", "debate"
     ],
     "all": "*"
   },

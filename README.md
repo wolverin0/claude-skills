@@ -127,7 +127,6 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 | `tdd-workflow` | Red-first test-driven flow. |
 | `debug-resolve` | Systematic debugging to resolution. |
 | `supabase-debug` | Supabase-specific diagnosis. |
-| `feature-validation` | Deprecated alias: routes old `feature-validation` prompts to `validation`. |
 | `mercadopago-integration` | MercadoPago OAuth/checkout/webhooks for Supabase/React SaaS, with production pitfalls from 7+ real Argentine projects. Assets: OAuth edge function, hook, migration SQL, and a webhook Edge Function with x-signature verification, legacy-IPN handling and idempotent updates; `scripts/mp_webhook_tool.py` signs test notifications and checks `verify_jwt = false`. |
 | `checklist-design-app-audit` | Audits against a validated Checklist Design snapshot: 703 auditable items, evidence-aware scoring, deterministic search scripts. |
 | `designmotion-ui` | 89 canonical UI/UX rules distilled strictly from 147 `@designmotionhq` posts across layout, type, color, motion, micro-interactions, forms, navigation, a11y, data-viz, onboarding, pricing, and anti-dark-patterns. |
@@ -139,9 +138,6 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 | `handoff` | Verified, identity-bound session checkpoint (v3: required sections, session/generation/corr identity, checksummed exclusive publication via the bundled `publish-handoff.cjs`; Node.js required). The next session starts from the file, not from vibes. v3.1 adds an optional PreCompact guard (`assets/settings-hooks.json` + `scripts/handoff-guard.cjs`) that blocks a manual compaction without a fresh verified handoff and carries the handoff's path and corr into the compaction summary. |
 | `skillify` | Turn a proven repeated workflow into a reusable skill. |
 | `skill-creator` | Create and validate skills locally (progressive disclosure). |
-| `project-setup` | Generate/refresh AGENTS.md / CLAUDE.md from the real codebase. |
-| `project-curate` | Hand-tune a project's `.claude/` directory. |
-| `project-doctor` | Read-only orchestration health check. |
 
 ### Collaboration
 
@@ -229,7 +225,6 @@ skills/
   designmotion-ui/            89 UI/UX rules distilled from @designmotionhq
   desloppify/                 Third-party: codebase health scanner
   emil-design-eng/            Third-party: animation and micro-interaction craft
-  feature-validation/         Deprecated alias routing to validation
   frontendgame/               Premium mobile-first UI engineering
   handoff/                    Verified session checkpoints (v3) + publisher scripts
   impeccable/                 Third-party: design operations (no engine binary)
@@ -237,9 +232,6 @@ skills/
   mcp-builder/                MCP server construction
   mercadopago-integration/    MercadoPago OAuth/payment integration
   product-ux-audit/           Task-centered UX audit
-  project-curate/             .claude/ curation workflow
-  project-doctor/             Read-only orchestration health check
-  project-setup/              AGENTS.md / CLAUDE.md setup workflow
   quality-loop/               Hardening loop in an isolated worktree
   security-review/            Security pass over pending changes
   skill-creator/              Skill creation and validation tools
@@ -255,15 +247,15 @@ agents/                       audit-runner and audit-domain-runner subagents
 commands/                     /audit and /audit-remediate slash commands
 hooks/                        pre/post audit report check hooks (Python)
 workflows/                    audit-remediate.mjs (workflow-runtime script)
-tools/                        install_skills.py + skill-profiles.json + retired-skills.txt, references/ (backend, ClickHouse), legacy docs
+tools/                        install_skills.py + skill-profiles.json + retired-skills.txt, references/ (backend, ClickHouse, coding standards, project-guidelines example), legacy docs
 tests/                        Shell tests (debate lock, hygiene, frontmatter, installer, routing, MercadoPago, handoff guard)
 ```
 
 `skills/` holds only skill folders. The former root reference docs now live with
-the skill that loads them (`frontendgame/references/frontend-patterns.md`,
-`project-setup/references/coding-standards.md`,
-`project-setup/assets/project-guidelines-example.md`) or, when no shipped skill
-fits, in `tools/references/` (`backend-patterns.md`, `clickhouse-io.md`).
+the skill that loads them (`frontendgame/references/frontend-patterns.md`) or, when no shipped skill
+fits, in `tools/references/` (`backend-patterns.md`, `clickhouse-io.md`,
+`coding-standards.md`, `project-guidelines-example.md`; the last two came from the retired
+`project-setup` skill, replaced by `project-health` in the home repo).
 
 ## Quick starts
 

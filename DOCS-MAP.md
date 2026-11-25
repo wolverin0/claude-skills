@@ -214,11 +214,6 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/mercadopago-integration/scripts/mp_webhook_tool.py` — sign/verify x-signature locally, `check-config` for `verify_jwt = false` — current
 - `skills/checklist-design-app-audit/SKILL.md` — Checklist Design audit — current
 - `skills/checklist-design-app-audit/references/README.md` — dataset reference — current
-- `skills/feature-validation/SKILL.md` — deprecated alias routing to `validation` — current (alias)
-- `skills/feature-validation/references/legacy-feature-validation.md` — old feature-validation workflow — legacy
-- `skills/feature-validation/references/AUTO-HEALING-INTEGRATION-GUIDE.md` — auto-healing integration — legacy\* (`skill-test.md` not in repo)
-- `skills/feature-validation/references/skill-auto-healing.md` — auto-healing module — legacy\* (`skill-test.md`)
-- `skills/feature-validation/references/handoff.md` — recursive-learning notes — legacy
 
 ## Session & project workflow
 
@@ -231,14 +226,7 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
 - `skills/skill-creator/scripts/eval_routing.py` — BM25 check of description triggers against prompts; fails on misroutes, prints near-ties — current
-- `skills/skill-creator/scripts/routing_cases.json` — 38 realistic routing prompts covering every skill — current
-- `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current
-- `skills/project-setup/references/full-process.md` — long setup process — current\* (`/monitoring-setup` not in repo)
-- `skills/project-setup/references/coding-standards.md` — TS/JS coding standards offered when a project has none (moved from `skills/` root) — current
-- `skills/project-setup/assets/project-guidelines-example.md` — example project-guidelines skill (moved from `skills/` root) — current (example)
-- `skills/project-curate/SKILL.md` — curate a project's `.claude/` — current
-- `skills/project-curate/references/full-process.md` — long curation process — current\* (`skills/architecture-decision-records/` not in repo)
-- `skills/project-doctor/SKILL.md` — read-only orchestration health check — current\* (`/monitoring-setup`)
+- `skills/skill-creator/scripts/routing_cases.json` — 35 realistic routing prompts covering every skill — current
 
 ## Collaboration
 

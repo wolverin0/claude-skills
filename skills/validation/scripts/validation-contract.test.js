@@ -37,6 +37,15 @@ const responsiveAuditSource = fs.readFileSync(path.join(__dirname, 'responsive-a
 assert.ok(responsiveAuditSource.includes("push('mobile-scroll-container', 'high'"));
 assert.ok(responsiveAuditSource.includes("data-validation-horizontal-scroll') !== 'allow'"));
 
+// T-2769 r2: the test phase hands off to autoqa, conditionally, never replacing the certify gate.
+const skillMd = fs.readFileSync(path.join(__dirname, '..', 'SKILL.md'), 'utf8');
+const autoqaStep = skillMd.split(/^## /m).find(section => /^Test-phase autoqa/.test(section)) || '';
+assert.ok(autoqaStep, 'SKILL.md needs a "Test-phase autoqa" section');
+assert.ok(/\$autoqa/.test(autoqaStep) && /installed/i.test(autoqaStep), 'autoqa step is named and conditional on install');
+assert.ok(/smoke only/.test(autoqaStep) && /full release QA/.test(autoqaStep), 'autoqa step passes an explicit scope');
+assert.ok(/certify-validation\.js/.test(autoqaStep) && /never replaces/i.test(autoqaStep), 'autoqa never replaces the certify gate');
+assert.ok(!/skills[\\/]autoqa/.test(autoqaStep), 'autoqa is cited by name, not by folder');
+
 assert.strictEqual(normalizeMode('full'), 'exhaustive');
 assert.strictEqual(modePolicy('standard').defaultMaxRoutes, null);
 assert.strictEqual(modePolicy('smoke').defaultMaxRoutes, 6);
