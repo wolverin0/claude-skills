@@ -24,3 +24,7 @@ audit-domain-13-code-integrity   # now audit-orchestrator/modules/audit-domain-1
 audit-decisions                  # now audit-loop/modules/audit-decisions.md
 # Renamed
 ultimate-validation              # succeeded by validation (see skills/validation/SKILL.md)
+# Replaced by project-health, which lives in the home repo (fleet-home/skills/project-health), 2026-11-25 (operator D1, T-2769)
+project-setup                    # now phase 2a of project-health
+project-curate                   # now phase 2b of project-health
+project-doctor                   # now phase 1 of project-health

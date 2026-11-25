@@ -339,7 +339,7 @@ SUPABASE_KEY=eyJ...
 
 ## Related Skills
 
-- `skills/project-setup/references/coding-standards.md` - General coding best practices
+- `tools/references/coding-standards.md` - General coding best practices
 - `tools/references/backend-patterns.md` - API and database patterns
 - `skills/frontendgame/references/frontend-patterns.md` - React and Next.js patterns
 - `skills/tdd-workflow/` - Test-driven development methodology

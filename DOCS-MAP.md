@@ -231,14 +231,7 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/skillify/SKILL.md` — workflow → reusable skill — current
 - `skills/skill-creator/SKILL.md` — create/validate skills (example paths are illustrative) — current
 - `skills/skill-creator/scripts/eval_routing.py` — BM25 check of description triggers against prompts; fails on misroutes, prints near-ties — current
-- `skills/skill-creator/scripts/routing_cases.json` — 38 realistic routing prompts covering every skill — current
-- `skills/project-setup/SKILL.md` — generate AGENTS.md / CLAUDE.md — current
-- `skills/project-setup/references/full-process.md` — long setup process — current\* (`/monitoring-setup` not in repo)
-- `skills/project-setup/references/coding-standards.md` — TS/JS coding standards offered when a project has none (moved from `skills/` root) — current
-- `skills/project-setup/assets/project-guidelines-example.md` — example project-guidelines skill (moved from `skills/` root) — current (example)
-- `skills/project-curate/SKILL.md` — curate a project's `.claude/` — current
-- `skills/project-curate/references/full-process.md` — long curation process — current\* (`skills/architecture-decision-records/` not in repo)
-- `skills/project-doctor/SKILL.md` — read-only orchestration health check — current\* (`/monitoring-setup`)
+- `skills/skill-creator/scripts/routing_cases.json` — 35 realistic routing prompts covering every skill — current
 
 ## Collaboration
 
