@@ -28,3 +28,5 @@ ultimate-validation              # succeeded by validation (see skills/validatio
 project-setup                    # now phase 2a of project-health
 project-curate                   # now phase 2b of project-health
 project-doctor                   # now phase 1 of project-health
+# Deprecated alias removed 2026-11-25 (operator order, T-2769)
+feature-validation               # use validation (skills/validation/SKILL.md)

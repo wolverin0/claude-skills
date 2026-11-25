@@ -127,7 +127,6 @@ them from the project's `.claude/hooks/` (copy them there, not to `~/.claude/`).
 | `tdd-workflow` | Red-first test-driven flow. |
 | `debug-resolve` | Systematic debugging to resolution. |
 | `supabase-debug` | Supabase-specific diagnosis. |
-| `feature-validation` | Deprecated alias: routes old `feature-validation` prompts to `validation`. |
 | `mercadopago-integration` | MercadoPago OAuth/checkout/webhooks for Supabase/React SaaS, with production pitfalls from 7+ real Argentine projects. Assets: OAuth edge function, hook, migration SQL, and a webhook Edge Function with x-signature verification, legacy-IPN handling and idempotent updates; `scripts/mp_webhook_tool.py` signs test notifications and checks `verify_jwt = false`. |
 | `checklist-design-app-audit` | Audits against a validated Checklist Design snapshot: 703 auditable items, evidence-aware scoring, deterministic search scripts. |
 | `designmotion-ui` | 89 canonical UI/UX rules distilled strictly from 147 `@designmotionhq` posts across layout, type, color, motion, micro-interactions, forms, navigation, a11y, data-viz, onboarding, pricing, and anti-dark-patterns. |
@@ -226,7 +225,6 @@ skills/
   designmotion-ui/            89 UI/UX rules distilled from @designmotionhq
   desloppify/                 Third-party: codebase health scanner
   emil-design-eng/            Third-party: animation and micro-interaction craft
-  feature-validation/         Deprecated alias routing to validation
   frontendgame/               Premium mobile-first UI engineering
   handoff/                    Verified session checkpoints (v3) + publisher scripts
   impeccable/                 Third-party: design operations (no engine binary)

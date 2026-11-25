@@ -214,11 +214,6 @@ Three installable skills; modules have no `SKILL.md` and load on demand. Paths a
 - `skills/mercadopago-integration/scripts/mp_webhook_tool.py` — sign/verify x-signature locally, `check-config` for `verify_jwt = false` — current
 - `skills/checklist-design-app-audit/SKILL.md` — Checklist Design audit — current
 - `skills/checklist-design-app-audit/references/README.md` — dataset reference — current
-- `skills/feature-validation/SKILL.md` — deprecated alias routing to `validation` — current (alias)
-- `skills/feature-validation/references/legacy-feature-validation.md` — old feature-validation workflow — legacy
-- `skills/feature-validation/references/AUTO-HEALING-INTEGRATION-GUIDE.md` — auto-healing integration — legacy\* (`skill-test.md` not in repo)
-- `skills/feature-validation/references/skill-auto-healing.md` — auto-healing module — legacy\* (`skill-test.md`)
-- `skills/feature-validation/references/handoff.md` — recursive-learning notes — legacy
 
 ## Session & project workflow
 
